@@ -123,23 +123,6 @@ describe('deploy contract ' + contractName, () => {
 		expect(balance).toEqual(amount);
 	});
 
-    test('alice deposit fts to market', async () => {
-        let amount = parseNearAmount('50');
-
-		await alice.functionCall(stableId, 'ft_transfer_call', {
-            receiver_id: marketId,
-            amount,
-            msg: "escrow",
-        }, GAS, 1);
-		
-		/// check balance
-		const balance = await alice.viewFunction(stableId, 'ft_balance_of', { account_id: aliceId });
-		expect(balance).toEqual(amount);
-		/// check escrowed tokens
-		const escrowBalance = await alice.viewFunction(marketId, 'get_token_balance', { token_contract_id: stableId, account_id: aliceId });
-		expect(escrowBalance).toEqual(amount);
-	});
-
     test('bob: ft storage, market storage, nft mint, approve sale with ft', async () => {
         const token_id = tokenIds[0]
 		await bob.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum);
@@ -149,8 +132,8 @@ describe('deploy contract ' + contractName, () => {
             token_id,
             account_id: marketId,
             msg: JSON.stringify({
-                beneficiary: bob.accountId,
-                token: stableId,
+                beneficiary: bobId,
+                ft_token_id: stableId,
                 price: parseNearAmount('25')
             })
         }, GAS, parseNearAmount('0.1001'));
@@ -158,7 +141,7 @@ describe('deploy contract ' + contractName, () => {
         const sale = await bob.viewFunction(marketId, 'get_sale', { token_contract_id: contractId, token_id });
 		console.log('\n\n', sale, '\n\n');
         expect(sale.price).toEqual(parseNearAmount('25'))
-        expect(sale.token).toEqual(stableId)
+        expect(sale.ft_token_id).toEqual(stableId)
         expect(token.owner_id).toEqual(bobId)
 	});
 
@@ -170,21 +153,27 @@ describe('deploy contract ' + contractName, () => {
         expect(sale.price).toEqual(parseNearAmount('20'))
 	});
 
-	test('alice purchase nft with fungible deposit (50 - 20)', async () => {
+	test('alice purchase nft with ft', async () => {
         const token_id = tokenIds[0]
-        /// purchase with tokens still requires 1 yocto for wallet redirect
-		await alice.functionCall(marketId, 'purchase', {
-            token_contract_id: contractId,
-            token_id
+        /// purchase = ft_transfer_call -> market: ft_on_transfer -> nft_transfer
+		await alice.functionCall(stableId, 'ft_transfer_call', {
+            receiver_id: marketId,
+            amount: parseNearAmount('20'),
+            msg: JSON.stringify({
+                token_contract_id: contractName,
+                token_id,
+            })
         }, GAS, 1);
         /// check owner
         const token = await contract.nft_token({ token_id });
         expect(token.owner_id).toEqual(aliceId)
-        /// check escrowed tokens
-		const aliceEscrow = await alice.viewFunction(marketId, 'get_token_balance', { token_contract_id: stableId, account_id: aliceId });
-		expect(aliceEscrow).toEqual(parseNearAmount('30'));
-		const bobEscrow = await alice.viewFunction(marketId, 'get_token_balance', { token_contract_id: stableId, account_id: bobId });
-		expect(bobEscrow).toEqual(parseNearAmount('20'));
+        /// check token balances
+		const aliceBalance = await alice.viewFunction(stableId, 'ft_balance_of', { account_id: aliceId });
+		expect(aliceBalance).toEqual(parseNearAmount('80'));
+        const marketBalance = await marketAccount.viewFunction(stableId, 'ft_balance_of', { account_id: marketId });
+		console.log('\n\n marketBalance', marketBalance, '\n\n');
+		const bobBalance = await bob.viewFunction(stableId, 'ft_balance_of', { account_id: bobId });
+		expect(bobBalance).toEqual(parseNearAmount('20'));
 	});
 
 });

@@ -12,8 +12,9 @@ mod internal;
 static ALLOC: near_sdk::wee_alloc::WeeAlloc<'_> = near_sdk::wee_alloc::WeeAlloc::INIT;
 
 
-const GAS_FOR_RESOLVE_TRANSFER: Gas = 10_000_000_000_000;
-const GAS_FOR_NFT_TRANSFER_CALL: Gas = 25_000_000_000_000 + GAS_FOR_RESOLVE_TRANSFER;
+const GAS_FOR_FT_TRANSFER: Gas = 25_000_000_000_000;
+const GAS_FOR_RESOLVE_PURCHASE: Gas = 10_000_000_000_000 + GAS_FOR_FT_TRANSFER;
+const GAS_FOR_NFT_PURCHASE: Gas = 25_000_000_000_000 + GAS_FOR_RESOLVE_PURCHASE;
 const NO_DEPOSIT: Balance = 0;
 const STORAGE_AMOUNT: u128 = 100_000_000_000_000_000_000_000;
 pub type TokenId = String;
@@ -26,7 +27,7 @@ pub struct Sale {
     pub approval_id: u64,
     pub beneficiary: AccountId,
     pub price: U128,
-    pub token: AccountId,
+    pub ft_token_id: AccountId,
     pub locked: bool,
 }
 
@@ -35,7 +36,14 @@ pub struct Sale {
 pub struct SaleArgs {
     pub price: U128,
     pub beneficiary: Option<AccountId>,
-    pub token: Option<AccountId>,
+    pub ft_token_id: Option<AccountId>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct PurchaseArgs {
+    pub token_contract_id: AccountId,
+    pub token_id: TokenId,
 }
 
 #[near_bindgen]
@@ -43,8 +51,7 @@ pub struct SaleArgs {
 pub struct Contract {
     pub owner_id: AccountId,
     pub sales: LookupMap<ContractAndTokenId, Sale>,
-    pub tokens: LookupSet<AccountId>,
-    pub token_escrow: LookupMap<AccountId, LookupMap<TokenId, Balance>>,
+    pub ft_token_ids: LookupSet<AccountId>,
     pub storage_deposits: LookupSet<AccountId>,
 }
 
@@ -56,8 +63,7 @@ impl Contract {
         Self {
             owner_id: owner_id.into(),
             sales: LookupMap::new(b"s".to_vec()),
-            tokens: LookupSet::new(b"t".to_vec()),
-            token_escrow: LookupMap::new(b"e".to_vec()),
+            ft_token_ids: LookupSet::new(b"t".to_vec()),
             storage_deposits: LookupSet::new(b"d".to_vec()),
         }
     }
@@ -65,7 +71,7 @@ impl Contract {
     /// only owner
     pub fn add_token(&mut self, token_contract_id: ValidAccountId) -> bool {
         self.assert_owner();
-        self.tokens.insert(token_contract_id.as_ref())
+        self.ft_token_ids.insert(token_contract_id.as_ref())
     }
 
     #[payable]
@@ -101,7 +107,7 @@ impl Contract {
         let SaleArgs {
             price,
             beneficiary,
-            token,
+            ft_token_id,
         } = sale_args;
         
         // if you are making a sale on someone's behalf and you want to escrow the funds (guest accounts)
@@ -111,9 +117,9 @@ impl Contract {
         }
 
         // if sale is denominated in some other token
-        let mut sale_token = "".to_string();
-        if let Some(token) = token {
-            sale_token = token;
+        let mut sale_ft_token_id = "".to_string();
+        if let Some(ft_token_id) = ft_token_id {
+            sale_ft_token_id = ft_token_id;
         }
 
         env::log(format!("add_sale for owner: {}", owner_id.clone().as_ref()).as_bytes());
@@ -123,7 +129,7 @@ impl Contract {
             approval_id,
             beneficiary: sale_beneficiary.into(),
             price,
-            token: sale_token.into(),
+            ft_token_id: sale_ft_token_id,
             locked: false,
         });
     }
@@ -153,54 +159,44 @@ impl Contract {
     }
 
     #[payable]
-    pub fn purchase(&mut self, token_contract_id: ValidAccountId, token_id: String) -> Promise {
+    pub fn purchase(&mut self, token_contract_id: ValidAccountId, token_id: String, sender_id: Option<AccountId>) -> Promise {
         let contract_id: AccountId = token_contract_id.clone().into();
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
         assert_eq!(sale.locked, false, "Sale is currently in progress");
-        
-        let price = u128::from(sale.price);
-        let ft_token_id = sale.token.clone();
-        let predecessor = env::predecessor_account_id();
-        let contract_id: AccountId = token_contract_id.into();
-
-        if ft_token_id.len() != 0 {
-            let mut escrow = self.token_escrow.get(&predecessor).expect("Account has no escrowed tokens");
-            let mut tokens = escrow.get(&ft_token_id).expect("Account has no tokens");
-            assert!(tokens > price, "Not enough tokens: {}, to pay {}", tokens, price);
-            tokens -= price;
-            escrow.insert(&ft_token_id, &tokens);
-            self.token_escrow.insert(&predecessor, &escrow);
+        let mut buyer_id = env::predecessor_account_id();
+        if let Some(sender_id) = sender_id {
+            // if sender_id.is_some() we already have the tokens in this contract
+            buyer_id = sender_id
         } else {
+            // purchase is in NEAR and not the result of ft_tranfer_call
             let deposit = env::attached_deposit();
             assert_eq!(
                 env::attached_deposit(),
-                price,
+                u128::from(sale.price),
                 "Must pay exactly the sale amount {}", deposit
             );
         }
-        
+        // lock the sale
         sale.locked = true;
         self.sales.insert(&contract_and_token_id, &sale);
-        let receiver_id = ValidAccountId::try_from(predecessor.clone()).unwrap();
-        let owner_id = ValidAccountId::try_from(sale.owner_id).unwrap();
         let memo: String = "Sold by Matt Market".to_string();
         // call NFT contract transfer call function
-        ext_transfer::nft_transfer(
-            receiver_id,
+        ext_nft_transfer::nft_transfer(
+            buyer_id.clone(),
             token_id.clone(),
-            owner_id, // who added sale must still be token owner
+            sale.owner_id,
             memo,
             &contract_id,
             1,
-            env::prepaid_gas() - GAS_FOR_NFT_TRANSFER_CALL,
+            env::prepaid_gas() - GAS_FOR_NFT_PURCHASE,
         ).then(ext_self::nft_resolve_purchase(
             contract_id,
             token_id,
-            predecessor,
+            buyer_id,
             &env::current_account_id(),
             NO_DEPOSIT,
-            GAS_FOR_RESOLVE_TRANSFER,
+            GAS_FOR_RESOLVE_PURCHASE,
         ))
     }
 
@@ -214,76 +210,47 @@ impl Contract {
     ) -> bool {
         env::log(format!("Promise Result {:?}", env::promise_result(0)).as_bytes());
         let contract_and_token_id = format!("{}:{}", token_contract_id, token_id);
-        // value is nothing, checking if nft_transfer was Successful promise execution
+        
+        // checking if nft_transfer was Successful promise execution
         if let PromiseResult::Successful(_value) = env::promise_result(0) {
             // pay seller and remove sale
             let sale = self.sales.remove(&contract_and_token_id).expect("No sale");
-            
-            let price = u128::from(sale.price);
-            let ft_token_id = sale.token;
             let beneficiary = sale.beneficiary;
 
-            if ft_token_id.len() != 0 {
-                let mut escrow = self
-                    .token_escrow
-                    .get(&beneficiary)
-                    .unwrap_or_else(|| LookupMap::new(unique_prefix(&beneficiary)));
-                let mut tokens = escrow.get(&ft_token_id).unwrap_or_else(|| 0);
-                tokens += price;
-                escrow.insert(&ft_token_id, &tokens);
-                self.token_escrow.insert(&beneficiary, &escrow);
+            if sale.ft_token_id.len() != 0 {
+                ext_ft_transfer::ft_transfer(
+                    beneficiary,
+                    sale.price, 
+                    None,
+                    &sale.ft_token_id,
+                    1,
+                    env::prepaid_gas() - GAS_FOR_FT_TRANSFER,
+                );
             } else {
-                Promise::new(beneficiary).transfer(u128::from(sale.price));
+                Promise::new(beneficiary).transfer(sale.price.into());
             }
-
             return true;
         }
-        // no promise result, refund buyer and update sale state to not processing
+        // no promise result, refund buyer and update sale state
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
-        let price = u128::from(sale.price);
-        let ft_token_id = sale.token.clone();
-        if ft_token_id.len() != 0 {
-            let mut escrow = self.token_escrow.get(&buyer_id).expect("Account has no tokens, but should...");
-            let mut tokens = escrow.get(&ft_token_id).unwrap_or_else(|| 0);
-            tokens += price;
-            escrow.insert(&ft_token_id, &tokens);
-            self.token_escrow.insert(&buyer_id, &escrow);
+        if sale.ft_token_id.len() != 0 {
+            ext_ft_transfer::ft_transfer(
+                buyer_id,
+                sale.price,
+                None,
+                &sale.ft_token_id,
+                1,
+                env::prepaid_gas() - GAS_FOR_FT_TRANSFER,
+            );
         } else {
-            Promise::new(buyer_id).transfer(u128::from(sale.price));
+            Promise::new(buyer_id).transfer(sale.price.into());
         }
         sale.locked = false;
         self.sales.insert(&contract_and_token_id, &sale);
         return false;
     }
 
-    /// escrowed funds
-
-    #[payable]
-    pub fn withdraw_all(&mut self, token_contract_id: AccountId ) {
-        assert_one_yocto();
-        let receiver_id = env::predecessor_account_id();
-        let escrowed_tokens = self.token_escrow.get(&receiver_id).expect("Account has no escrowed tokens");
-        let tokens = escrowed_tokens.get(&token_contract_id).expect("Account has no tokens");
-        
-        if tokens > 0 {
-            // call NFT contract transfer call function
-            ext_transfer::ft_transfer(
-                receiver_id,
-                tokens, 
-                None,
-                &token_contract_id,
-                1,
-                env::prepaid_gas() - GAS_FOR_NFT_TRANSFER_CALL,
-            );
-        }
-    }
-
     /// view methods
-
-    pub fn get_token_balance(&self, account_id: AccountId, token_contract_id: AccountId) -> U128 {
-        let escrowed_tokens = self.token_escrow.get(&account_id).expect("Account has no escrowed tokens");
-        U128(escrowed_tokens.get(&token_contract_id).expect("Account has no token balance"))
-    }
 
     pub fn get_sale(&self, token_contract_id: ValidAccountId, token_id: String) -> Sale {
         let contract_id: AccountId = token_contract_id.into();
@@ -291,13 +258,15 @@ impl Contract {
     }
 
     pub fn supports_token(&self, token_contract_id: ValidAccountId) -> bool {
-        self.tokens.contains(token_contract_id.as_ref())
+        self.ft_token_ids.contains(token_contract_id.as_ref())
     }
 
     pub fn storage_amount(&self) -> U128 {
         U128(STORAGE_AMOUNT)
     }
 }
+
+/// external calls
 
 #[ext_contract(ext_self)]
 trait ResolvePurchase {
@@ -309,16 +278,20 @@ trait ResolvePurchase {
     ) -> Promise;
 }
 
-#[ext_contract(ext_transfer)]
+#[ext_contract(ext_nft_transfer)]
 trait ExtTransfer {
     fn nft_transfer(
         &mut self,
-        receiver_id: ValidAccountId,
+        receiver_id: AccountId,
         token_id: TokenId,
-        enforce_owner_id: ValidAccountId,
+        enforce_owner_id: AccountId,
         memo: String,
     );
-    fn ft_transfer(&mut self, receiver_id: AccountId, amount: u128, memo: Option<String>);
+}
+
+#[ext_contract(ext_ft_transfer)]
+trait ExtTransfer {
+    fn ft_transfer(&mut self, receiver_id: AccountId, amount: U128, memo: Option<String>);
 }
 
 /// approval callbacks from NFT Contracts 
@@ -371,21 +344,23 @@ impl FungibleTokenReceiver for Contract {
         amount: U128,
         msg: String
     ) -> U128 {
-        let token_contract_id = env::predecessor_account_id();
-
-        env::log(format!("tokens transferred {} {} {}", sender_id.clone(), u128::from(amount.clone()), msg.clone()).as_bytes());
-
-        let mut escrow = self
-            .token_escrow
-            .get(&sender_id)
-            .unwrap_or_else(|| LookupMap::new(unique_prefix(&sender_id)));
-
-        // check for existing balance (increment) and insert new balance
-        let balance = u128::from(amount) + escrow.get(&token_contract_id).unwrap_or_else(|| 0);
-        escrow.insert(&token_contract_id, &balance);
-        self.token_escrow.insert(&sender_id, &escrow);
-
-        // we use all the tokens sent to this contract to increase tokens.balance
-        U128(0)
+        let PurchaseArgs {
+            token_contract_id,
+            token_id,
+        } = near_sdk::serde_json::from_str(&msg).expect("Valid SaleArgs");
+        let contract_and_token_id = format!("{}:{}", token_contract_id, token_id);
+        let sale = self.sales.get(&contract_and_token_id).expect("No sale");
+        let ft_token_id = env::predecessor_account_id();
+        assert_eq!(sale.ft_token_id, ft_token_id, "Sale doesn't accept token {}", ft_token_id);
+        assert_eq!(sale.locked, false, "Sale is currently in progress");
+        let price = u128::from(sale.price);
+        let amount = u128::from(amount);
+        assert!(amount >= price, "Not enough tokens. Price is {}", price);
+        self.purchase(
+            ValidAccountId::try_from(token_contract_id).expect("token_contract_id should be ValidAccountId"),
+            token_id,
+            Some(sender_id)
+        );
+        U128(amount - price)
     }
 }
