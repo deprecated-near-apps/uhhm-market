@@ -103,15 +103,6 @@ impl NonFungibleTokenCore for Contract {
             memo,
         );
 
-        // If sale was made on_behalf_of guest then give guest the balance of the sale
-        if let Some(guest_sale) = self.guest_sales.get(&token_id) {
-            let mut guest = self.guests.get(&guest_sale.public_key).expect("No guest");
-            let new_balance = u128::from(guest.balance) + guest_sale.price;
-            guest.balance = U128(new_balance);
-            env::log(format!("New guest balance {}", new_balance).as_bytes());
-            self.guests.insert(&guest_sale.public_key, &guest);
-        }
-
         refund_approved_account_ids(previous_owner_id, &approved_account_ids);
     }
 

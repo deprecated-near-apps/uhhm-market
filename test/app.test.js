@@ -21,9 +21,10 @@ const {
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 50000;
 
 describe('deploy contract ' + contractName, () => {
-    let alice, bobId, bob, bobKey, marketAccount;
+    let alice, aliceId, bob, bobId,
+        stableAccount, marketAccount,
+        storageMinimum, storageMarket;
 
-    const market_deposit = parseNearAmount('0.1');
     const metadata = 'https://media1.tenor.com/images/4c1d96a989150e7019bfbabbebd2ff36/tenor.gif?itemid=20269144'
     const metadata2 = 'https://media1.tenor.com/images/818161c07948bac34aa7c5f5712ec3d7/tenor.gif?itemid=15065455'
 
@@ -33,160 +34,157 @@ describe('deploy contract ' + contractName, () => {
         'token' + Date.now() + 2
     ]
 
-    /// contractAccount.accountId is the token contract and contractAccount is the owner
+    /// contractAccount.accountId is the NFT contract and contractAccount is the owner
     /// see initContract in ./test-utils.js for details
     const contractId = contractAccount.accountId
-    /// this MUST be guests.NFT_CONTRACT_ACCOUNT_ID
-    /// see lib.rs get_predecessor method for details
-    const guestId = 'guests.' + contractId;
+    /// the fungible token "stablecoin" contract
+    const stableId = 'stable.' + contractId;
+    /// the market contract
     const marketId = 'market.' + contractId;
 
 	beforeAll(async () => {
 	    await initContract();
 
-		// /// normal user alice
 		alice = await getAccount();
-		console.log('\n\nAlice accountId:', alice.accountId, '\n\n');
-		/// create guest account for bob
-        /// add key to guests account (pays for gas, manages guest keys)
-        /// add guest record to contract
-        /// add key to current near connection signer keyStore (bob's key signs for guestId account)
-		bobId = 'g' + Date.now() + '.' + contractId;
-		console.log('\n\nBob accountId:', bobId, '\n\n');
-		const keyPair = KeyPair.fromRandom('ed25519');
-        /// saving public_key to bobKey (available for future tests)
-		const public_key = bobKey = keyPair.publicKey.toString();
-		const guestAccount = await createOrInitAccount(guestId, GUESTS_ACCOUNT_SECRET);
-		await guestAccount.addKey(public_key, contractId, contractMethods.changeMethods, parseNearAmount('0.1'));
-		try {
-			await contract.add_guest({ account_id: bobId, public_key }, GAS);
-		} catch(e) {
-			console.warn(e);
-		}
-		connection.signer.keyStore.setKey(networkId, guestId, keyPair);
-		bob = new Account(connection, guestId);
-		const guest = await bob.viewFunction(contractId, 'get_guest', { public_key: bobKey });
-		console.log('\n\nBob guest record:', guest, '\n\n');
+        aliceId = alice.accountId;
+		console.log('\n\n Alice accountId:', aliceId, '\n\n');
 
-        /// create or get market account and deploy market.wasm
-		marketAccount = await createOrInitAccount(marketId, GUESTS_ACCOUNT_SECRET);
-        let state = await marketAccount.state()
-		console.log('\n\nstate:', state, '\n\n');
-        if (state.code_hash === '11111111111111111111111111111111') {
-            const contractBytes = fs.readFileSync('./out/market.wasm');
-            console.log('\n\ndeploying contractBytes:', contractBytes.length, '\n\n');
+        bob = await getAccount();
+        bobId = bob.accountId;
+		console.log('\n\n Bob accountId:', bobId, '\n\n');
+		
+        /// create or get stableAccount and deploy ft.wasm (if not already deployed)
+		stableAccount = await createOrInitAccount(stableId, GUESTS_ACCOUNT_SECRET);
+        const stableAccountState = await stableAccount.state()
+		console.log('\n\nstate:', stableAccountState, '\n\n');
+        if (stableAccountState.code_hash === '11111111111111111111111111111111') {
+            const fungibleContractByes = fs.readFileSync('./out/ft.wasm');
+            console.log('\n\n deploying stableAccount contractBytes:', fungibleContractByes.length, '\n\n');
+            const newFungibleArgs = {
+                /// will have totalSupply minted to them
+                owner_id: contractName,
+                total_supply: parseNearAmount('1000000'),
+                name: 'Test Stable Coin',
+                symbol: 'TSC',
+                // not set by user request
+                version: '1',
+                reference: 'https://github.com/near/core-contracts/tree/master/w-near-141',
+                reference_hash: '7c879fa7b49901d0ecc6ff5d64d7f673da5e4a5eb52a8d50a214175760d8919a',
+                decimals: 24,
+            };
             const actions = [
-                deployContract(contractBytes),
-                functionCall('new', { owner_id: contractId }, GAS)
+                deployContract(fungibleContractByes),
+                functionCall('new', newFungibleArgs, GAS)
+            ]
+            await stableAccount.signAndSendTransaction(stableId, actions)
+        }
+        /// find out how much needed to store for FTs
+        storageMinimum = await contractAccount.viewFunction(stableId, 'storage_minimum_balance')
+		console.log('\n\n storageMinimum:', storageMinimum, '\n\n');
+
+        /// create or get market account and deploy market.wasm (if not already deployed)
+		marketAccount = await createOrInitAccount(marketId, GUESTS_ACCOUNT_SECRET);
+        const marketAccountState = await marketAccount.state()
+		console.log('\n\nstate:', marketAccountState, '\n\n');
+        if (marketAccountState.code_hash === '11111111111111111111111111111111') {
+            const marketContractBytes = fs.readFileSync('./out/market.wasm');
+            console.log('\n\n deploying marketAccount contractBytes:', marketContractBytes.length, '\n\n');
+            const newMarketArgs = {
+                owner_id: contractId
+            }
+            const actions = [
+                deployContract(marketContractBytes),
+                functionCall('new', newMarketArgs, GAS)
             ]
             await marketAccount.signAndSendTransaction(marketId, actions)
         }
+        const supported = await marketAccount.viewFunction(marketId, "supports_token", { token_contract_id: stableId });
+        console.log('\n\n market supports token:', stableId, supported, '\n\n');
+        if (!supported) {
+            await marketAccount.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum)
+            const added = await contractAccount.functionCall(marketId, "add_token", { token_contract_id: stableId }, GAS);
+            console.log('\n\n added token:', stableId, added, '\n\n');
+        }
+
+        /// find out how much needed for market storage
+        storageMarket = await contractAccount.viewFunction(marketId, 'storage_amount')
+		console.log('\n\n storageMarket:', storageMarket, '\n\n');
 	});
 
-    test('nft mint and approve but no sale', async () => {
-        const token_id = tokenIds[2]
-		await alice.functionCall(contractId, 'nft_mint', { token_id, metadata: metadata2 }, GAS, parseNearAmount('1'));
-        /// msg is the price
-        await alice.functionCall(contractId, 'nft_approve', {
+    test('alice gets 100 fts', async () => {
+		await alice.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum);
+		let amount = parseNearAmount('100');
+		await contractAccount.functionCall(stableId, 'ft_transfer', {
+			receiver_id: aliceId,
+			amount
+		}, GAS, 1);
+		/// check balance
+		const balance = await contractAccount.viewFunction(stableId, 'ft_balance_of', { account_id: aliceId });
+		expect(balance).toEqual(amount);
+	});
+
+    test('alice deposit fts to market', async () => {
+        let amount = parseNearAmount('50');
+
+		await alice.functionCall(stableId, 'ft_transfer_call', {
+            receiver_id: marketId,
+            amount,
+            msg: "escrow",
+        }, GAS, 1);
+		
+		/// check balance
+		const balance = await alice.viewFunction(stableId, 'ft_balance_of', { account_id: aliceId });
+		expect(balance).toEqual(amount);
+		/// check escrowed tokens
+		const escrowBalance = await alice.viewFunction(marketId, 'get_token_balance', { token_contract_id: stableId, account_id: aliceId });
+		expect(escrowBalance).toEqual(amount);
+	});
+
+    test('bob: ft storage, market storage, nft mint, approve sale with ft', async () => {
+        const token_id = tokenIds[0]
+		await bob.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum);
+        await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket);
+		await bob.functionCall(contractId, 'nft_mint', { token_id, metadata }, GAS, parseNearAmount('1'));
+        await bob.functionCall(contractId, 'nft_approve', {
             token_id,
             account_id: marketId,
             msg: JSON.stringify({
-                beneficiary: alice.accountId,
-                price: parseNearAmount('1')
+                beneficiary: bob.accountId,
+                token: stableId,
+                price: parseNearAmount('25')
             })
         }, GAS, parseNearAmount('0.1001'));
         const token = await contract.nft_token({ token_id });
-        const sale = await alice.viewFunction(marketId, 'get_sale', { token_contract_id: contractId, token_id });
+        const sale = await bob.viewFunction(marketId, 'get_sale', { token_contract_id: contractId, token_id });
 		console.log('\n\n', sale, '\n\n');
-        expect(sale.price).toEqual(parseNearAmount('1'))
-        expect(token.owner_id).toEqual(alice.accountId)
-	});
-
-	test('change price', async () => {
-        const token_id = tokenIds[2]
-		await alice.functionCall(marketId, 'update_price', { token_contract_id: contractId, token_id, price: parseNearAmount('2') }, GAS);
-        const sale = await alice.viewFunction(marketId, 'get_sale', { token_contract_id: contractId, token_id });
-		console.log('\n\n', sale, '\n\n');
-        expect(sale.price).toEqual(parseNearAmount('2'))
-	});
-
-	test('nft mint', async () => {
-        const token_id = tokenIds[0]
-		await alice.functionCall(contractId, 'nft_mint', { token_id, metadata }, GAS, parseNearAmount('1'));
-        const token = await contract.nft_token({ token_id });
-        expect(token.metadata).toEqual(metadata)
-        expect(token.owner_id).toEqual(alice.accountId)
-	});
-
-	test('nft transfer to guest', async () => {
-        const token_id = tokenIds[0]
-		await alice.functionCall(contractId, 'nft_transfer', { token_id, receiver_id: bobId }, GAS, 1);
-        const token = await contract.nft_token({ token_id });
+        expect(sale.price).toEqual(parseNearAmount('25'))
+        expect(sale.token).toEqual(stableId)
         expect(token.owner_id).toEqual(bobId)
 	});
 
-	test('nft mint guest', async () => {
-        const token_id = tokenIds[1]
-		await bob.functionCall(contractId, 'nft_mint_guest', { token_id, metadata }, GAS);
-        const token = await contract.nft_token({ token_id });
-        expect(token.metadata).toEqual(metadata)
-        expect(token.owner_id).toEqual(bobId)
-	});
-
-    /// selling token as guest
-
-	test('nft add sale guest', async () => {
+	test('bob changes price', async () => {
         const token_id = tokenIds[0]
-		await bob.functionCall(contractId, 'nft_add_sale_guest', {
-            token_id,
-            price: parseNearAmount('1'),
-            market_id: marketId,
-            market_deposit
-        }, GAS);
-        /// don't panic
-	});
-
-	test('get sale', async () => {
-        const token_id = tokenIds[0]
-		const sale = await alice.viewFunction(marketId, 'get_sale', {
-            token_contract_id: contractId,
-            token_id
-        });
+		await bob.functionCall(marketId, 'update_price', { token_contract_id: contractId, token_id, price: parseNearAmount('20') }, GAS);
+        const sale = await bob.viewFunction(marketId, 'get_sale', { token_contract_id: contractId, token_id });
 		console.log('\n\n', sale, '\n\n');
-        expect(sale.owner_id).toEqual(bobId)
+        expect(sale.price).toEqual(parseNearAmount('20'))
 	});
 
-	test('purchase nft from market', async () => {
+	test('alice purchase nft with fungible deposit (50 - 20)', async () => {
         const token_id = tokenIds[0]
+        /// purchase with tokens still requires 1 yocto for wallet redirect
 		await alice.functionCall(marketId, 'purchase', {
             token_contract_id: contractId,
             token_id
-        }, GAS, parseNearAmount('1'));
+        }, GAS, 1);
+        /// check owner
         const token = await contract.nft_token({ token_id });
-        expect(token.owner_id).toEqual(alice.accountId)
-	});
-
-	test('get guest', async () => {
-		const guest = await bob.viewFunction(contractId, 'get_guest', { public_key: bobKey });
-        console.log('\n\n', guest, '\n\n');
-	});
-
-	test('upgrade guest self', async () => {
-		const keyPair = KeyPair.fromRandom('ed25519');
-		const keyPair2 = KeyPair.fromRandom('ed25519');
-		const public_key = keyPair.publicKey.toString();
-		const public_key2 = keyPair2.publicKey.toString();
-		connection.signer.keyStore.setKey(networkId, bobId, keyPair);
-		const result = await bob.functionCall(contractId, 'upgrade_guest', {
-			public_key,
-			access_key: public_key2,
-			method_names: '',
-		}, GAS);
-        console.log('\n\n', result, '\n\n');
-		/// update account and contract for bob (bob now pays gas)
-		const balance = await testUtils.getAccountBalance(bobId);
-		expect(balance.total).toEqual(parseNearAmount('0.9'));
-		
+        expect(token.owner_id).toEqual(aliceId)
+        /// check escrowed tokens
+		const aliceEscrow = await alice.viewFunction(marketId, 'get_token_balance', { token_contract_id: stableId, account_id: aliceId });
+		expect(aliceEscrow).toEqual(parseNearAmount('30'));
+		const bobEscrow = await alice.viewFunction(marketId, 'get_token_balance', { token_contract_id: stableId, account_id: bobId });
+		expect(bobEscrow).toEqual(parseNearAmount('20'));
 	});
 
 });

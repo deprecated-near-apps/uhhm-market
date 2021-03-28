@@ -60,13 +60,13 @@ pub(crate) fn refund_approved_account_ids(
 }
 
 impl Contract {
-    pub(crate) fn assert_owner(&self) {
-        assert_eq!(
-            &env::predecessor_account_id(),
-            &self.owner_id,
-            "Owner's method"
-        );
-    }
+    // pub(crate) fn assert_owner(&self) {
+    //     assert_eq!(
+    //         &env::predecessor_account_id(),
+    //         &self.owner_id,
+    //         "Owner's method"
+    //     );
+    // }
 
     pub(crate) fn internal_add_token_to_owner(
         &mut self,
