@@ -1,10 +1,17 @@
 # NFT Market Reference Implementation
 
-# WARNING
+## 🚨🚨🚨 Extreme WIP! 🚨🚨🚨
 
-🚨🚨🚨 Extreme WIP! 🚨🚨🚨
+## Working
 
-# END WARNING
+**App Tests: `/test/app.test.js/`**
+- install, deploy, test `yarn && yarn test:deploy`
+- change contracts - `yarn test:deploy`
+- change tests only - `yarn test`
+
+## 🚨🚨🚨 End of Warning 🚨🚨🚨
+
+# NFT Specific Notes
 
 Associated Video Demos (most recent at top)
 
