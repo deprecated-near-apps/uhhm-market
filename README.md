@@ -2,6 +2,15 @@
 
 ## 🚨🚨🚨 Extreme WIP! 🚨🚨🚨
 
+This is intended to be a PoC backbone for projects like this.
+No more guest accounts and easy onboarding, just straight FT and NFT standards.
+https://github.com/near-apps/nft-market
+
+## Goals:
+- test and determine standards for markets (best practice?) to buy/sell NFTs (finish standard) with FTs (already standard)
+- connect with bridged tokens e.g. buy and sell with wETH/nDAI (or whatever we call these)
+- demo some basic auction types, secondary markets and frontend example
+
 ## Working
 
 **App Tests: `/test/app.test.js/`**
