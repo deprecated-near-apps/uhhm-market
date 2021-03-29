@@ -3,8 +3,7 @@
 ## 🚨🚨🚨 Extreme WIP! 🚨🚨🚨
 
 This is intended to be a PoC backbone for projects like this.
-No more guest accounts and easy onboarding, just straight FT and NFT standards.
-https://github.com/near-apps/nft-market
+No guest accounts and easy onboarding, just straight FT and NFT standards.
 
 ## Goals:
 - test and determine standards for markets (best practice?) to buy/sell NFTs (finish standard) with FTs (already standard)
