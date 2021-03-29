@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LookupMap, LookupSet};
-use near_sdk::json_types::{U128, ValidAccountId};
+use near_sdk::json_types::{U64, U128, ValidAccountId};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{env, ext_contract, near_bindgen, AccountId, Gas, Balance, PanicOnDefault, Promise, PromiseResult};
 
@@ -24,7 +24,7 @@ pub type ContractAndTokenId = String;
 #[serde(crate = "near_sdk::serde")]
 pub struct Sale {
     pub owner_id: AccountId,
-    pub approval_id: u64,
+    pub approval_id: U64,
     pub beneficiary: AccountId,
     pub price: U128,
     pub ft_token_id: AccountId,
@@ -98,7 +98,7 @@ impl Contract {
         token_contract_id: ValidAccountId,
         token_id: String,
         owner_id: ValidAccountId,
-        approval_id: u64,
+        approval_id: U64,
         sale_args: SaleArgs
     ) {
         assert!(self.storage_deposits.contains(owner_id.as_ref()), "Must call storage_deposit with {} to sell on this market.", STORAGE_AMOUNT);
@@ -292,19 +292,27 @@ trait ExtTransfer {
 #[ext_contract(ext_ft_transfer)]
 trait ExtTransfer {
     fn ft_transfer(&mut self, receiver_id: AccountId, amount: U128, memo: Option<String>);
+    fn ft_transfer_call(
+        &mut self,
+        receiver_id: ValidAccountId,
+        amount: U128,
+        msg: String,
+        memo: Option<String>,
+    );
 }
+
+
 
 /// approval callbacks from NFT Contracts 
 
 trait NonFungibleTokenApprovalsReceiver {
     fn nft_on_approve(
         &mut self,
-        token_contract_id: ValidAccountId,
         token_id: TokenId,
         owner_id: ValidAccountId,
-        approval_id: u64,
-        msg: Option<String>,
-    ) -> bool;
+        approval_id: U64,
+        msg: String,
+    );
 }
 
 #[near_bindgen]
@@ -312,21 +320,17 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
     #[payable]
     fn nft_on_approve(
         &mut self,
-        token_contract_id: ValidAccountId,
         token_id: TokenId,
         owner_id: ValidAccountId,
-        approval_id: u64,
-        msg: Option<String>,
-    ) -> bool {
-        let contract: AccountId = token_contract_id.clone().into();
-        assert_eq!(env::predecessor_account_id(), contract, "Approval callbacks need to be called by the NFT Contract");
-        if let Some(msg) = msg {
-            let sale_args: SaleArgs = near_sdk::serde_json::from_str(&msg).expect("Valid SaleArgs");
-            self.add_sale(token_contract_id, token_id, owner_id, approval_id, sale_args);
-            true
-        } else {
-            false
-        }
+        approval_id: U64,
+        msg: String,
+    ) {
+        let contract: AccountId = env::predecessor_account_id();
+        let sale_args: SaleArgs = near_sdk::serde_json::from_str(&msg).expect("Valid SaleArgs");
+        self.add_sale(
+            ValidAccountId::try_from(contract).unwrap(),
+            token_id, owner_id, approval_id, sale_args
+        );
     }
 }
 

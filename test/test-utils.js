@@ -16,6 +16,11 @@ async function initContract() {
 	try {
         const newArgs = {
 			owner_id: contractAccount.accountId,
+			metadata: {
+				spec: 'nft-1',
+				name: 'Test NFT',
+				symbol: 'TNFT',
+			}
 		};
 		await contract.new(newArgs);
 	} catch (e) {

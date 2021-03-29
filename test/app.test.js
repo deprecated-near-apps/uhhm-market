@@ -25,8 +25,12 @@ describe('deploy contract ' + contractName, () => {
         stableAccount, marketAccount,
         storageMinimum, storageMarket;
 
-    const metadata = 'https://media1.tenor.com/images/4c1d96a989150e7019bfbabbebd2ff36/tenor.gif?itemid=20269144'
-    const metadata2 = 'https://media1.tenor.com/images/818161c07948bac34aa7c5f5712ec3d7/tenor.gif?itemid=15065455'
+    const metadata = {
+        media: 'https://media1.tenor.com/images/4c1d96a989150e7019bfbabbebd2ff36/tenor.gif?itemid=20269144'
+    }
+    const metadata2 = {
+        media: 'https://media1.tenor.com/images/818161c07948bac34aa7c5f5712ec3d7/tenor.gif?itemid=15065455'
+    }
 
     const tokenIds = [
         'token' + Date.now(),
@@ -103,7 +107,7 @@ describe('deploy contract ' + contractName, () => {
         if (!supported) {
             await marketAccount.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum)
             const added = await contractAccount.functionCall(marketId, "add_token", { token_contract_id: stableId }, GAS);
-            console.log('\n\n added token:', stableId, added, '\n\n');
+            console.log('\n\n added token:', stableId, '\n\n');
         }
 
         /// find out how much needed for market storage

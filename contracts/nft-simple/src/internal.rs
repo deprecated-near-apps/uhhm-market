@@ -1,4 +1,7 @@
 use crate::*;
+use std::mem::size_of;
+
+pub(crate) const YOCTO_MULTIPLIER: f32 = 0.000000000000000000000001;
 
 /// Price per 1 byte of storage from mainnet config after `1.18.0` release and protocol version `42`.
 /// It's 10 times lower than the genesis price.
@@ -15,7 +18,8 @@ pub(crate) fn assert_one_yocto() {
     assert_eq!(
         env::attached_deposit(),
         1,
-        "Requires attached deposit of exactly 1 yoctoNEAR"
+        "Requires attached deposit of exactly 1 yoctoⓃ ({} Ⓝ )",
+        YOCTO_MULTIPLIER
     )
 }
 
@@ -33,8 +37,9 @@ pub(crate) fn deposit_refund(storage_used: u64) {
 
     assert!(
         required_cost <= attached_deposit,
-        "Requires to attach {} NEAR tokens to cover storage",
-        required_cost
+        "Must attach {} yoctoⓃ to cover storage ({} Ⓝ )",
+        required_cost,
+        required_cost as f32  * YOCTO_MULTIPLIER
     );
 
     let refund = attached_deposit - required_cost;
@@ -43,14 +48,15 @@ pub(crate) fn deposit_refund(storage_used: u64) {
     }
 }
 
-pub(crate) fn bytes_for_approved_account_id(account_id: &AccountId) -> u64 {
+// TODO: need a way for end users to determine how much an approval will cost.
+pub(crate) fn bytes_for_approved_account_id(hm: (&AccountId, &U64)) -> u64 {
     // The extra 4 bytes are coming from Borsh serialization to store the length of the string.
-    account_id.len() as u64 + 4
+    hm.0.len() as u64 + (4 + size_of::<u64>()) as u64
 }
 
 pub(crate) fn refund_approved_account_ids(
     account_id: AccountId,
-    approved_account_ids: &HashSet<AccountId>,
+    approved_account_ids: &HashMap<AccountId, U64>,
 ) -> Promise {
     let storage_released: u64 = approved_account_ids
         .iter()
@@ -60,13 +66,13 @@ pub(crate) fn refund_approved_account_ids(
 }
 
 impl Contract {
-    // pub(crate) fn assert_owner(&self) {
-    //     assert_eq!(
-    //         &env::predecessor_account_id(),
-    //         &self.owner_id,
-    //         "Owner's method"
-    //     );
-    // }
+    pub(crate) fn assert_owner(&self) {
+        assert_eq!(
+            &env::predecessor_account_id(),
+            &self.owner_id,
+            "Owner's method"
+        );
+    }
 
     pub(crate) fn internal_add_token_to_owner(
         &mut self,
@@ -103,24 +109,27 @@ impl Contract {
         sender_id: &AccountId,
         receiver_id: &AccountId,
         token_id: &TokenId,
-        enforce_approval_id: Option<u64>,
+        enforce_approval_id: Option<U64>,
         memo: Option<String>,
-    ) -> (AccountId, HashSet<AccountId>) {
+    ) -> (AccountId, HashMap<AccountId, U64>) {
         let Token {
             owner_id,
             metadata,
             approved_account_ids,
-            approval_id,
+            approval_counter,
         } = self.tokens_by_id.get(token_id).expect("Token not found");
-        if sender_id != &owner_id && !approved_account_ids.contains(sender_id) {
+
+        if sender_id != &owner_id && !approved_account_ids.contains_key(sender_id) {
             env::panic(b"Unauthorized");
         }
 
+        // If they included an enforce_approval_id, check the receiver approval id
         if let Some(enforce_approval_id) = enforce_approval_id {
+            let approval_id = approved_account_ids.get(receiver_id).expect("Receiver not an approver of this token.");
             assert_eq!(
                 approval_id,
-                enforce_approval_id,
-                "The token approval_id is different from provided"
+                &enforce_approval_id,
+                "The approval_id is different from enforce_approval_id"
             );
         }
 
@@ -144,7 +153,7 @@ impl Contract {
             owner_id: receiver_id.clone(),
             metadata,
             approved_account_ids: Default::default(),
-            approval_id: approval_id + 1,
+            approval_counter,
         };
         self.tokens_by_id.insert(token_id, &token);
 

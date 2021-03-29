@@ -11,7 +11,7 @@ pub trait NonFungibleTokenCore {
         &mut self,
         receiver_id: ValidAccountId,
         token_id: TokenId,
-        enforce_approval_id: Option<u64>,
+        enforce_approval_id: Option<U64>,
         memo: Option<String>,
     );
 
@@ -20,16 +20,16 @@ pub trait NonFungibleTokenCore {
         &mut self,
         receiver_id: ValidAccountId,
         token_id: TokenId,
-        enforce_approval_id: Option<u64>,
+        enforce_approval_id: Option<U64>,
         memo: Option<String>,
         msg: String,
     ) -> Promise;
 
-    fn nft_approve(&mut self, token_id: TokenId, account_id: ValidAccountId, msg: Option<String>) -> bool;
+    fn nft_approve(&mut self, token_id: TokenId, account_id: ValidAccountId, msg: Option<String>);
 
-    fn nft_revoke(&mut self, token_id: TokenId, account_id: ValidAccountId) -> bool;
+    fn nft_revoke(&mut self, token_id: TokenId, account_id: ValidAccountId);
 
-    fn nft_revoke_all(&mut self, token_id: TokenId) -> bool;
+    fn nft_revoke_all(&mut self, token_id: TokenId);
 
     fn nft_total_supply(&self) -> U64;
 
@@ -39,7 +39,6 @@ pub trait NonFungibleTokenCore {
 #[ext_contract(ext_non_fungible_token_receiver)]
 trait NonFungibleTokenReceiver {
     /// Returns `true` if the token should be returned back to the sender.
-    /// TODO: Maybe make it inverse. E.g. true to keep it.
     fn nft_on_transfer(
         &mut self,
         sender_id: AccountId,
@@ -53,13 +52,14 @@ trait NonFungibleTokenReceiver {
 trait NonFungibleTokenApprovalsReceiver {
     fn nft_on_approve(
         &mut self,
-        token_contract_id: AccountId,
         token_id: TokenId,
         owner_id: AccountId,
-        approval_id: u64,
-        msg: Option<String>,
-    ) -> Promise;
+        approval_id: U64,
+        msg: String,
+    );
 }
+
+// TODO: create nft_on_revoke
 
 #[ext_contract(ext_self)]
 trait NonFungibleTokenResolver {
@@ -67,7 +67,7 @@ trait NonFungibleTokenResolver {
         &mut self,
         owner_id: AccountId,
         receiver_id: AccountId,
-        approved_account_ids: HashSet<AccountId>,
+        approved_account_ids: HashMap<AccountId, U64>,
         token_id: TokenId,
     ) -> bool;
 }
@@ -77,7 +77,7 @@ trait NonFungibleTokenResolver {
         &mut self,
         owner_id: AccountId,
         receiver_id: AccountId,
-        approved_account_ids: HashSet<AccountId>,
+        approved_account_ids: HashMap<AccountId, U64>,
         token_id: TokenId,
     ) -> bool;
 }
@@ -89,7 +89,7 @@ impl NonFungibleTokenCore for Contract {
         &mut self,
         receiver_id: ValidAccountId,
         token_id: TokenId,
-        enforce_approval_id: Option<u64>,
+        enforce_approval_id: Option<U64>,
         memo: Option<String>,
     ) {
         assert_one_yocto();
@@ -102,7 +102,6 @@ impl NonFungibleTokenCore for Contract {
             enforce_approval_id,
             memo,
         );
-
         refund_approved_account_ids(previous_owner_id, &approved_account_ids);
     }
 
@@ -111,7 +110,7 @@ impl NonFungibleTokenCore for Contract {
         &mut self,
         receiver_id: ValidAccountId,
         token_id: TokenId,
-        enforce_approval_id: Option<u64>,
+        enforce_approval_id: Option<U64>,
         memo: Option<String>,
         msg: String,
     ) -> Promise {
@@ -151,34 +150,43 @@ impl NonFungibleTokenCore for Contract {
         token_id: TokenId,
         account_id: ValidAccountId,
         msg: Option<String>,
-    ) -> bool {
-        let mut deposit = env::attached_deposit();
+    ) {
         let account_id: AccountId = account_id.into();
-        let storage_required = bytes_for_approved_account_id(&account_id);
-        assert!(deposit >= storage_required as u128, "Deposit doesn't cover storage of account_id: {}", account_id.clone());
+        let storage_used = bytes_for_approved_account_id((&account_id, &0_u64.into()));
 
         let mut token = self.tokens_by_id.get(&token_id).expect("Token not found");
-        assert_eq!(&env::predecessor_account_id(), &token.owner_id);
 
-        if token.approved_account_ids.insert(account_id.clone()) {
-            deposit -= storage_required as u128;
+        assert_eq!(&env::predecessor_account_id(), &token.owner_id, "Predecessor must be the token owner.");
 
-            token.approval_id += 1;
+        if token.approved_account_ids.contains_key(&account_id) {
+            // If account is already approved, refund the attached deposit
+            if env::attached_deposit() != 0 {
+                Promise::new(env::predecessor_account_id()).transfer(env::attached_deposit());
+            }
+        } else {
+            let storage_cost = (storage_used as u128).saturating_mul(STORAGE_PRICE_PER_BYTE);
+            assert!(env::attached_deposit() >= storage_cost, "attached_deposit doesn't cover storage of account_id: {}. Need {} yoctoⓃ ({} Ⓝ )", account_id.clone(), storage_cost, storage_cost as f32 * YOCTO_MULTIPLIER);
+        }
 
+        token.approval_counter = U64::from(token.approval_counter.0 + 1);
+
+        if token.approved_account_ids.insert(account_id.clone(), token.approval_counter).is_some() {
             self.tokens_by_id.insert(&token_id, &token);
+            deposit_refund(storage_used);
+        }
+
+        self.tokens_by_id.insert(&token_id, &token);
+
+        if let Some(msg) = msg {
             ext_non_fungible_approval_receiver::nft_on_approve(
-                env::current_account_id(),
                 token_id,
                 token.owner_id,
-                token.approval_id,
+                token.approval_counter,
                 msg,
                 &account_id,
-                deposit,
+                NO_DEPOSIT,
                 env::prepaid_gas() - GAS_FOR_NFT_TRANSFER_CALL,
             );
-            true
-        } else {
-            false
         }
     }
 
@@ -187,19 +195,16 @@ impl NonFungibleTokenCore for Contract {
         &mut self,
         token_id: TokenId,
         account_id: ValidAccountId,
-    ) -> bool {
+    ) {
         assert_one_yocto();
         let mut token = self.tokens_by_id.get(&token_id).expect("Token not found");
         let predecessor_account_id = env::predecessor_account_id();
         assert_eq!(&predecessor_account_id, &token.owner_id);
-        if token.approved_account_ids.remove(account_id.as_ref()) {
-            let storage_released = bytes_for_approved_account_id(account_id.as_ref());
+        if token.approved_account_ids.remove(account_id.as_ref()).is_some() {
+            let storage_released = bytes_for_approved_account_id((account_id.as_ref(), &0u64.into()));
             Promise::new(env::predecessor_account_id())
                 .transfer(Balance::from(storage_released) * STORAGE_PRICE_PER_BYTE);
             self.tokens_by_id.insert(&token_id, &token);
-            true
-        } else {
-            false
         }
     }
 
@@ -207,7 +212,7 @@ impl NonFungibleTokenCore for Contract {
     fn nft_revoke_all(
         &mut self,
         token_id: TokenId,
-    ) -> bool {
+    ) {
         assert_one_yocto();
         let mut token = self.tokens_by_id.get(&token_id).expect("Token not found");
         let predecessor_account_id = env::predecessor_account_id();
@@ -216,18 +221,19 @@ impl NonFungibleTokenCore for Contract {
             refund_approved_account_ids(predecessor_account_id, &token.approved_account_ids);
             token.approved_account_ids.clear();
             self.tokens_by_id.insert(&token_id, &token);
-            true
-        } else {
-            false
         }
     }
 
     fn nft_total_supply(&self) -> U64 {
-        self.total_supply.into()
+        self.tokens_by_id.len().into()
     }
 
     fn nft_token(&self, token_id: TokenId) -> Option<Token> {
-        self.tokens_by_id.get(&token_id)
+        if let Some(token) = self.tokens_by_id.get(&token_id) {
+            Some(token)
+        } else {
+            None
+        }
     }
 }
 
@@ -237,7 +243,7 @@ impl NonFungibleTokenResolver for Contract {
         &mut self,
         owner_id: AccountId,
         receiver_id: AccountId,
-        approved_account_ids: HashSet<AccountId>,
+        approved_account_ids: HashMap<AccountId, U64>,
         token_id: TokenId,
     ) -> bool {
         assert_self();
