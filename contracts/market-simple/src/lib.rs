@@ -20,7 +20,10 @@ mod royalty;
 static ALLOC: near_sdk::wee_alloc::WeeAlloc<'_> = near_sdk::wee_alloc::WeeAlloc::INIT;
 
 const GAS_FOR_FT_TRANSFER: Gas = 25_000_000_000_000;
-const GAS_FOR_RESOLVE_PURCHASE: Gas = 25_000_000_000_000 + GAS_FOR_FT_TRANSFER;
+const GAS_FOR_TRANSFER: Gas = 10_000_000_000_000;
+
+const GAS_FOR_ROYALTIES: Gas = 50_000_000_000_000;
+const GAS_FOR_RESOLVE_PURCHASE: Gas = 25_000_000_000_000 + GAS_FOR_ROYALTIES;
 const GAS_FOR_NFT_TRANSFER: Gas = 25_000_000_000_000 + GAS_FOR_RESOLVE_PURCHASE;
 const GAS_FOR_RECEIVE_ROYALTY: Gas = 25_000_000_000_000 + GAS_FOR_NFT_TRANSFER;
 const GAS_FOR_ROYALTY: Gas = 25_000_000_000_000 + GAS_FOR_RECEIVE_ROYALTY;
@@ -253,6 +256,16 @@ impl Contract {
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
         assert_eq!(sale.locked, false, "Sale is currently in progress");
         
+        let royalty_gas = if !sale.ft_token_id.is_empty() {
+            royalty.split_between.len() as u64 * GAS_FOR_FT_TRANSFER
+        } else {
+            royalty.split_between.len() as u64 * GAS_FOR_TRANSFER
+        };
+
+        if royalty_gas > GAS_FOR_ROYALTIES {
+            env::panic("Not enough gas".as_bytes());
+        }
+
         // lock the sale
         sale.locked = true;
         self.sales.insert(&contract_and_token_id, &sale);
@@ -300,16 +313,24 @@ impl Contract {
             let beneficiary = sale.beneficiary;
 
             if !sale.ft_token_id.is_empty() {
-                ext_contract::ft_transfer(
-                    beneficiary,
-                    sale.price,
-                    None,
-                    &sale.ft_token_id,
-                    1,
-                    GAS_FOR_FT_TRANSFER,
-                );
+                for (receiver_id, fraction) in &royalty.split_between {
+                    let amount = fraction.multiply_balance(u128::from(sale.price));
+                    env::log(format!("Royalty payment {} to {}", amount, receiver_id).as_bytes());
+
+                    ext_contract::ft_transfer(
+                        receiver_id.to_string(),
+                        sale.price,
+                        None,
+                        &sale.ft_token_id,
+                        1,
+                        GAS_FOR_FT_TRANSFER,
+                    );
+                }
             } else {
-                Promise::new(beneficiary).transfer(sale.price.into());
+                for (receiver_id, fraction) in &royalty.split_between {
+                    let amount = fraction.multiply_balance(u128::from(sale.price));
+                    Promise::new(receiver_id.to_string()).transfer(amount);
+                }
             }
             return true;
         }
