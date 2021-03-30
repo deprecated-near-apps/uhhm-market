@@ -53,7 +53,7 @@ pub struct SaleArgs {
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct PurchaseArgs {
-    pub token_contract_id: AccountId,
+    pub nft_contract_id: AccountId,
     pub token_id: TokenId,
 }
 
@@ -80,9 +80,9 @@ impl Contract {
     }
 
     /// only owner
-    pub fn add_token(&mut self, token_contract_id: ValidAccountId) -> bool {
+    pub fn add_token(&mut self, ft_contract_id: ValidAccountId) -> bool {
         self.assert_owner();
-        self.ft_token_ids.insert(token_contract_id.as_ref())
+        self.ft_token_ids.insert(ft_contract_id.as_ref())
     }
 
     #[payable]
@@ -111,7 +111,7 @@ impl Contract {
     #[payable]
     pub fn add_sale(
         &mut self,
-        token_contract_id: ValidAccountId,
+        nft_contract_id: ValidAccountId,
         token_id: String,
         owner_id: ValidAccountId,
         approval_id: U64,
@@ -122,7 +122,7 @@ impl Contract {
             "Must call storage_deposit with {} to sell on this market.",
             STORAGE_AMOUNT
         );
-        let contract_id: AccountId = token_contract_id.into();
+        let contract_id: AccountId = nft_contract_id.into();
 
         let SaleArgs {
             price,
@@ -160,11 +160,11 @@ impl Contract {
 
     pub fn update_price(
         &mut self,
-        token_contract_id: ValidAccountId,
+        nft_contract_id: ValidAccountId,
         token_id: String,
         price: U128,
     ) {
-        let contract_id: AccountId = token_contract_id.into();
+        let contract_id: AccountId = nft_contract_id.into();
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
         let mut sale = self.sales.remove(&contract_and_token_id).expect("No sale");
         assert_eq!(
@@ -177,8 +177,8 @@ impl Contract {
     }
 
     /// should be able to pull a sale without yocto redirect to wallet?
-    pub fn remove_sale(&mut self, token_contract_id: ValidAccountId, token_id: String) {
-        let contract_id: AccountId = token_contract_id.into();
+    pub fn remove_sale(&mut self, nft_contract_id: ValidAccountId, token_id: String) {
+        let contract_id: AccountId = nft_contract_id.into();
         let sale = self
             .sales
             .remove(&format!("{}:{}", contract_id, token_id))
@@ -193,10 +193,10 @@ impl Contract {
     #[payable]
     pub fn purchase(
         &mut self,
-        token_contract_id: ValidAccountId,
+        nft_contract_id: ValidAccountId,
         token_id: String,
     ) -> Promise {
-        let contract_id: AccountId = token_contract_id.into();
+        let contract_id: AccountId = nft_contract_id.into();
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
         let sale = self.sales.get(&contract_and_token_id).expect("No sale");
         
@@ -229,7 +229,7 @@ impl Contract {
 
     pub fn nft_receive_royalty(
         &mut self,
-        token_contract_id: AccountId,
+        nft_contract_id: AccountId,
         token_id: String,
         sender_id: AccountId,
     ) -> Promise {
@@ -248,7 +248,7 @@ impl Contract {
 
         env::log(format!("Royalty {:?}", royalty).as_bytes());
 
-        let contract_id: AccountId = token_contract_id.into();
+        let contract_id: AccountId = nft_contract_id.into();
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
         assert_eq!(sale.locked, false, "Sale is currently in progress");
@@ -283,7 +283,7 @@ impl Contract {
 
     pub fn nft_resolve_purchase(
         &mut self,
-        token_contract_id: AccountId,
+        nft_contract_id: AccountId,
         token_id: TokenId,
         buyer_id: AccountId,
         royalty: Royalty,
@@ -291,7 +291,7 @@ impl Contract {
 
         env::log(format!("Promise Result {:?}", env::promise_result(0)).as_bytes());
         
-        let contract_and_token_id = format!("{}:{}", token_contract_id, token_id);
+        let contract_and_token_id = format!("{}:{}", nft_contract_id, token_id);
 
         // checking if nft_transfer was Successful promise execution
         if let PromiseResult::Successful(_value) = env::promise_result(0) {
@@ -334,15 +334,15 @@ impl Contract {
 
     /// view methods
 
-    pub fn get_sale(&self, token_contract_id: ValidAccountId, token_id: String) -> Sale {
-        let contract_id: AccountId = token_contract_id.into();
+    pub fn get_sale(&self, nft_contract_id: ValidAccountId, token_id: String) -> Sale {
+        let contract_id: AccountId = nft_contract_id.into();
         self.sales
             .get(&format!("{}:{}", contract_id, token_id))
             .expect("No sale")
     }
 
-    pub fn supports_token(&self, token_contract_id: ValidAccountId) -> bool {
-        self.ft_token_ids.contains(token_contract_id.as_ref())
+    pub fn supports_token(&self, ft_contract_id: ValidAccountId) -> bool {
+        self.ft_token_ids.contains(ft_contract_id.as_ref())
     }
 
     pub fn storage_amount(&self) -> U128 {
@@ -356,7 +356,7 @@ impl Contract {
 trait ExtSelf {
     fn nft_resolve_purchase(
         &mut self,
-        token_contract_id: AccountId,
+        nft_contract_id: AccountId,
         token_id: TokenId,
         buyer_id: AccountId,
         royalty: Royalty
@@ -364,7 +364,7 @@ trait ExtSelf {
     // royalty is received from env::promise_result(0)
     fn nft_receive_royalty(
         &mut self,
-        token_contract_id: AccountId,
+        nft_contract_id: AccountId,
         token_id: TokenId,
         sender_id: AccountId,
     ) -> Promise;
@@ -422,10 +422,10 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
         approval_id: U64,
         msg: String,
     ) {
-        let contract: AccountId = env::predecessor_account_id();
-        let sale_args: SaleArgs = near_sdk::serde_json::from_str(&msg).expect("Valid SaleArgs");
+        let nft_contract: AccountId = env::predecessor_account_id();
+        let sale_args: SaleArgs = near_sdk::serde_json::from_str(&msg).expect("Not valid SaleArgs");
         self.add_sale(
-            ValidAccountId::try_from(contract).unwrap(),
+            ValidAccountId::try_from(nft_contract).unwrap(),
             token_id,
             owner_id,
             approval_id,
@@ -444,10 +444,10 @@ trait FungibleTokenReceiver {
 impl FungibleTokenReceiver for Contract {
     fn ft_on_transfer(&mut self, sender_id: AccountId, amount: U128, msg: String) -> Promise {
         let PurchaseArgs {
-            token_contract_id,
+            nft_contract_id,
             token_id,
         } = near_sdk::serde_json::from_str(&msg).expect("Valid SaleArgs");
-        let contract_and_token_id = format!("{}:{}", token_contract_id, token_id);
+        let contract_and_token_id = format!("{}:{}", nft_contract_id, token_id);
         let sale = self.sales.get(&contract_and_token_id).expect("No sale");
         let ft_token_id = env::predecessor_account_id();
         assert_eq!(
@@ -462,11 +462,11 @@ impl FungibleTokenReceiver for Contract {
 
         ext_contract::nft_royalty(
             token_id.clone(),
-            &token_contract_id,
+            &nft_contract_id,
             NO_DEPOSIT,
             env::prepaid_gas() - GAS_FOR_ROYALTY,
         ).then(ext_self::nft_receive_royalty(
-            token_contract_id,
+            nft_contract_id,
             token_id,
             sender_id,
             &env::current_account_id(),

@@ -102,11 +102,11 @@ describe('deploy contract ' + contractName, () => {
             ]
             await marketAccount.signAndSendTransaction(marketId, actions)
         }
-        const supported = await marketAccount.viewFunction(marketId, "supports_token", { token_contract_id: stableId });
+        const supported = await marketAccount.viewFunction(marketId, "supports_token", { ft_contract_id: stableId });
         console.log('\n\n market supports token:', stableId, supported, '\n\n');
         if (!supported) {
             await marketAccount.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum)
-            const added = await contractAccount.functionCall(marketId, "add_token", { token_contract_id: stableId }, GAS);
+            const added = await contractAccount.functionCall(marketId, "add_token", { ft_contract_id: stableId }, GAS);
             console.log('\n\n added token:', stableId, '\n\n');
         }
 
@@ -142,7 +142,7 @@ describe('deploy contract ' + contractName, () => {
             })
         }, GAS, parseNearAmount('0.1001'));
         const token = await contract.nft_token({ token_id });
-        const sale = await bob.viewFunction(marketId, 'get_sale', { token_contract_id: contractId, token_id });
+        const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_id: contractId, token_id });
 		console.log('\n\n', sale, '\n\n');
         expect(sale.price).toEqual(parseNearAmount('25'))
         expect(sale.ft_token_id).toEqual(stableId)
@@ -151,8 +151,8 @@ describe('deploy contract ' + contractName, () => {
 
 	test('bob changes price', async () => {
         const token_id = tokenIds[0]
-		await bob.functionCall(marketId, 'update_price', { token_contract_id: contractId, token_id, price: parseNearAmount('20') }, GAS);
-        const sale = await bob.viewFunction(marketId, 'get_sale', { token_contract_id: contractId, token_id });
+		await bob.functionCall(marketId, 'update_price', { nft_contract_id: contractId, token_id, price: parseNearAmount('20') }, GAS);
+        const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_id: contractId, token_id });
 		console.log('\n\n', sale, '\n\n');
         expect(sale.price).toEqual(parseNearAmount('20'))
 	});
@@ -164,7 +164,7 @@ describe('deploy contract ' + contractName, () => {
             receiver_id: marketId,
             amount: parseNearAmount('20'),
             msg: JSON.stringify({
-                token_contract_id: contractName,
+                nft_contract_id: contractName,
                 token_id,
             })
         }, GAS, 1);
