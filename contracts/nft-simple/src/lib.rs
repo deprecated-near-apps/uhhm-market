@@ -8,11 +8,13 @@ use near_sdk::{env, near_bindgen, AccountId, Balance, PanicOnDefault, Promise, S
 
 use crate::internal::*;
 pub use crate::mint::*;
+pub use crate::royalty::*;
 pub use crate::nft_core::*;
 use crate::nft_metadata::{TokenMetadata, NFTMetadata};
 
 mod internal;
 mod mint;
+mod royalty;
 mod nft_core;
 mod nft_metadata;
 
@@ -28,6 +30,7 @@ pub struct Token {
     pub metadata: TokenMetadata,
     pub approved_account_ids: HashMap<AccountId, U64>,
     pub approval_counter: U64,
+    pub royalty: Royalty,
 }
 
 #[near_bindgen]
@@ -76,6 +79,16 @@ impl Contract {
             tokens_per_owner_entry_in_bytes + owner_id_extra_cost_in_bytes;
 
         self.tokens_per_owner.remove(&tmp_account_id);
+    }
+
+    // custom view method for markets
+    pub fn nft_royalty(&self, token_id: TokenId) -> Royalty {
+        let token = self.nft_token(token_id);
+        if let Some(token) = token {
+            token.royalty
+        } else {
+            env::panic("Not a token".as_bytes())
+        }
     }
 }
 

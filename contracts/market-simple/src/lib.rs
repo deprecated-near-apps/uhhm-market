@@ -1,3 +1,4 @@
+
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LookupMap, LookupSet};
 use near_sdk::json_types::{ValidAccountId, U128, U64};
@@ -6,17 +7,25 @@ use near_sdk::{
     env, ext_contract, near_bindgen, AccountId, Balance, Gas, PanicOnDefault, Promise,
     PromiseResult,
 };
+use std::collections::HashMap;
 use std::convert::TryFrom;
 
 use crate::internal::*;
+use crate::royalty::*;
+
 mod internal;
+mod royalty;
 
 #[global_allocator]
 static ALLOC: near_sdk::wee_alloc::WeeAlloc<'_> = near_sdk::wee_alloc::WeeAlloc::INIT;
 
 const GAS_FOR_FT_TRANSFER: Gas = 25_000_000_000_000;
-const GAS_FOR_RESOLVE_PURCHASE: Gas = 10_000_000_000_000 + GAS_FOR_FT_TRANSFER;
-const GAS_FOR_NFT_PURCHASE: Gas = 25_000_000_000_000 + GAS_FOR_RESOLVE_PURCHASE;
+const GAS_FOR_RESOLVE_PURCHASE: Gas = 25_000_000_000_000 + GAS_FOR_FT_TRANSFER;
+const GAS_FOR_NFT_TRANSFER: Gas = 25_000_000_000_000 + GAS_FOR_RESOLVE_PURCHASE;
+const GAS_FOR_RECEIVE_ROYALTY: Gas = 25_000_000_000_000 + GAS_FOR_NFT_TRANSFER;
+const GAS_FOR_ROYALTY: Gas = 25_000_000_000_000 + GAS_FOR_RECEIVE_ROYALTY;
+
+
 const NO_DEPOSIT: Balance = 0;
 const STORAGE_AMOUNT: u128 = 100_000_000_000_000_000_000_000;
 pub type TokenId = String;
@@ -186,44 +195,84 @@ impl Contract {
         &mut self,
         token_contract_id: ValidAccountId,
         token_id: String,
-        sender_id: Option<AccountId>,
     ) -> Promise {
+        let contract_id: AccountId = token_contract_id.into();
+        let contract_and_token_id = format!("{}:{}", contract_id, token_id);
+        let sale = self.sales.get(&contract_and_token_id).expect("No sale");
+        
+        let deposit = env::attached_deposit();
+        assert_eq!(
+            env::attached_deposit(),
+            u128::from(sale.price),
+            "Must pay exactly the sale amount {}",
+            deposit
+        );
+
+        env::log(format!("Calling nft_royalty").as_bytes());
+
+        ext_contract::nft_royalty(
+            token_id.clone(),
+            &contract_id,
+            NO_DEPOSIT,
+            env::prepaid_gas() - GAS_FOR_ROYALTY,
+        ).then(ext_self::nft_receive_royalty(
+            contract_id,
+            token_id,
+            env::predecessor_account_id(),
+            &env::current_account_id(),
+            NO_DEPOSIT,
+            GAS_FOR_RECEIVE_ROYALTY,
+        ))
+    }
+
+    /// self callback once we have the royalty
+
+    pub fn nft_receive_royalty(
+        &mut self,
+        token_contract_id: AccountId,
+        token_id: String,
+        sender_id: AccountId,
+    ) -> Promise {
+
+        // checking if nft_transfer was Successful promise execution
+        
+        let royalty = match env::promise_result(0) {
+            PromiseResult::NotReady => unreachable!(),
+            PromiseResult::Successful(value) => {
+                near_sdk::serde_json::from_slice::<Royalty>(&value).expect("Failed to parse royalty")
+            }
+            PromiseResult::Failed => {
+                env::panic("Failed to get royalty".as_bytes())
+            }
+        };
+
+        env::log(format!("Royalty {:?}", royalty).as_bytes());
+
         let contract_id: AccountId = token_contract_id.into();
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
         assert_eq!(sale.locked, false, "Sale is currently in progress");
-        let mut buyer_id = env::predecessor_account_id();
-        if let Some(sender_id) = sender_id {
-            // if sender_id.is_some() we already have the tokens in this contract
-            buyer_id = sender_id
-        } else {
-            // purchase is in NEAR and not the result of ft_tranfer_call
-            let deposit = env::attached_deposit();
-            assert_eq!(
-                env::attached_deposit(),
-                u128::from(sale.price),
-                "Must pay exactly the sale amount {}",
-                deposit
-            );
-        }
+        
         // lock the sale
         sale.locked = true;
         self.sales.insert(&contract_and_token_id, &sale);
         let memo: String = "Sold by Matt Market".to_string();
+
         // call NFT contract transfer call function
-        ext_nft_transfer::nft_transfer(
-            buyer_id.clone(),
+        ext_contract::nft_transfer(
+            sender_id.clone(),
             token_id.clone(),
             sale.owner_id,
             memo,
             &contract_id,
             1,
-            env::prepaid_gas() - GAS_FOR_NFT_PURCHASE,
+            env::prepaid_gas() - GAS_FOR_NFT_TRANSFER,
         )
         .then(ext_self::nft_resolve_purchase(
             contract_id,
             token_id,
-            buyer_id,
+            sender_id,
+            royalty,
             &env::current_account_id(),
             NO_DEPOSIT,
             GAS_FOR_RESOLVE_PURCHASE,
@@ -237,8 +286,11 @@ impl Contract {
         token_contract_id: AccountId,
         token_id: TokenId,
         buyer_id: AccountId,
+        royalty: Royalty,
     ) -> bool {
+
         env::log(format!("Promise Result {:?}", env::promise_result(0)).as_bytes());
+        
         let contract_and_token_id = format!("{}:{}", token_contract_id, token_id);
 
         // checking if nft_transfer was Successful promise execution
@@ -248,13 +300,13 @@ impl Contract {
             let beneficiary = sale.beneficiary;
 
             if !sale.ft_token_id.is_empty() {
-                ext_ft_transfer::ft_transfer(
+                ext_contract::ft_transfer(
                     beneficiary,
                     sale.price,
                     None,
                     &sale.ft_token_id,
                     1,
-                    env::prepaid_gas() - GAS_FOR_FT_TRANSFER,
+                    GAS_FOR_FT_TRANSFER,
                 );
             } else {
                 Promise::new(beneficiary).transfer(sale.price.into());
@@ -264,13 +316,13 @@ impl Contract {
         // no promise result, refund buyer and update sale state
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
         if !sale.ft_token_id.is_empty() {
-            ext_ft_transfer::ft_transfer(
+            ext_contract::ft_transfer(
                 buyer_id,
                 sale.price,
                 None,
                 &sale.ft_token_id,
                 1,
-                env::prepaid_gas() - GAS_FOR_FT_TRANSFER,
+                GAS_FOR_FT_TRANSFER,
             );
         } else {
             Promise::new(buyer_id).transfer(sale.price.into());
@@ -298,20 +350,34 @@ impl Contract {
     }
 }
 
-/// external calls
+/// self calls
 
 #[ext_contract(ext_self)]
-trait ResolvePurchase {
+trait ExtSelf {
     fn nft_resolve_purchase(
         &mut self,
         token_contract_id: AccountId,
         token_id: TokenId,
         buyer_id: AccountId,
+        royalty: Royalty
+    ) -> Promise;
+    // royalty is received from env::promise_result(0)
+    fn nft_receive_royalty(
+        &mut self,
+        token_contract_id: AccountId,
+        token_id: TokenId,
+        sender_id: AccountId,
     ) -> Promise;
 }
 
-#[ext_contract(ext_nft_transfer)]
-trait ExtTransfer {
+/// external contract calls
+
+#[ext_contract(ext_contract)]
+trait ExtContract {
+    fn nft_royalty(
+        &self,
+        token_id: TokenId,
+    );
     fn nft_transfer(
         &mut self,
         receiver_id: AccountId,
@@ -319,11 +385,12 @@ trait ExtTransfer {
         enforce_owner_id: AccountId,
         memo: String,
     );
-}
-
-#[ext_contract(ext_ft_transfer)]
-trait ExtTransfer {
-    fn ft_transfer(&mut self, receiver_id: AccountId, amount: U128, memo: Option<String>);
+    fn ft_transfer(
+        &mut self,
+        receiver_id: AccountId,
+        amount: U128,
+        memo: Option<String>
+    );
     fn ft_transfer_call(
         &mut self,
         receiver_id: ValidAccountId,
@@ -370,12 +437,12 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
 /// approval callbacks from FT Contracts
 
 trait FungibleTokenReceiver {
-    fn ft_on_transfer(&mut self, sender_id: AccountId, amount: U128, msg: String) -> U128;
+    fn ft_on_transfer(&mut self, sender_id: AccountId, amount: U128, msg: String) -> Promise;
 }
 
 #[near_bindgen]
 impl FungibleTokenReceiver for Contract {
-    fn ft_on_transfer(&mut self, sender_id: AccountId, amount: U128, msg: String) -> U128 {
+    fn ft_on_transfer(&mut self, sender_id: AccountId, amount: U128, msg: String) -> Promise {
         let PurchaseArgs {
             token_contract_id,
             token_id,
@@ -389,15 +456,22 @@ impl FungibleTokenReceiver for Contract {
             ft_token_id
         );
         assert_eq!(sale.locked, false, "Sale is currently in progress");
-        let price = u128::from(sale.price);
-        let amount = u128::from(amount);
-        assert!(amount >= price, "Not enough tokens. Price is {}", price);
-        self.purchase(
-            ValidAccountId::try_from(token_contract_id)
-                .expect("token_contract_id should be ValidAccountId"),
+        assert_eq!(u128::from(amount), u128::from(sale.price), "Must pay exactly the sale price");
+
+        env::log(format!("Calling nft_royalty").as_bytes());
+
+        ext_contract::nft_royalty(
+            token_id.clone(),
+            &token_contract_id,
+            NO_DEPOSIT,
+            env::prepaid_gas() - GAS_FOR_ROYALTY,
+        ).then(ext_self::nft_receive_royalty(
+            token_contract_id,
             token_id,
-            Some(sender_id),
-        );
-        U128(amount - price)
+            sender_id,
+            &env::current_account_id(),
+            NO_DEPOSIT,
+            GAS_FOR_RECEIVE_ROYALTY,
+        ))
     }
 }

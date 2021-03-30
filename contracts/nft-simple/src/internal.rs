@@ -117,6 +117,7 @@ impl Contract {
             metadata,
             approved_account_ids,
             approval_counter,
+            royalty,
         } = self.tokens_by_id.get(token_id).expect("Token not found");
 
         if sender_id != &owner_id && !approved_account_ids.contains_key(sender_id) {
@@ -154,6 +155,7 @@ impl Contract {
             metadata,
             approved_account_ids: Default::default(),
             approval_counter,
+            royalty,
         };
         self.tokens_by_id.insert(token_id, &token);
 
