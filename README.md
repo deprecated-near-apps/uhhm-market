@@ -2,13 +2,18 @@
 
 ## 🚨🚨🚨 Extreme WIP! 🚨🚨🚨
 
-This is intended to be a PoC backbone for projects like this.
-No guest accounts and easy onboarding, just straight FT and NFT standards.
+This is intended to be a PoC backbone for NFT market projects. No guest accounts and easy onboarding, just straight FT and NFT standards.
 
 ## Goals:
-- test and determine standards for markets (best practice?) to buy/sell NFTs (finish standard) with FTs (already standard)
-- connect with bridged tokens e.g. buy and sell with wETH/nDAI (or whatever we call these)
-- demo some basic auction types, secondary markets and frontend example
+- [ ] test and determine standards for markets (best practice?) to buy/sell NFTs (finish standard) with FTs (already standard)
+- [ ] connect with bridged tokens e.g. buy and sell with wETH/nDAI (or whatever we call these)
+- [ ] demo pay out royalties
+- [ ] demo some basic auction types, secondary markets and frontend example
+
+## Notes:
+
+Differences from `nft-simple` NFT standard reference implementation:
+- anyone can mint an NFT
 
 ## Working
 
