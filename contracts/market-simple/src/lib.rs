@@ -214,7 +214,7 @@ impl Contract {
             &contract_id,
             NO_DEPOSIT,
             GAS_FOR_GET_ROYALTY,
-        ).then(ext_self::nft_receive_royalty(
+        ).then(ext_self::market_receive_royalty(
             contract_id,
             token_id,
             env::predecessor_account_id(),
@@ -226,7 +226,7 @@ impl Contract {
 
     /// self callback once we have the royalty
 
-    pub fn nft_receive_royalty(
+    pub fn market_receive_royalty(
         &mut self,
         nft_contract_id: AccountId,
         token_id: String,
@@ -278,7 +278,7 @@ impl Contract {
             1,
             GAS_FOR_NFT_TRANSFER,
         )
-        .then(ext_self::nft_resolve_purchase(
+        .then(ext_self::market_resolve_purchase(
             contract_id,
             token_id,
             sender_id,
@@ -291,7 +291,7 @@ impl Contract {
 
     /// self callback
 
-    pub fn nft_resolve_purchase(
+    pub fn market_resolve_purchase(
         &mut self,
         nft_contract_id: AccountId,
         token_id: TokenId,
@@ -371,7 +371,7 @@ impl Contract {
 
 #[ext_contract(ext_self)]
 trait ExtSelf {
-    fn nft_resolve_purchase(
+    fn market_resolve_purchase(
         &mut self,
         nft_contract_id: AccountId,
         token_id: TokenId,
@@ -379,7 +379,7 @@ trait ExtSelf {
         royalty: Royalty
     ) -> Promise;
     // royalty is received from env::promise_result(0)
-    fn nft_receive_royalty(
+    fn market_receive_royalty(
         &mut self,
         nft_contract_id: AccountId,
         token_id: TokenId,
@@ -476,7 +476,7 @@ impl FungibleTokenReceiver for Contract {
             &nft_contract_id,
             NO_DEPOSIT,
             GAS_FOR_GET_ROYALTY,
-        ).then(ext_self::nft_receive_royalty(
+        ).then(ext_self::market_receive_royalty(
             nft_contract_id,
             token_id,
             sender_id,
