@@ -8,11 +8,40 @@ impl Contract {
         
         // self.assert_owner();
         // royalties
+        // testing 8 x FT royalty payouts
         let owner_id = env::predecessor_account_id();
         let mut split_between = HashMap::new();
         split_between.insert(
             owner_id.clone(),
-            SafeFraction::new(10000),
+            SafeFraction::new(1250),
+        );
+        split_between.insert(
+            owner_id.clone(),
+            SafeFraction::new(1250),
+        );
+        split_between.insert(
+            owner_id.clone(),
+            SafeFraction::new(1250),
+        );
+        split_between.insert(
+            owner_id.clone(),
+            SafeFraction::new(1250),
+        );
+        split_between.insert(
+            owner_id.clone(),
+            SafeFraction::new(1250),
+        );
+        split_between.insert(
+            owner_id.clone(),
+            SafeFraction::new(1250),
+        );
+        split_between.insert(
+            owner_id.clone(),
+            SafeFraction::new(1250),
+        );
+        split_between.insert(
+            owner_id.clone(),
+            SafeFraction::new(1250),
         );
         
         let token = Token {

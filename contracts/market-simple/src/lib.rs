@@ -19,8 +19,6 @@ mod royalty;
 #[global_allocator]
 static ALLOC: near_sdk::wee_alloc::WeeAlloc<'_> = near_sdk::wee_alloc::WeeAlloc::INIT;
 
-/// naive try to attach 8 x the gas for ft_transfer
-const FT_SIM: Gas = 8;
 /// measuring how many royalties can be paid
 const GAS_FOR_FT_TRANSFER: Gas = 10_000_000_000_000;
 const GAS_FOR_TRANSFER: Gas = 10_000_000_000_000;
@@ -319,7 +317,7 @@ impl Contract {
                         None,
                         &sale.ft_token_id,
                         1,
-                        GAS_FOR_FT_TRANSFER * FT_SIM,
+                        GAS_FOR_FT_TRANSFER,
                     );
                 }
             } else {
