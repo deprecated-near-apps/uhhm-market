@@ -7,6 +7,7 @@ const getConfig = require('../src/config');
 const {
 	networkId, contractName, contractMethods,
 	DEFAULT_NEW_ACCOUNT_AMOUNT, 
+	DEFAULT_NEW_CONTRACT_AMOUNT,
 } = getConfig();
 
 const TEST_HOST = 'http://localhost:3000'
@@ -35,12 +36,15 @@ const getAccountBalance = async (accountId) => (new nearAPI.Account(connection, 
 const createOrInitAccount = async(accountId, secret) => {
 	let account;
 	try {
-		account = await createAccount(accountId, DEFAULT_NEW_ACCOUNT_AMOUNT, secret);
+		account = await createAccount(accountId, DEFAULT_NEW_CONTRACT_AMOUNT, secret);
 	} catch (e) {
 		if (!/because it already exists/.test(e.toString())) {
 			throw e;
 		}
 		account = new nearAPI.Account(connection, accountId);
+
+		console.log(await getAccountBalance(accountId))
+
 		const newKeyPair = KeyPair.fromString(secret);
 		keyStore.setKey(networkId, accountId, newKeyPair);
 	}

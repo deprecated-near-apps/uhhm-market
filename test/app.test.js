@@ -136,7 +136,6 @@ describe('deploy contract ' + contractName, () => {
             token_id,
             account_id: marketId,
             msg: JSON.stringify({
-                beneficiary: bobId,
                 ft_token_id: stableId,
                 price: parseNearAmount('25')
             })

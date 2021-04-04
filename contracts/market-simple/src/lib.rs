@@ -19,15 +19,22 @@ mod royalty;
 #[global_allocator]
 static ALLOC: near_sdk::wee_alloc::WeeAlloc<'_> = near_sdk::wee_alloc::WeeAlloc::INIT;
 
-const GAS_FOR_FT_TRANSFER: Gas = 25_000_000_000_000;
+/// naive try to attach 8 x the gas for ft_transfer
+const FT_SIM: Gas = 8;
+/// measuring how many royalties can be paid
+const GAS_FOR_FT_TRANSFER: Gas = 10_000_000_000_000;
 const GAS_FOR_TRANSFER: Gas = 10_000_000_000_000;
+/// 100 Tgas for royalties if using ft_transfer_call and 200 Tgas
+const GAS_FOR_ROYALTIES: Gas = 115_000_000_000_000 - GAS_FOR_RESOLVE_PURCHASE;
+/// depends on how royalty data will be looped and calc'd but this should provide plenty of gas
+const GAS_FOR_RESOLVE_PURCHASE: Gas = 35_000_000_000_000;
 
-const GAS_FOR_ROYALTIES: Gas = 50_000_000_000_000;
-const GAS_FOR_RESOLVE_PURCHASE: Gas = 25_000_000_000_000 + GAS_FOR_ROYALTIES;
-const GAS_FOR_NFT_TRANSFER: Gas = 25_000_000_000_000 + GAS_FOR_RESOLVE_PURCHASE;
-const GAS_FOR_RECEIVE_ROYALTY: Gas = 25_000_000_000_000 + GAS_FOR_NFT_TRANSFER;
-const GAS_FOR_ROYALTY: Gas = 25_000_000_000_000 + GAS_FOR_RECEIVE_ROYALTY;
-
+/// gas for cross contract calls and scheduled promise callbacks
+const GAS_FOR_PURCHASE: Gas = 10_000_000_000_000;
+const GAS_FOR_FT_ON_TRANSFER: Gas = 25_000_000_000_000;
+const GAS_FOR_GET_ROYALTY: Gas = 10_000_000_000_000;
+const GAS_FOR_RECEIVE_ROYALTY: Gas = 25_000_000_000_000;
+const GAS_FOR_NFT_TRANSFER: Gas = 15_000_000_000_000;
 
 const NO_DEPOSIT: Balance = 0;
 const STORAGE_AMOUNT: u128 = 100_000_000_000_000_000_000_000;
@@ -39,7 +46,6 @@ pub type ContractAndTokenId = String;
 pub struct Sale {
     pub owner_id: AccountId,
     pub approval_id: U64,
-    pub beneficiary: AccountId,
     pub price: U128,
     pub ft_token_id: AccountId,
     pub locked: bool,
@@ -49,7 +55,6 @@ pub struct Sale {
 #[serde(crate = "near_sdk::serde")]
 pub struct SaleArgs {
     pub price: U128,
-    pub beneficiary: Option<AccountId>,
     pub ft_token_id: Option<AccountId>,
 }
 
@@ -129,16 +134,8 @@ impl Contract {
 
         let SaleArgs {
             price,
-            beneficiary,
             ft_token_id,
         } = sale_args;
-
-        // if you are making a sale on someone's behalf and you want to escrow the funds (guest accounts)
-        let mut sale_beneficiary = owner_id.clone();
-        if let Some(beneficiary) = beneficiary {
-            sale_beneficiary = ValidAccountId::try_from(beneficiary)
-                .expect("Beneficiary should be valid account id");
-        }
 
         // if sale is denominated in some other token
         let mut sale_ft_token_id = "".to_string();
@@ -153,7 +150,6 @@ impl Contract {
             &Sale {
                 owner_id: owner_id.into(),
                 approval_id,
-                beneficiary: sale_beneficiary.into(),
                 price,
                 ft_token_id: sale_ft_token_id,
                 locked: false,
@@ -217,14 +213,14 @@ impl Contract {
             token_id.clone(),
             &contract_id,
             NO_DEPOSIT,
-            env::prepaid_gas() - GAS_FOR_ROYALTY,
+            GAS_FOR_GET_ROYALTY,
         ).then(ext_self::nft_receive_royalty(
             contract_id,
             token_id,
             env::predecessor_account_id(),
             &env::current_account_id(),
             NO_DEPOSIT,
-            GAS_FOR_RECEIVE_ROYALTY,
+            env::prepaid_gas() - GAS_FOR_GET_ROYALTY - GAS_FOR_PURCHASE,
         ))
     }
 
@@ -245,6 +241,8 @@ impl Contract {
                 near_sdk::serde_json::from_slice::<Royalty>(&value).expect("Failed to parse royalty")
             }
             PromiseResult::Failed => {
+                // TODO send buyer NEAR back (it's in this contract still)
+                
                 env::panic("Failed to get royalty".as_bytes())
             }
         };
@@ -271,7 +269,6 @@ impl Contract {
         self.sales.insert(&contract_and_token_id, &sale);
         let memo: String = "Sold by Matt Market".to_string();
 
-        // call NFT contract transfer call function
         ext_contract::nft_transfer(
             sender_id.clone(),
             token_id.clone(),
@@ -279,7 +276,7 @@ impl Contract {
             memo,
             &contract_id,
             1,
-            env::prepaid_gas() - GAS_FOR_NFT_TRANSFER,
+            GAS_FOR_NFT_TRANSFER,
         )
         .then(ext_self::nft_resolve_purchase(
             contract_id,
@@ -288,7 +285,7 @@ impl Contract {
             royalty,
             &env::current_account_id(),
             NO_DEPOSIT,
-            GAS_FOR_RESOLVE_PURCHASE,
+            env::prepaid_gas() - GAS_FOR_NFT_TRANSFER - GAS_FOR_RECEIVE_ROYALTY,
         ))
     }
 
@@ -302,7 +299,7 @@ impl Contract {
         royalty: Royalty,
     ) -> bool {
 
-        env::log(format!("Promise Result {:?}", env::promise_result(0)).as_bytes());
+        env::log(format!("nft_resolve_purchase Promise Result {:?}", env::promise_result(0)).as_bytes());
         
         let contract_and_token_id = format!("{}:{}", nft_contract_id, token_id);
 
@@ -310,7 +307,6 @@ impl Contract {
         if let PromiseResult::Successful(_value) = env::promise_result(0) {
             // pay seller and remove sale
             let sale = self.sales.remove(&contract_and_token_id).expect("No sale");
-            let beneficiary = sale.beneficiary;
 
             if !sale.ft_token_id.is_empty() {
                 for (receiver_id, fraction) in &royalty.split_between {
@@ -323,7 +319,7 @@ impl Contract {
                         None,
                         &sale.ft_token_id,
                         1,
-                        GAS_FOR_FT_TRANSFER,
+                        GAS_FOR_FT_TRANSFER * FT_SIM,
                     );
                 }
             } else {
@@ -412,13 +408,6 @@ trait ExtContract {
         amount: U128,
         memo: Option<String>
     );
-    fn ft_transfer_call(
-        &mut self,
-        receiver_id: ValidAccountId,
-        amount: U128,
-        msg: String,
-        memo: Option<String>,
-    );
 }
 
 /// approval callbacks from NFT Contracts
@@ -467,32 +456,33 @@ impl FungibleTokenReceiver for Contract {
         let PurchaseArgs {
             nft_contract_id,
             token_id,
-        } = near_sdk::serde_json::from_str(&msg).expect("Valid SaleArgs");
+        } = near_sdk::serde_json::from_str(&msg).expect("Invalid SaleArgs");
+        
         let contract_and_token_id = format!("{}:{}", nft_contract_id, token_id);
-        let sale = self.sales.get(&contract_and_token_id).expect("No sale");
+        
+        let sale = self.sales.get(&contract_and_token_id).expect("No sale in ft_on_transfer");
+
         let ft_token_id = env::predecessor_account_id();
         assert_eq!(
             sale.ft_token_id, ft_token_id,
             "Sale doesn't accept token {}",
             ft_token_id
         );
-        assert_eq!(sale.locked, false, "Sale is currently in progress");
         assert_eq!(u128::from(amount), u128::from(sale.price), "Must pay exactly the sale price");
-
-        env::log(format!("Calling nft_royalty").as_bytes());
+        assert_eq!(sale.locked, false, "Sale is currently in progress");
 
         ext_contract::nft_royalty(
             token_id.clone(),
             &nft_contract_id,
             NO_DEPOSIT,
-            env::prepaid_gas() - GAS_FOR_ROYALTY,
+            GAS_FOR_GET_ROYALTY,
         ).then(ext_self::nft_receive_royalty(
             nft_contract_id,
             token_id,
             sender_id,
             &env::current_account_id(),
             NO_DEPOSIT,
-            GAS_FOR_RECEIVE_ROYALTY,
+            env::prepaid_gas() - GAS_FOR_GET_ROYALTY - GAS_FOR_FT_ON_TRANSFER,
         ))
     }
 }
