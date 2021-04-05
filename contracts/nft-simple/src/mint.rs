@@ -13,34 +13,26 @@ impl Contract {
         let mut split_between = HashMap::new();
         split_between.insert(
             owner_id.clone(),
+            SafeFraction::new(2500),
+        );
+        split_between.insert(
+            "a1.testnet".to_string(),
+            SafeFraction::new(2500),
+        );
+        split_between.insert(
+            "a2.testnet".to_string(),
             SafeFraction::new(1250),
         );
         split_between.insert(
-            owner_id.clone(),
+            "a3.testnet".to_string(),
             SafeFraction::new(1250),
         );
         split_between.insert(
-            owner_id.clone(),
+            "a4.testnet".to_string(),
             SafeFraction::new(1250),
         );
         split_between.insert(
-            owner_id.clone(),
-            SafeFraction::new(1250),
-        );
-        split_between.insert(
-            owner_id.clone(),
-            SafeFraction::new(1250),
-        );
-        split_between.insert(
-            owner_id.clone(),
-            SafeFraction::new(1250),
-        );
-        split_between.insert(
-            owner_id.clone(),
-            SafeFraction::new(1250),
-        );
-        split_between.insert(
-            owner_id.clone(),
+            "a5.testnet".to_string(),
             SafeFraction::new(1250),
         );
         

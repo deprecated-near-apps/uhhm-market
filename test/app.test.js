@@ -1,4 +1,5 @@
 const fs = require('fs');
+const BN = require('bn.js');
 const nearAPI = require('near-api-js');
 const testUtils = require('./test-utils');
 const getConfig = require('../src/config');
@@ -81,10 +82,16 @@ describe('deploy contract ' + contractName, () => {
                 functionCall('new', newFungibleArgs, GAS)
             ]
             await stableAccount.signAndSendTransaction(stableId, actions)
+            /// find out how much needed to store for FTs
+            storageMinimum = await contractAccount.viewFunction(stableId, 'storage_minimum_balance')
+            console.log('\n\n storageMinimum:', storageMinimum, '\n\n');
+            /// pay storageMinimum for all the royalty receiving accounts
+            const promises = []
+            for (let i = 1; i < 6; i++) {
+                promises.push(stableAccount.functionCall(stableId, 'storage_deposit', { account_id: `a${i}.testnet` }, GAS, storageMinimum));
+            }
+            await Promise.all(promises);
         }
-        /// find out how much needed to store for FTs
-        storageMinimum = await contractAccount.viewFunction(stableId, 'storage_minimum_balance')
-		console.log('\n\n storageMinimum:', storageMinimum, '\n\n');
 
         /// create or get market account and deploy market.wasm (if not already deployed)
 		marketAccount = await createOrInitAccount(marketId, GUESTS_ACCOUNT_SECRET);
@@ -115,6 +122,8 @@ describe('deploy contract ' + contractName, () => {
 		console.log('\n\n storageMarket:', storageMarket, '\n\n');
 	});
 
+    /// fungible token purchase
+
     test('alice gets 100 fts', async () => {
 		await alice.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum);
 		let amount = parseNearAmount('100');
@@ -139,7 +148,7 @@ describe('deploy contract ' + contractName, () => {
                 ft_token_id: stableId,
                 price: parseNearAmount('25')
             })
-        }, GAS, parseNearAmount('0.1001'));
+        }, GAS, parseNearAmount('0.01'));
         const token = await contract.nft_token({ token_id });
         const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_id: contractId, token_id });
 		console.log('\n\n', sale, '\n\n');
@@ -175,8 +184,48 @@ describe('deploy contract ' + contractName, () => {
 		expect(aliceBalance).toEqual(parseNearAmount('80'));
         const marketBalance = await marketAccount.viewFunction(stableId, 'ft_balance_of', { account_id: marketId });
 		console.log('\n\n marketBalance', marketBalance, '\n\n');
-		const bobBalance = await bob.viewFunction(stableId, 'ft_balance_of', { account_id: bobId });
-		expect(bobBalance).toEqual(parseNearAmount('20'));
+		
+        /// bob gets 20%
+        const bobBalance = await bob.viewFunction(stableId, 'ft_balance_of', { account_id: bobId });
+		expect(bobBalance).toEqual(parseNearAmount('5'));
+	});
+
+    /// near purchase
+
+    test('bob: nft mint, approve sale with near', async () => {
+        const token_id = tokenIds[1]
+        await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket);
+		await bob.functionCall(contractId, 'nft_mint', { token_id, metadata }, GAS, parseNearAmount('1'));
+        await bob.functionCall(contractId, 'nft_approve', {
+            token_id,
+            account_id: marketId,
+            msg: JSON.stringify({
+                price: parseNearAmount('0.2')
+            })
+        }, GAS, parseNearAmount('0.01'));
+        const token = await contract.nft_token({ token_id });
+        const meta = await bob.viewFunction(contractName, 'get_token_metadata', { token_id });
+        console.log('\n\n', meta, '\n\n');
+        const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_id: contractId, token_id });
+		console.log('\n\n', sale, '\n\n');
+        expect(sale.price).toEqual(parseNearAmount('0.2'))
+        expect(token.owner_id).toEqual(bobId)
+	});
+
+	test('alice purchase nft with near', async () => {
+        const token_id = tokenIds[1]
+		const bobBalanceBefore = await getAccountBalance(bobId);
+        /// purchase = near deposit = sale.price -> nft_transfer -> royalties transfer near
+		await alice.functionCall(marketId, 'purchase', {
+            nft_contract_id: contractName,
+            token_id,
+        }, GAS, parseNearAmount('0.2'));
+        /// check owner
+        const token = await contract.nft_token({ token_id });
+        expect(token.owner_id).toEqual(aliceId)
+		const bobBalanceAfter = await getAccountBalance(bobId);
+        /// bob got at least 0.05 N (20%) from this sale
+        expect(new BN(bobBalanceAfter.total).sub(new BN(bobBalanceBefore.total)).gt(new BN(parseNearAmount('0.05')))).toEqual(true)
 	});
 
 });

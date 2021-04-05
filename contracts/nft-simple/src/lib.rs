@@ -98,11 +98,16 @@ impl Contract {
     /// custom view method for markets
 
     pub fn nft_royalty(&self, token_id: TokenId) -> Royalty {
-        let token = self.nft_token(token_id);
-        if let Some(token) = token {
-            token.royalty
-        } else {
-            env::panic("Not a token".as_bytes())
+        match self.nft_token(token_id) {
+            Some(token) => token.royalty,
+            None => env::panic("Not a token".as_bytes())
+        }
+    }
+
+    pub fn get_token_metadata(&self, token_id: TokenId) -> TokenMetadata {
+        match self.token_metadata_by_id.get(&token_id) {
+            Some(metadata) => metadata,
+            None => env::panic("Not a token".as_bytes())
         }
     }
 }

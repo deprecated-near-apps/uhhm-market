@@ -28,7 +28,7 @@ const GAS_FOR_ROYALTIES: Gas = 115_000_000_000_000 - GAS_FOR_RESOLVE_PURCHASE;
 const GAS_FOR_RESOLVE_PURCHASE: Gas = 35_000_000_000_000;
 
 /// gas for cross contract calls and scheduled promise callbacks
-const GAS_FOR_PURCHASE: Gas = 10_000_000_000_000;
+const GAS_FOR_PURCHASE: Gas = 25_000_000_000_000;
 const GAS_FOR_FT_ON_TRANSFER: Gas = 25_000_000_000_000;
 const GAS_FOR_GET_ROYALTY: Gas = 10_000_000_000_000;
 const GAS_FOR_RECEIVE_ROYALTY: Gas = 25_000_000_000_000;
@@ -231,34 +231,38 @@ impl Contract {
         sender_id: AccountId,
     ) -> Promise {
 
-        // checking if nft_transfer was Successful promise execution
-        
+        let contract_id: AccountId = nft_contract_id.into();
+        let contract_and_token_id = format!("{}:{}", contract_id, token_id);
+        let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
+        assert_eq!(sale.locked, false, "Sale is currently in progress");
+
+        // checking for royalty information
         let royalty = match env::promise_result(0) {
             PromiseResult::NotReady => unreachable!(),
             PromiseResult::Successful(value) => {
                 near_sdk::serde_json::from_slice::<Royalty>(&value).expect("Failed to parse royalty")
             }
             PromiseResult::Failed => {
-                // TODO send buyer NEAR back (it's in this contract still)
-                
+                // send buyer NEAR back if we can't find the royalty
+                if sale.ft_token_id.is_empty() {
+                    Promise::new(sender_id).transfer(u128::from(sale.price));
+                }
                 env::panic("Failed to get royalty".as_bytes())
             }
         };
-
         env::log(format!("Royalty {:?}", royalty).as_bytes());
 
-        let contract_id: AccountId = nft_contract_id.into();
-        let contract_and_token_id = format!("{}:{}", contract_id, token_id);
-        let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
-        assert_eq!(sale.locked, false, "Sale is currently in progress");
-        
+        // calc if we have enough gas to make royalty payments
         let royalty_gas = if !sale.ft_token_id.is_empty() {
             royalty.split_between.len() as u64 * GAS_FOR_FT_TRANSFER
         } else {
             royalty.split_between.len() as u64 * GAS_FOR_TRANSFER
         };
-
         if royalty_gas > GAS_FOR_ROYALTIES {
+            // send buyer NEAR back if we don't have enough gas to pay all royalties
+            if sale.ft_token_id.is_empty() {
+                Promise::new(sender_id).transfer(u128::from(sale.price));
+            }
             env::panic("Not enough gas".as_bytes());
         }
 
@@ -289,63 +293,62 @@ impl Contract {
 
     /// self callback
 
+    /// returns U128(amount) if it needs to refund FTs
+
     pub fn market_resolve_purchase(
         &mut self,
         nft_contract_id: AccountId,
         token_id: TokenId,
         buyer_id: AccountId,
         royalty: Royalty,
-    ) -> bool {
+    ) -> U128 {
 
-        env::log(format!("nft_resolve_purchase Promise Result {:?}", env::promise_result(0)).as_bytes());
-        
+        env::log(format!("nft_resolve_purchase Promise {:?}", env::promise_result(0)).as_bytes());
         let contract_and_token_id = format!("{}:{}", nft_contract_id, token_id);
 
         // checking if nft_transfer was Successful promise execution
         if let PromiseResult::Successful(_value) = env::promise_result(0) {
             // pay seller and remove sale
             let sale = self.sales.remove(&contract_and_token_id).expect("No sale");
-
-            if !sale.ft_token_id.is_empty() {
+            if sale.ft_token_id.is_empty() {
                 for (receiver_id, fraction) in &royalty.split_between {
                     let amount = fraction.multiply_balance(u128::from(sale.price));
-                    env::log(format!("Royalty payment {} to {}", amount, receiver_id).as_bytes());
-
+                    env::log(format!("NEAR royalty payment {} to {}", amount, receiver_id).as_bytes());
+                    Promise::new(receiver_id.to_string()).transfer(amount);
+                }
+                // refund all FTs if any
+                sale.price
+            } else {
+                for (receiver_id, fraction) in &royalty.split_between {
+                    let amount = fraction.multiply_balance(u128::from(sale.price));
+                    env::log(format!("FT Royalty payment {} to {}", amount, receiver_id).as_bytes());
                     ext_contract::ft_transfer(
                         receiver_id.to_string(),
-                        sale.price,
+                        U128(amount),
                         None,
                         &sale.ft_token_id,
                         1,
                         GAS_FOR_FT_TRANSFER,
                     );
                 }
-            } else {
-                for (receiver_id, fraction) in &royalty.split_between {
-                    let amount = fraction.multiply_balance(u128::from(sale.price));
-                    Promise::new(receiver_id.to_string()).transfer(amount);
-                }
+                // keep all FTs because we already transferred for royalties
+                U128(0)
             }
-            return true;
-        }
-        // no promise result, refund buyer and update sale state
-        let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
-        if !sale.ft_token_id.is_empty() {
-            ext_contract::ft_transfer(
-                buyer_id,
-                sale.price,
-                None,
-                &sale.ft_token_id,
-                1,
-                GAS_FOR_FT_TRANSFER,
-            );
         } else {
-            Promise::new(buyer_id).transfer(sale.price.into());
+            // no promise result, refund buyer and update sale state
+            let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
+            env::log(format!("Refunding {} to {}", u128::from(sale.price), buyer_id).as_bytes());
+            
+            // refund NEAR or FTs
+            if sale.ft_token_id.is_empty() {
+                Promise::new(buyer_id).transfer(u128::from(sale.price));
+            }
+            sale.locked = false;
+            self.sales.insert(&contract_and_token_id, &sale);
+            // refund all FTs
+            sale.price
         }
-        sale.locked = false;
-        self.sales.insert(&contract_and_token_id, &sale);
-        false
-    }
+    }                             
 
     /// view methods
 
