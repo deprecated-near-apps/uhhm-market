@@ -4,11 +4,11 @@
 
 This is intended to be a PoC backbone for NFT market projects. No guest accounts and easy onboarding, just straight FT and NFT standards.
 
-## Goals:
+## TODO / DONE:
 - [x] basic purchase of NFT with FT
+- [x] demo pay out royalties (FTs and NEAR)
 - [ ] test and determine standards for markets (best practice?) to buy/sell NFTs (finish standard) with FTs (already standard)
 - [ ] connect with bridged tokens e.g. buy and sell with wETH/nDAI (or whatever we call these)
-- [ ] demo pay out royalties
 - [ ] demo some basic auction types, secondary markets and frontend example
 
 ## Notes:
