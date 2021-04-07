@@ -14,7 +14,8 @@ pub trait NonFungibleTokenCore {
         token_id: TokenId,
         approval_id: Option<U64>,
         memo: Option<String>,
-    );
+        balance: Option<U128>,
+    ) -> Option<Payout>;
 
     /// Returns `true` if the token was transferred from the sender's account.
     fn nft_transfer_call(
@@ -92,7 +93,8 @@ impl NonFungibleTokenCore for Contract {
         token_id: TokenId,
         approval_id: Option<U64>,
         memo: Option<String>,
-    ) {
+        balance: Option<U128>,
+    ) -> Option<Payout> {
         assert_one_yocto();
 
         let sender_id = env::predecessor_account_id();
@@ -107,6 +109,20 @@ impl NonFungibleTokenCore for Contract {
             previous_token.owner_id,
             &previous_token.approved_account_ids,
         );
+
+        // compute payout based on balance option
+        if let Some(balance) = balance {
+            let token = self.tokens_by_id.get(&token_id).expect("No token");
+            let balance_u128 = u128::from(balance);
+            let mut payout: Payout = HashMap::new();
+            for (k, v) in token.royalty.iter() {
+                let key = k.clone();
+                payout.insert(key, U128(v.multiply_balance(balance_u128)));
+            }
+            Some(payout)
+        } else {
+            None
+        }
     }
 
     #[payable]
@@ -233,7 +249,6 @@ impl NonFungibleTokenCore for Contract {
                 owner_id: token.owner_id,
                 metadata,
                 approved_account_ids: token.approved_account_ids,
-                royalty: token.royalty,
             })
         } else {
             None

@@ -1,12 +1,13 @@
 use crate::*;
 
 pub type TokenId = String;
+pub type Payout = HashMap<AccountId, U128>;
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct Token {
     pub owner_id: AccountId,
     pub approved_account_ids: HashMap<AccountId, U64>,
-    pub royalty: Royalty,
+    pub royalty: HashMap<AccountId, SafeFraction>,
     pub next_approval_id: u64,
 }
 
@@ -17,5 +18,4 @@ pub struct JsonToken {
     pub owner_id: AccountId,
     pub metadata: TokenMetadata,
     pub approved_account_ids: HashMap<AccountId, U64>,
-    pub royalty: Royalty,
 }

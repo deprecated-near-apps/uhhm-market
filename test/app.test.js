@@ -87,7 +87,7 @@ describe('deploy contract ' + contractName, () => {
             console.log('\n\n storageMinimum:', storageMinimum, '\n\n');
             /// pay storageMinimum for all the royalty receiving accounts
             const promises = []
-            for (let i = 1; i < 6; i++) {
+            for (let i = 1; i < 8; i++) {
                 promises.push(stableAccount.functionCall(stableId, 'storage_deposit', { account_id: `a${i}.testnet` }, GAS, storageMinimum));
             }
             await Promise.all(promises);

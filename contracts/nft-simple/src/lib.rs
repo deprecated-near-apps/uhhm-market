@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap, UnorderedSet};
-use near_sdk::json_types::{Base64VecU8, ValidAccountId, U64};
+use near_sdk::json_types::{Base64VecU8, ValidAccountId, U64, U128};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     env, near_bindgen, AccountId, Balance, CryptoHash, PanicOnDefault, Promise, StorageUsage,
@@ -12,14 +12,14 @@ use crate::internal::*;
 pub use crate::metadata::*;
 pub use crate::mint::*;
 pub use crate::nft_core::*;
-pub use crate::royalty::*;
+pub use crate::safe_fraction::*;
 pub use crate::token::*;
 
 mod internal;
 mod metadata;
 mod mint;
 mod nft_core;
-mod royalty;
+mod safe_fraction;
 mod token;
 
 near_sdk::setup_alloc!();
@@ -96,13 +96,6 @@ impl Contract {
     }
 
     /// custom view method for markets
-
-    pub fn nft_royalty(&self, token_id: TokenId) -> Royalty {
-        match self.nft_token(token_id) {
-            Some(token) => token.royalty,
-            None => env::panic("Not a token".as_bytes())
-        }
-    }
 
     pub fn get_token_metadata(&self, token_id: TokenId) -> TokenMetadata {
         match self.token_metadata_by_id.get(&token_id) {

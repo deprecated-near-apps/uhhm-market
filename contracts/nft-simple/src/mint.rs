@@ -5,45 +5,48 @@ impl Contract {
     #[payable]
     pub fn nft_mint(&mut self, token_id: TokenId, metadata: TokenMetadata) {
         let initial_storage_usage = env::storage_usage();
-        
-        // self.assert_owner();
-        // royalties
-        // testing 8 x FT royalty payouts
         let owner_id = env::predecessor_account_id();
-        let mut split_between = HashMap::new();
-        split_between.insert(
+        
+        // royalties
+        let mut royalty = HashMap::new();
+        royalty.insert(
             owner_id.clone(),
             SafeFraction::new(2500),
         );
-        split_between.insert(
+        royalty.insert(
             "a1.testnet".to_string(),
-            SafeFraction::new(2500),
+            SafeFraction::new(1250),
         );
-        split_between.insert(
+        royalty.insert(
             "a2.testnet".to_string(),
             SafeFraction::new(1250),
         );
-        split_between.insert(
+        royalty.insert(
             "a3.testnet".to_string(),
             SafeFraction::new(1250),
         );
-        split_between.insert(
+        royalty.insert(
             "a4.testnet".to_string(),
             SafeFraction::new(1250),
         );
-        split_between.insert(
+        royalty.insert(
             "a5.testnet".to_string(),
             SafeFraction::new(1250),
+        );
+        royalty.insert(
+            "a6.testnet".to_string(),
+            SafeFraction::new(675),
+        );
+        royalty.insert(
+            "a7.testnet".to_string(),
+            SafeFraction::new(675),
         );
         
         let token = Token {
             owner_id,
             approved_account_ids: Default::default(),
             next_approval_id: 0,
-            royalty: Royalty {
-                split_between,
-                percentage: SafeFraction::new(10000),
-            }
+            royalty,
         };
         assert!(
             self.tokens_by_id.insert(&token_id, &token).is_none(),
