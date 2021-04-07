@@ -5,7 +5,7 @@
 This is intended to be a PoC backbone for NFT market projects. No guest accounts and easy onboarding, just straight FT and NFT standards.
 
 High level diagram of NFT sale on Market using Fungible Token:
-![image](https://user-images.githubusercontent.com/321340/113893172-9d413500-977b-11eb-99a1-af273f7108aa.png)
+![image](https://user-images.githubusercontent.com/321340/113903355-bea71e80-9785-11eb-8ab3-9c2f0d23466f.png)
 
 
 ## TODO / DONE:
