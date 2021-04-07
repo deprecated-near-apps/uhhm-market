@@ -185,9 +185,9 @@ describe('deploy contract ' + contractName, () => {
         const marketBalance = await marketAccount.viewFunction(stableId, 'ft_balance_of', { account_id: marketId });
 		console.log('\n\n marketBalance', marketBalance, '\n\n');
 		
-        /// bob gets 20%
+        /// bob gets 50%
         const bobBalance = await bob.viewFunction(stableId, 'ft_balance_of', { account_id: bobId });
-		expect(bobBalance).toEqual(parseNearAmount('5'));
+		expect(bobBalance).toEqual(parseNearAmount('10'));
 	});
 
     /// near purchase
@@ -224,8 +224,8 @@ describe('deploy contract ' + contractName, () => {
         const token = await contract.nft_token({ token_id });
         expect(token.owner_id).toEqual(aliceId)
 		const bobBalanceAfter = await getAccountBalance(bobId);
-        /// bob got at least 0.05 N (20%) from this sale
-        expect(new BN(bobBalanceAfter.total).sub(new BN(bobBalanceBefore.total)).gt(new BN(parseNearAmount('0.05')))).toEqual(true)
+        /// bob got at least 0.1 N (50%) from this sale (some N from storage refunds)
+        expect(new BN(bobBalanceAfter.total).sub(new BN(bobBalanceBefore.total)).gt(new BN(parseNearAmount('0.1')))).toEqual(true)
 	});
 
 });

@@ -19,8 +19,8 @@ static ALLOC: near_sdk::wee_alloc::WeeAlloc<'_> = near_sdk::wee_alloc::WeeAlloc:
 
 /// measuring how many royalties can be paid
 const GAS_FOR_FT_TRANSFER: Gas = 10_000_000_000_000;
-/// 100 Tgas for royalties if using ft_transfer_call and 200 Tgas
-const GAS_FOR_ROYALTIES: Gas = 125_000_000_000_000;
+/// seems to be the max TGas can attach to resolve_purchase
+const GAS_FOR_ROYALTIES: Gas = 130_000_000_000_000;
 const GAS_FOR_NFT_TRANSFER: Gas = 15_000_000_000_000;
 
 const NO_DEPOSIT: Balance = 0;
@@ -209,13 +209,11 @@ impl Contract {
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
         let sale = self.sales.remove(&contract_and_token_id).expect("No sale");
 
-        let memo: String = "Sold by Matt Market".to_string();
-
         ext_contract::nft_transfer(
             buyer_id.clone(),
             token_id.clone(),
             sale.owner_id.clone(),
-            memo,
+            None,
             sale.price,
             &contract_id,
             1,
@@ -243,9 +241,6 @@ impl Contract {
         buyer_id: AccountId,
         sale: Sale,
     ) -> U128 {
-
-        env::log(format!("resolve_purchase Promise: {:?}", env::promise_result(0)).as_bytes());
-
         // checking for payout information
         let payout_option = match env::promise_result(0) {
             PromiseResult::NotReady => unreachable!(),
@@ -290,7 +285,7 @@ impl Contract {
         if sale.ft_token_id.is_empty() {
             for (receiver_id, amount) in &payout {
                 let amount_u128 = u128::from(*amount);
-                env::log(format!("FT payout payment {} to {}", amount_u128, receiver_id).as_bytes());
+                env::log(format!("NEAR payout payment {} to {}", amount_u128, receiver_id).as_bytes());
                 Promise::new(receiver_id.to_string()).transfer(amount_u128);
             }
             // refund all FTs if any
@@ -350,7 +345,7 @@ trait ExtContract {
         receiver_id: AccountId,
         token_id: TokenId,
         enforce_owner_id: AccountId,
-        memo: String,
+        memo: Option<String>,
         balance: U128,
     );
     fn ft_transfer(

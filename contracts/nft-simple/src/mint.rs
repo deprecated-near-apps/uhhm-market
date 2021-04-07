@@ -11,35 +11,35 @@ impl Contract {
         let mut royalty = HashMap::new();
         royalty.insert(
             owner_id.clone(),
-            SafeFraction::new(2500),
+            SafeFraction::new(5000),
         );
         royalty.insert(
             "a1.testnet".to_string(),
-            SafeFraction::new(1250),
+            SafeFraction::new(1000),
         );
         royalty.insert(
             "a2.testnet".to_string(),
-            SafeFraction::new(1250),
+            SafeFraction::new(1000),
         );
         royalty.insert(
             "a3.testnet".to_string(),
-            SafeFraction::new(1250),
+            SafeFraction::new(1000),
         );
         royalty.insert(
             "a4.testnet".to_string(),
-            SafeFraction::new(1250),
+            SafeFraction::new(500),
         );
         royalty.insert(
             "a5.testnet".to_string(),
-            SafeFraction::new(1250),
+            SafeFraction::new(500),
         );
         royalty.insert(
             "a6.testnet".to_string(),
-            SafeFraction::new(675),
+            SafeFraction::new(500),
         );
         royalty.insert(
             "a7.testnet".to_string(),
-            SafeFraction::new(675),
+            SafeFraction::new(500),
         );
         
         let token = Token {
