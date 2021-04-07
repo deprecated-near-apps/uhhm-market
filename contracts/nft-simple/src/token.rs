@@ -1,7 +1,7 @@
 use crate::*;
 
 pub type TokenId = String;
-pub type Payout = HashMap<AccountId, U128>;
+pub type Payout = HashMap<AccountId, u128>;
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct Token {

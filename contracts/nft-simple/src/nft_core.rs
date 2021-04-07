@@ -117,7 +117,7 @@ impl NonFungibleTokenCore for Contract {
             let mut payout: Payout = HashMap::new();
             for (k, v) in token.royalty.iter() {
                 let key = k.clone();
-                payout.insert(key, U128(v.multiply_balance(balance_u128)));
+                payout.insert(key, v.multiply_balance(balance_u128));
             }
             Some(payout)
         } else {

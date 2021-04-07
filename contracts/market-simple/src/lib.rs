@@ -27,7 +27,7 @@ const NO_DEPOSIT: Balance = 0;
 const STORAGE_AMOUNT: u128 = 100_000_000_000_000_000_000_000;
 pub type TokenId = String;
 pub type ContractAndTokenId = String;
-pub type Payout = HashMap<AccountId, U128>;
+pub type Payout = HashMap<AccountId, u128>;
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
@@ -224,10 +224,6 @@ impl Contract {
             sale,
             &env::current_account_id(),
             NO_DEPOSIT,
-
-            // GIVE MAX GAS FOR PAYOUTS YOU NEED 100 Tgas - 6 FT transfers
-            // 105 TGas
-            // 10 for ft_transfer + 5 for promise callback
             GAS_FOR_ROYALTIES,
         ))
     }
@@ -245,20 +241,20 @@ impl Contract {
         let payout_option = match env::promise_result(0) {
             PromiseResult::NotReady => unreachable!(),
             PromiseResult::Successful(value) => {
-                near_sdk::serde_json::from_slice::<Payout>(&value).ok().and_then(|royalty| {
-
-                    // should have enough gas to do X transfers
-
-                    if royalty.len() > 10 {
+                // None means a bad payout from bad NFT contract
+                near_sdk::serde_json::from_slice::<Payout>(&value).ok().and_then(|payout| {
+                    // gas to do 8 FT transfers (and definitely 8 NEAR transfers)
+                    if payout.len() > 8 {
                         None
                     } else {
-                        Some(royalty)
-                        // TODO reimpliment as reduce, watch out for overflow
-                        // if royalty.values().map(|v| v.0).sum() != sale.price {
-                        //     None
-                        // } else {
-                        //     Some(royalty)
-                        // }
+                        // payouts must == sale.price, otherwise something wrong with NFT contract
+                        // TODO off by 1 e.g. payouts are 3333 + 3333 + 3333
+                        let sum: u128 = payout.values().map(|a| *a).reduce(|a, b| a + b).unwrap();
+                        if sum == u128::from(sale.price) {
+                            Some(payout)
+                        } else {
+                            None
+                        }
                     }
                 })
             }
@@ -276,6 +272,7 @@ impl Contract {
             if sale.ft_token_id.is_empty() {
                 Promise::new(buyer_id).transfer(u128::from(sale.price));
             }
+            // leave function and return all FTs in ft_resolve_transfer
             return sale.price;
         };
 
@@ -284,18 +281,17 @@ impl Contract {
         // pay seller and remove sale
         if sale.ft_token_id.is_empty() {
             for (receiver_id, amount) in &payout {
-                let amount_u128 = u128::from(*amount);
-                env::log(format!("NEAR payout payment {} to {}", amount_u128, receiver_id).as_bytes());
-                Promise::new(receiver_id.to_string()).transfer(amount_u128);
+                env::log(format!("NEAR payout payment {} to {}", *amount, receiver_id).as_bytes());
+                Promise::new(receiver_id.to_string()).transfer(*amount);
             }
             // refund all FTs if any
             sale.price
         } else {
             for (receiver_id, amount) in &payout {
-                env::log(format!("FT payout payment {} to {}", u128::from(*amount), receiver_id).as_bytes());
+                env::log(format!("FT payout payment {} to {}", *amount, receiver_id).as_bytes());
                 ext_contract::ft_transfer(
                     receiver_id.to_string(),
-                    *amount,
+                    U128(*amount),
                     None,
                     &sale.ft_token_id,
                     1,
