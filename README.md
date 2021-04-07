@@ -4,6 +4,10 @@
 
 This is intended to be a PoC backbone for NFT market projects. No guest accounts and easy onboarding, just straight FT and NFT standards.
 
+High level diagram of NFT sale on Market using Fungible Token:
+![image](https://user-images.githubusercontent.com/321340/113893172-9d413500-977b-11eb-99a1-af273f7108aa.png)
+
+
 ## TODO / DONE:
 - [x] basic purchase of NFT with FT
 - [x] demo pay out royalties (FTs and NEAR)
