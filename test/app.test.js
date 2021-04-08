@@ -158,18 +158,17 @@ describe('deploy contract ' + contractName, () => {
             token_id,
             account_id: marketId,
             msg: JSON.stringify({
-                ft_token_id: stableId,
-                price: parseNearAmount('25')
+                prices:[{
+                    ft_token_id: stableId,
+                    price: parseNearAmount('25')
+                }]
             })
         }, GAS, parseNearAmount('0.01'));
         const token = await contract.nft_token({ token_id });
         const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_id: contractId, token_id });
 		console.log('\n\n', sale, '\n\n');
-        expect(sale.price).toEqual(parseNearAmount('25'))
-        expect(sale.ft_token_id).toEqual(stableId)
+        expect(sale.conditions[stableId]).toEqual(parseNearAmount('25'))
         expect(token.owner_id).toEqual(bobId)
-
-        
 	});
 
 	test('enumerable tests', async () => {
@@ -190,10 +189,15 @@ describe('deploy contract ' + contractName, () => {
     
 	test('bob changes price', async () => {
         const token_id = tokenIds[0]
-		await bob.functionCall(marketId, 'update_price', { nft_contract_id: contractId, token_id, price: parseNearAmount('20') }, GAS);
+		await bob.functionCall(marketId, 'update_price', {
+            nft_contract_id: contractId,
+            token_id,
+            ft_token_id: stableId,
+            price: parseNearAmount('20')
+        }, GAS);
         const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_id: contractId, token_id });
 		console.log('\n\n', sale, '\n\n');
-        expect(sale.price).toEqual(parseNearAmount('20'))
+        expect(sale.conditions[stableId]).toEqual(parseNearAmount('20'))
 	});
 
 	test('alice purchase nft with ft', async () => {
@@ -231,13 +235,15 @@ describe('deploy contract ' + contractName, () => {
             token_id,
             account_id: marketId,
             msg: JSON.stringify({
-                price: parseNearAmount('0.2')
+                prices: [{
+                    price: parseNearAmount('0.2')
+                }]
             })
         }, GAS, parseNearAmount('0.01'));
         const token = await contract.nft_token({ token_id });
         const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_id: contractId, token_id });
 		console.log('\n\n', sale, '\n\n');
-        expect(sale.price).toEqual(parseNearAmount('0.2'))
+        expect(sale.conditions["near"]).toEqual(parseNearAmount('0.2'))
         expect(token.owner_id).toEqual(bobId)
 	});
 
