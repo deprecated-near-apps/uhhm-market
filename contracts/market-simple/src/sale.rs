@@ -6,15 +6,20 @@ use near_sdk::borsh::{self};
 pub struct Sale {
     pub owner_id: AccountId,
     pub approval_id: U64,
-    pub price: U128,
-    pub ft_token_id: AccountId,
+    pub conditions: LookupMap<AccountId, U128>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Price {
+    pub price: Option<U128>,
+    pub ft_token_id: Option<AccountId>,
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct SaleArgs {
-    pub price: U128,
-    pub ft_token_id: Option<AccountId>,
+    pub prices: Vec<Price>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -43,15 +48,34 @@ impl Contract {
         let contract_id: AccountId = nft_contract_id.into();
 
         let SaleArgs {
-            price,
-            ft_token_id,
+            prices
         } = sale_args;
 
-        // if sale is denominated in some other token
-        let mut sale_ft_token_id = "".to_string();
-        if let Some(ft_token_id) = ft_token_id {
-            sale_ft_token_id = ft_token_id;
+        let conditions = LookupMap::new(format!("{}:{}", contract_id, token_id).as_bytes);
+
+        for item in prices {
+            let Price{
+                mut price,
+                mut ft_token_id,
+            };
+            if let Some(ft_token_id) = ft_token_id {
+                if let Some(price) = price {
+                    // sale is denominated in FT
+                    conditions.insert(&ft_token_id, &price);
+                } else {
+                    // accepting bids
+                    conditions.insert(&ft_token_id, &U128(0));
+                }
+            } else {
+                // sale denom in NEAR
+                if let Some(price) = price {
+                    conditions.insert("", &price);
+                }
+                // accepting bids in NEAR prices.len() == 0
+            }
         }
+
+        
 
         env::log(format!("add_sale for owner: {}", owner_id.as_ref()).as_bytes());
 
@@ -60,9 +84,7 @@ impl Contract {
             &Sale {
                 owner_id: owner_id.into(),
                 approval_id,
-                price,
-                ft_token_id: sale_ft_token_id,
-                locked: false,
+                prices,
             },
         );
     }
@@ -155,6 +177,7 @@ impl Contract {
     #[private]
     pub fn resolve_purchase(
         &mut self,
+        ft_token_id: AccountId,
         buyer_id: AccountId,
         sale: Sale,
     ) -> U128 {
@@ -190,7 +213,7 @@ impl Contract {
         } else {
             env::log(format!("Refunding {} to {}", u128::from(sale.price), buyer_id).as_bytes());
             // refund NEAR
-            if sale.ft_token_id.is_empty() {
+            if sale.ft_token_ids.len() == 0 {
                 Promise::new(buyer_id).transfer(u128::from(sale.price));
             }
             // leave function and return all FTs in ft_resolve_transfer
@@ -199,15 +222,16 @@ impl Contract {
 
         env::log(format!("Royalty {:?}", payout).as_bytes());
 
-        // pay seller and remove sale
-        if sale.ft_token_id.is_empty() {
+        // NEAR payouts
+        if sale.ft_token_ids.len() == 0 {
             for (receiver_id, amount) in &payout {
                 env::log(format!("NEAR payout payment {} to {}", *amount, receiver_id).as_bytes());
                 Promise::new(receiver_id.to_string()).transfer(*amount);
             }
-            // refund all FTs if any
+            // refund all FTs (won't be any)
             sale.price
         } else {
+        // FT payouts
             for (receiver_id, amount) in &payout {
                 env::log(format!("FT payout payment {} to {}", *amount, receiver_id).as_bytes());
                 ext_contract::ft_transfer(
@@ -219,7 +243,7 @@ impl Contract {
                     GAS_FOR_FT_TRANSFER,
                 );
             }
-            // keep all FTs because we already transferred for royalties
+            // keep all FTs (already transferred for payouts)
             U128(0)
         }
     }                             
