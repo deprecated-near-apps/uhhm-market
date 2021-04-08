@@ -20,14 +20,14 @@ pub struct Sale {
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Price {
+    pub ft_token_id: AccountId,
     pub price: Option<U128>,
-    pub ft_token_id: Option<AccountId>,
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct SaleArgs {
-    pub prices: Vec<Price>,
+    pub sale_conditions: Vec<Price>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -56,31 +56,22 @@ impl Contract {
         let contract_id: AccountId = nft_contract_id.into();
 
         let SaleArgs {
-            prices
+            sale_conditions
         } = sale_args;
 
         let mut conditions = HashMap::new();
 
-        for item in prices {
+        for item in sale_conditions {
             let Price{
                 price,
                 ft_token_id,
             } = item;
-            if let Some(ft_token_id) = ft_token_id {
-                if let Some(price) = price {
-                    // sale is denominated in FT
-                    conditions.insert(ft_token_id, price);
-                } else {
-                    // accepting bids
-                    conditions.insert(ft_token_id, U128(0));
-                }
+            if let Some(price) = price {
+                // sale is denominated in FT
+                conditions.insert(ft_token_id, price);
             } else {
-                // sale denom in NEAR
-                if let Some(price) = price {
-                    conditions.insert("near".to_string(), price);
-                } else {
-                    conditions.insert("near".to_string(), U128(0));
-                }
+                // accepting bids
+                conditions.insert(ft_token_id, U128(0));
             }
         }
         

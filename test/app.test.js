@@ -158,10 +158,16 @@ describe('deploy contract ' + contractName, () => {
             token_id,
             account_id: marketId,
             msg: JSON.stringify({
-                prices:[{
-                    ft_token_id: stableId,
-                    price: parseNearAmount('25')
-                }]
+                sale_conditions:[
+                    {
+                        ft_token_id: stableId,
+                        price: parseNearAmount('25')
+                    },
+                    {
+                        ft_token_id: "near",
+                        price: parseNearAmount('5')
+                    }
+                ]
             })
         }, GAS, parseNearAmount('0.01'));
         const token = await contract.nft_token({ token_id });
@@ -235,7 +241,8 @@ describe('deploy contract ' + contractName, () => {
             token_id,
             account_id: marketId,
             msg: JSON.stringify({
-                prices: [{
+                sale_conditions: [{
+                    ft_token_id: "near",
                     price: parseNearAmount('0.2')
                 }]
             })
