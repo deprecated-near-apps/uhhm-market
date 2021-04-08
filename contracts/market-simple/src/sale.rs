@@ -160,6 +160,9 @@ impl Contract {
         // checking for payout information
         let payout_option = match env::promise_result(0) {
             PromiseResult::NotReady => unreachable!(),
+            PromiseResult::Failed => {
+                None
+            },
             PromiseResult::Successful(value) => {
                 // None means a bad payout from bad NFT contract
                 near_sdk::serde_json::from_slice::<Payout>(&value).ok().and_then(|payout| {
@@ -177,9 +180,6 @@ impl Contract {
                         }
                     }
                 })
-            }
-            PromiseResult::Failed => {
-                None
             }
         };
 

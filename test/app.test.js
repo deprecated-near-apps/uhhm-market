@@ -132,7 +132,8 @@ describe('deploy contract ' + contractName, () => {
         const nft_supply_for_owner = await bob.viewFunction(contractName, 'nft_supply_for_owner', { account_id: bobId });
         console.log('\n\n nft_supply_for_owner', nft_supply_for_owner, '\n\n');
         expect(nft_supply_for_owner).toEqual('0')
-        const bobTokens = await bob.viewFunction(contractName, 'nft_tokens_for_owner', { account_id: bobId, from_index: '0', limit: '1000' });
+        // messing around with index and limit
+        const bobTokens = await bob.viewFunction(contractName, 'nft_tokens_for_owner', { account_id: bobId, from_index: '1001', limit: '1000' });
         console.log('\n\n bobTokens', bobTokens, '\n\n');
         expect(bobTokens.length).toEqual(0)
 	});
