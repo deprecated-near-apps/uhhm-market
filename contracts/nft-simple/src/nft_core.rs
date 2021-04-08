@@ -106,13 +106,13 @@ impl NonFungibleTokenCore for Contract {
             memo,
         );
         refund_approved_account_ids(
-            previous_token.owner_id,
+            previous_token.owner_id.clone(),
             &previous_token.approved_account_ids,
         );
 
-        // compute payout based on balance option
-        if let Some(balance) = balance {
-            let token = self.tokens_by_id.get(&token_id).expect("No token");
+        // compute payouts based on balance option
+        let mut token = self.tokens_by_id.get(&token_id).expect("No token");
+        let payout = if let Some(balance) = balance {
             let balance_u128 = u128::from(balance);
             let mut payout: Payout = HashMap::new();
             for (k, v) in token.royalty.iter() {
@@ -122,7 +122,14 @@ impl NonFungibleTokenCore for Contract {
             Some(payout)
         } else {
             None
-        }
+        };
+
+        // add sender_id as new owner_royalty receiver
+        let owner_royalty = token.royalty.remove(&previous_token.owner_id).unwrap();
+        token.royalty.insert(sender_id, owner_royalty);
+        self.tokens_by_id.insert(&token_id, &token);
+
+        payout
     }
 
     #[payable]

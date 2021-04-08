@@ -7,39 +7,39 @@ impl Contract {
         let initial_storage_usage = env::storage_usage();
         let owner_id = env::predecessor_account_id();
         
-        // royalties
+        // royalties (should equal 10000)
         let mut royalty = HashMap::new();
         royalty.insert(
             owner_id.clone(),
-            SafeFraction::new(5000),
+            SafeFraction::new(8000),
         );
         royalty.insert(
             "a1.testnet".to_string(),
-            SafeFraction::new(1000),
+            SafeFraction::new(500),
         );
         royalty.insert(
             "a2.testnet".to_string(),
-            SafeFraction::new(1000),
+            SafeFraction::new(250),
         );
         royalty.insert(
             "a3.testnet".to_string(),
-            SafeFraction::new(1000),
+            SafeFraction::new(250),
         );
         royalty.insert(
             "a4.testnet".to_string(),
-            SafeFraction::new(500),
+            SafeFraction::new(250),
         );
         royalty.insert(
             "a5.testnet".to_string(),
-            SafeFraction::new(500),
+            SafeFraction::new(250),
         );
         royalty.insert(
             "a6.testnet".to_string(),
-            SafeFraction::new(500),
+            SafeFraction::new(250),
         );
         royalty.insert(
             "a7.testnet".to_string(),
-            SafeFraction::new(500),
+            SafeFraction::new(250),
         );
         
         let token = Token {

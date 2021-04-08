@@ -91,6 +91,10 @@ describe('deploy contract ' + contractName, () => {
                 promises.push(stableAccount.functionCall(stableId, 'storage_deposit', { account_id: `a${i}.testnet` }, GAS, storageMinimum));
             }
             await Promise.all(promises);
+        } else {
+            /// find out how much needed to store for FTs
+            storageMinimum = await contractAccount.viewFunction(stableId, 'storage_minimum_balance')
+            console.log('\n\n storageMinimum:', storageMinimum, '\n\n');
         }
 
         /// create or get market account and deploy market.wasm (if not already deployed)
@@ -155,6 +159,22 @@ describe('deploy contract ' + contractName, () => {
         expect(sale.price).toEqual(parseNearAmount('25'))
         expect(sale.ft_token_id).toEqual(stableId)
         expect(token.owner_id).toEqual(bobId)
+
+        // test enumerable
+
+        const total_supply = await bob.viewFunction(contractName, 'nft_total_supply', {});
+        console.log('\n\n total_supply', total_supply, '\n\n');
+        // could be several tests in, with many tokens minted
+        const nft_supply_for_owner = await bob.viewFunction(contractName, 'nft_supply_for_owner', { account_id: bobId });
+        console.log('\n\n nft_supply_for_owner', nft_supply_for_owner, '\n\n');
+        expect(nft_supply_for_owner).toEqual('1')
+        const tokens = await bob.viewFunction(contractName, 'nft_tokens', { from_index: '0', limit: '1000' });
+        console.log('\n\n tokens', tokens, '\n\n');
+        // proxy for total supply with low limits, could be several tests in, with many tokens minted
+        expect(tokens.length >= 1).toEqual(true)
+        const bobTokens = await bob.viewFunction(contractName, 'nft_tokens_for_owner', { account_id: bobId, from_index: '0', limit: '1000' });
+        console.log('\n\n bobTokens', bobTokens, '\n\n');
+        expect(bobTokens.length).toEqual(1)
 	});
 
 	test('bob changes price', async () => {
@@ -185,9 +205,9 @@ describe('deploy contract ' + contractName, () => {
         const marketBalance = await marketAccount.viewFunction(stableId, 'ft_balance_of', { account_id: marketId });
 		console.log('\n\n marketBalance', marketBalance, '\n\n');
 		
-        /// bob gets 50%
+        /// bob gets 80%
         const bobBalance = await bob.viewFunction(stableId, 'ft_balance_of', { account_id: bobId });
-		expect(bobBalance).toEqual(parseNearAmount('10'));
+		expect(bobBalance).toEqual(parseNearAmount('16'));
 	});
 
     /// near purchase
@@ -204,8 +224,6 @@ describe('deploy contract ' + contractName, () => {
             })
         }, GAS, parseNearAmount('0.01'));
         const token = await contract.nft_token({ token_id });
-        const meta = await bob.viewFunction(contractName, 'get_token_metadata', { token_id });
-        console.log('\n\n', meta, '\n\n');
         const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_id: contractId, token_id });
 		console.log('\n\n', sale, '\n\n');
         expect(sale.price).toEqual(parseNearAmount('0.2'))
@@ -224,8 +242,8 @@ describe('deploy contract ' + contractName, () => {
         const token = await contract.nft_token({ token_id });
         expect(token.owner_id).toEqual(aliceId)
 		const bobBalanceAfter = await getAccountBalance(bobId);
-        /// bob got at least 0.1 N (50%) from this sale (some N from storage refunds)
-        expect(new BN(bobBalanceAfter.total).sub(new BN(bobBalanceBefore.total)).gt(new BN(parseNearAmount('0.1')))).toEqual(true)
+        /// bob got at least 0.1 N (80%) from this sale (some N from storage refunds)
+        expect(new BN(bobBalanceAfter.total).sub(new BN(bobBalanceBefore.total)).gt(new BN(parseNearAmount('0.16')))).toEqual(true)
 	});
 
 });

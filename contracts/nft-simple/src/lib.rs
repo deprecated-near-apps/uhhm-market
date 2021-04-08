@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::cmp::min;
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap, UnorderedSet};
@@ -14,6 +15,7 @@ pub use crate::mint::*;
 pub use crate::nft_core::*;
 pub use crate::safe_fraction::*;
 pub use crate::token::*;
+pub use crate::enumerable::*;
 
 mod internal;
 mod metadata;
@@ -21,6 +23,7 @@ mod mint;
 mod nft_core;
 mod safe_fraction;
 mod token;
+mod enumerable;
 
 near_sdk::setup_alloc!();
 
@@ -93,15 +96,6 @@ impl Contract {
             tokens_per_owner_entry_in_bytes + owner_id_extra_cost_in_bytes;
 
         self.tokens_per_owner.remove(&tmp_account_id);
-    }
-
-    /// custom view method for markets
-
-    pub fn get_token_metadata(&self, token_id: TokenId) -> TokenMetadata {
-        match self.token_metadata_by_id.get(&token_id) {
-            Some(metadata) => metadata,
-            None => env::panic("Not a token".as_bytes())
-        }
     }
 }
 
