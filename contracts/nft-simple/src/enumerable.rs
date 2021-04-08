@@ -7,7 +7,12 @@ impl Contract {
         &self,
         account_id: AccountId,
     ) -> U64 {
-        U64(self.tokens_per_owner.get(&account_id).expect("No tokens for owner").len())
+        let tokens_owner = self.tokens_per_owner.get(&account_id);
+        if let Some(tokens_owner) = tokens_owner {
+            U64(tokens_owner.len())
+        } else {
+            U64(0)
+        }
     }
 
     pub fn nft_tokens(
@@ -32,7 +37,12 @@ impl Contract {
         limit: U64,
     ) -> Vec<JsonToken> {
         let mut tmp = vec![];
-        let tokens = self.tokens_per_owner.get(&account_id).expect("No tokens");
+        let tokens_owner = self.tokens_per_owner.get(&account_id);
+        let tokens = if let Some(tokens_owner) = tokens_owner {
+            tokens_owner
+        } else {
+            return vec![];
+        };
         let keys = tokens.as_vector();
         let start = u64::from(from_index);
         let end = min(start + u64::from(limit), keys.len());

@@ -13,6 +13,7 @@
         "react-dom": "^17.0.1"
     },
     "devDependencies": {
+        "cross-env": "^7.0.3",
         "eslint": "^7.14.0",
         "jest": "^26.6.3",
         "jest-environment-uint8array": "^1.0.0",
@@ -26,7 +27,7 @@
     "scripts": {
         "prestart": "yarn clean",
         "start:deploy": "yarn test:deploy && yarn start",
-        "start": "REACT_APP_ENV=dev parcel src/index.html --open",
+        "start": "cross-env REACT_APP_ENV=dev parcel src/index.html --open",
         "prebuild": "yarn clean",
         "build": "parcel build src/index.html --no-source-maps",
         "clean": "rimraf ./dist ./parcel-cache",
@@ -36,9 +37,9 @@
         "dev:deploy": "yarn build:contracts && rm -rf neardev && (near dev-deploy || exit 0) && yarn patch:config",
         "test:unit": "(cd contracts && cargo test -- --nocapture --color always)",
         "test:deploy": "yarn dev:deploy && yarn test",
-        "test": "REACT_APP_ENV=dev jest app.test.js --useStderr",
-        "test:server": "REACT_APP_ENV=dev jest server.test.js --useStderr",
-        "deploy": "REACT_APP_ENV=prod yarn build && cp -a static/* dist && gh-pages -d dist"
+        "test": "cross-env REACT_APP_ENV=dev jest app.test.js --useStderr",
+        "test:server": "cross-env REACT_APP_ENV=dev jest server.test.js --useStderr",
+        "deploy": "cross-env REACT_APP_ENV=prod yarn build && cp -a static/* dist && gh-pages -d dist"
     },
     "jest": {
         "testEnvironment": "jest-environment-uint8array"
