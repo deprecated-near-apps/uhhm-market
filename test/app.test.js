@@ -160,8 +160,10 @@ describe('deploy contract ' + contractName, () => {
         expect(sale.ft_token_id).toEqual(stableId)
         expect(token.owner_id).toEqual(bobId)
 
-        // test enumerable
+        
+	});
 
+	test('enumerable tests', async () => {
         const total_supply = await bob.viewFunction(contractName, 'nft_total_supply', {});
         console.log('\n\n total_supply', total_supply, '\n\n');
         // could be several tests in, with many tokens minted
@@ -176,7 +178,7 @@ describe('deploy contract ' + contractName, () => {
         console.log('\n\n bobTokens', bobTokens, '\n\n');
         expect(bobTokens.length).toEqual(1)
 	});
-
+    
 	test('bob changes price', async () => {
         const token_id = tokenIds[0]
 		await bob.functionCall(marketId, 'update_price', { nft_contract_id: contractId, token_id, price: parseNearAmount('20') }, GAS);
