@@ -25,7 +25,6 @@ impl FungibleTokenReceiver for Contract {
             ft_token_id
         );
         assert_eq!(u128::from(amount), u128::from(sale.price), "Must pay exactly the sale price");
-        assert_eq!(sale.locked, false, "Sale is currently in progress");
 
         self.process_purchase(nft_contract_id, token_id, sender_id)
     }

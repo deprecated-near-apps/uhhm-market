@@ -62,7 +62,6 @@ impl Contract {
                 approval_id,
                 price,
                 ft_token_id: sale_ft_token_id,
-                locked: false,
             },
         );
     }
