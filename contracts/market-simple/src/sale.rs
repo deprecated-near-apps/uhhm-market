@@ -6,7 +6,7 @@ use near_sdk::borsh::{self};
 pub struct Sale {
     pub owner_id: AccountId,
     pub approval_id: U64,
-    pub conditions: LookupMap<AccountId, U128>,
+    pub conditions: HashMap<AccountId, U128>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -51,7 +51,7 @@ impl Contract {
             prices
         } = sale_args;
 
-        let conditions = LookupMap::new(format!("{}:{}", contract_id, token_id).as_bytes);
+        let conditions = HashMap::new();
 
         for item in prices {
             let Price{
@@ -69,14 +69,12 @@ impl Contract {
             } else {
                 // sale denom in NEAR
                 if let Some(price) = price {
-                    conditions.insert("", &price);
+                    conditions.insert(&"".to_string(), &price);
                 }
                 // accepting bids in NEAR prices.len() == 0
             }
         }
-
         
-
         env::log(format!("add_sale for owner: {}", owner_id.as_ref()).as_bytes());
 
         self.sales.insert(
@@ -84,7 +82,7 @@ impl Contract {
             &Sale {
                 owner_id: owner_id.into(),
                 approval_id,
-                prices,
+                conditions,
             },
         );
     }
@@ -248,14 +246,12 @@ impl Contract {
         }
     }                             
 
-    /// view methods
-
-    pub fn get_sale(&self, nft_contract_id: ValidAccountId, token_id: String) -> Sale {
-        let contract_id: AccountId = nft_contract_id.into();
-        self.sales
-            .get(&format!("{}:{}", contract_id, token_id))
-            .expect("No sale")
-    }
+    // pub fn get_sale(&self, nft_contract_id: ValidAccountId, token_id: String) -> Sale {
+    //     let contract_id: AccountId = nft_contract_id.into();
+    //     self.sales
+    //         .get(&format!("{}:{}", contract_id, token_id))
+    //         .expect("No sale")
+    // }
 }
 
 /// self call

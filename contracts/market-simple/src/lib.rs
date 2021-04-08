@@ -1,4 +1,3 @@
-
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LookupMap, LookupSet};
 use near_sdk::json_types::{ValidAccountId, U128, U64};
@@ -20,8 +19,7 @@ mod sale;
 mod ft_callbacks;
 mod nft_callbacks;
 
-#[global_allocator]
-static ALLOC: near_sdk::wee_alloc::WeeAlloc<'_> = near_sdk::wee_alloc::WeeAlloc::INIT;
+near_sdk::setup_alloc!();
 
 /// measuring how many royalties can be paid
 const GAS_FOR_FT_TRANSFER: Gas = 10_000_000_000_000;
