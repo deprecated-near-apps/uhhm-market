@@ -248,7 +248,7 @@ impl Contract {
                         None
                     } else {
                         // payouts must == sale.price, otherwise something wrong with NFT contract
-                        // TODO off by 1 e.g. payouts are 3333 + 3333 + 3333
+                        // TODO off by 1 e.g. payouts are fractions of 3333 + 3333 + 3333
                         let sum: u128 = payout.values().map(|a| *a).reduce(|a, b| a + b).unwrap();
                         if sum == u128::from(sale.price) {
                             Some(payout)
