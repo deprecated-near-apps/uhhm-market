@@ -117,7 +117,7 @@ impl Contract {
     }
 
     #[payable]
-    pub fn purchase(
+    pub fn offer(
         &mut self,
         nft_contract_id: ValidAccountId,
         token_id: String,
@@ -132,10 +132,11 @@ impl Contract {
 
         // there's a fixed price user can buy for
         if deposit == price {
-            self.process_purchase(contract_id, token_id, near_token_id, buyer_id);
+            self.process_purchase(contract_id, token_id, near_token_id, U128(deposit), buyer_id);
         } else {
-            assert!(deposit < price, "Can't pay more than price: {}", price);
-            // buyer falls short of fixed price, store a bid and refund any current bid lower
+            assert!(price == 0 || deposit < price, "Can't pay more than fixed price: {}", price);
+            // buyer falls short of fixed price, or there is no fixed price
+            // store a bid and refund any current bid lower
             let new_bid = Bid{
                 owner_id: buyer_id,
                 price: U128(deposit),
@@ -154,18 +155,37 @@ impl Contract {
         }
     }
 
+    pub fn accept_offer(&mut self, nft_contract_id: ValidAccountId, token_id: String, ft_token_id: ValidAccountId) {
+        let contract_id: AccountId = nft_contract_id.into();
+        let contract_and_token_id = format!("{}:{}", contract_id, token_id);
+        let mut sale = self.sales.remove(&contract_and_token_id).expect("No sale");
+        // bid exists, user is accepting bid price as payment
+        let bid = sale.bids.remove(ft_token_id.as_ref()).expect("No bid");
+        self.sales.insert(&contract_and_token_id, &sale);
+        // we have amount of ft_token_id in this contract
+        self.process_purchase(
+            contract_id,
+            token_id,
+            ft_token_id.into(),
+            bid.price,
+            bid.owner_id,
+        );
+    }
+
+    /// private 
+
     #[private]
     pub fn process_purchase(
         &mut self,
         nft_contract_id: AccountId,
         token_id: String,
         ft_token_id: AccountId,
+        price: U128,
         buyer_id: AccountId,
     ) -> Promise {
         let contract_id: AccountId = nft_contract_id.into();
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
         let sale = self.sales.remove(&contract_and_token_id).expect("No sale");
-        let price = *sale.conditions.get(&ft_token_id).unwrap();
 
         ext_contract::nft_transfer(
             buyer_id.clone(),
@@ -181,6 +201,7 @@ impl Contract {
             ft_token_id,
             buyer_id,
             sale,
+            price,
             &env::current_account_id(),
             NO_DEPOSIT,
             GAS_FOR_ROYALTIES,
@@ -195,9 +216,8 @@ impl Contract {
         ft_token_id: AccountId,
         buyer_id: AccountId,
         sale: Sale,
+        price: U128,
     ) -> U128 {
-
-        let price = *sale.conditions.get(&ft_token_id).unwrap();
 
         // checking for payout information
         let payout_option = match env::promise_result(0) {
@@ -302,5 +322,6 @@ trait ExtSelf {
         ft_token_id: AccountId,
         buyer_id: AccountId,
         sale: Sale,
+        price: U128,
     ) -> Promise;
 }

@@ -66,12 +66,8 @@ impl Contract {
 
     #[payable]
     pub fn storage_deposit(&mut self) -> bool {
-        assert_eq!(
-            env::attached_deposit(),
-            STORAGE_AMOUNT,
-            "Attach {}",
-            STORAGE_AMOUNT
-        );
+        assert_eq!(self.storage_deposits.contains(&env::predecessor_account_id()), false, "Already paid for storage");
+        assert_eq!(env::attached_deposit(), STORAGE_AMOUNT, "Attach {}", STORAGE_AMOUNT);
         self.storage_deposits.insert(&env::predecessor_account_id())
     }
 
