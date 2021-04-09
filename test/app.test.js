@@ -210,6 +210,22 @@ describe('deploy contract ' + contractName, () => {
         expect(sale.conditions[stableId]).toEqual(parseNearAmount('20'))
 	});
 
+    test('alice makes low bid with near', async () => {
+        const token_id = tokenIds[0]
+        /// purchase = ft_transfer_call -> market: ft_on_transfer -> nft_transfer
+		await alice.functionCall(stableId, 'purchase', {
+            nft_contract_id: contractName,
+            token_id,            
+        }, GAS, parseNearAmount('1'));
+        /// check owner
+        const token = await contract.nft_token({ token_id });
+        expect(token.owner_id).toEqual(bobId);
+        /// check sale should have 1 N bid for stableId form aliceId
+		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_id: contractId, token_id });
+		expect(sale.bids[stableId].owner_id).toEqual(aliceId)
+		expect(sale.bids[stableId].price).toEqual(parseNearAmount('1'))
+	});
+
 	test('alice purchase nft with ft', async () => {
         const token_id = tokenIds[0]
         /// purchase = ft_transfer_call -> market: ft_on_transfer -> nft_transfer

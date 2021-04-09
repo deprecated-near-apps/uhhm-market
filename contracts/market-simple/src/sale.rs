@@ -112,15 +112,8 @@ impl Contract {
     /// should be able to pull a sale without yocto redirect to wallet?
     pub fn remove_sale(&mut self, nft_contract_id: ValidAccountId, token_id: String) {
         let contract_id: AccountId = nft_contract_id.into();
-        let sale = self
-            .sales
-            .remove(&format!("{}:{}", contract_id, token_id))
-            .expect("No sale");
-        assert_eq!(
-            env::predecessor_account_id(),
-            sale.owner_id,
-            "Must be sale owner"
-        );
+        let sale = self.sales.remove(&format!("{}:{}", contract_id, token_id)).expect("No sale");
+        assert_eq!(env::predecessor_account_id(), sale.owner_id, "Must be sale owner");
     }
 
     #[payable]
@@ -128,20 +121,37 @@ impl Contract {
         &mut self,
         nft_contract_id: ValidAccountId,
         token_id: String,
-    ) -> Promise {
+    ) {
         let contract_id: AccountId = nft_contract_id.into();
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
-        let sale = self.sales.get(&contract_and_token_id).expect("No sale");
+        let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
         let near_token_id = "near".to_string();
-        let price = sale.conditions.get(&near_token_id).expect("Not for sale in NEAR");
+        let price = u128::from(*sale.conditions.get(&near_token_id).expect("Not for sale in NEAR"));
         let deposit = env::attached_deposit();
-        assert_eq!(
-            env::attached_deposit(),
-            u128::from(*price),
-            "Must pay exactly the sale amount {}",
-            deposit
-        );
-        self.process_purchase(contract_id, token_id, near_token_id, env::predecessor_account_id())
+        let buyer_id = env::predecessor_account_id();
+
+        // there's a fixed price user can buy for
+        if deposit == price {
+            self.process_purchase(contract_id, token_id, near_token_id, buyer_id);
+        } else {
+            assert!(deposit < price, "Can't pay more than price: {}", price);
+            // buyer falls short of fixed price, store a bid and refund any current bid lower
+            let new_bid = Bid{
+                owner_id: buyer_id,
+                price: U128(deposit),
+            };
+            let current_bid = sale.bids.get(&near_token_id);
+            if let Some(current_bid) = current_bid {
+                // refund current bid holder
+                let current_price: u128 = current_bid.price.into();
+                assert!(deposit <= current_price, "Can't pay less than or equal to current bid price: {}", current_price);
+                Promise::new(current_bid.owner_id.clone()).transfer(current_bid.price.into());
+                sale.bids.insert(near_token_id, new_bid);
+            } else {
+                sale.bids.insert(near_token_id, new_bid);
+            }
+            self.sales.insert(&contract_and_token_id, &sale);
+        }
     }
 
     #[private]
