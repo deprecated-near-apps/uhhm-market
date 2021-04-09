@@ -153,7 +153,11 @@ describe('deploy contract ' + contractName, () => {
         const token_id = tokenIds[0]
 		await bob.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum);
         await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket);
-		await bob.functionCall(contractId, 'nft_mint', { token_id, metadata }, GAS, parseNearAmount('1'));
+		await bob.functionCall(contractId, 'nft_mint', {
+            token_id,
+            metadata,
+            receiver_id: bobId,
+        }, GAS, parseNearAmount('1'));
         await bob.functionCall(contractId, 'nft_approve', {
             token_id,
             account_id: marketId,
