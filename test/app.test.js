@@ -228,6 +228,8 @@ describe('deploy contract ' + contractName, () => {
 
 	test('alice purchase nft with ft', async () => {
         const token_id = tokenIds[0]
+
+        const aliceBalanceBefore = await getAccountBalance(aliceId);
         /// purchase = ft_transfer_call -> market: ft_on_transfer -> nft_transfer
 		await alice.functionCall(stableId, 'ft_transfer_call', {
             receiver_id: marketId,
@@ -249,6 +251,10 @@ describe('deploy contract ' + contractName, () => {
         /// bob gets 80%
         const bobBalance = await bob.viewFunction(stableId, 'ft_balance_of', { account_id: bobId });
 		expect(bobBalance).toEqual(parseNearAmount('16'));
+
+        // alice's bid of 1 NEAR was returned (some N greater than 0.9 since she used some gas)
+		const aliceBalanceAfter = await getAccountBalance(aliceId);
+        expect(new BN(aliceBalanceAfter.total).sub(new BN(aliceBalanceBefore.total)).gt(new BN(parseNearAmount('0.9')))).toEqual(true)
 	});
 
     /// near purchase
