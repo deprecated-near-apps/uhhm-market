@@ -39,6 +39,8 @@ describe('deploy contract ' + contractName, () => {
         'token' + Date.now() + 2
     ]
 
+    const owner_royalty = 500;
+
     /// contractAccount.accountId is the NFT contract and contractAccount is the owner
     /// see initContract in ./test-utils.js for details
     const contractId = contractAccount.accountId
@@ -57,6 +59,8 @@ describe('deploy contract ' + contractName, () => {
         bob = await getAccount();
         bobId = bob.accountId;
 		console.log('\n\n Bob accountId:', bobId, '\n\n');
+
+        await contractAccount.functionCall(contractName, 'set_owner_royalty', { owner_royalty }, GAS);
 		
         /// create or get stableAccount and deploy ft.wasm (if not already deployed)
 		stableAccount = await createOrInitAccount(stableId, GUESTS_ACCOUNT_SECRET);

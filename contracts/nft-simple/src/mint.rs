@@ -16,27 +16,28 @@ impl Contract {
             owner_id = receiver_id.into();
         }
         
-        // royalties (should equal 10000)
         let mut royalty = HashMap::new();
-        // nft contract owner gets 5%
-        royalty.insert(self.owner_id.clone(), 500);
+        // nft contract owner
+        if self.owner_royalty != 0 {
+            royalty.insert(self.owner_id.clone(), self.owner_royalty);
+        }
         // user royalties arg?
         if let Some(royalties) = royalties {
-            let sum: u32 = royalties.values().map(|a| *a).reduce(|a, b| a + b).unwrap();
-            assert_eq!(sum, 10000, "Royalties should sum to exactly 10000");
             assert!(royalties.len() < 7, "Cannot add more than 6 royalty amounts");
             for (account, mut amount) in royalties {
                 if account == owner_id {
-                    amount -= 500;
+                    amount -= self.owner_royalty;
                 }
                 royalty.insert(account, amount);
             }
         } else {
             // owner gets rest of royalties if no royalties arg
-            royalty.insert(owner_id.clone(), 9500);
+            royalty.insert(owner_id.clone(), 10000 - self.owner_royalty);
         }
 
-        env::log(format!("minting token with royalties: {:?}", royalty).as_bytes());
+        env::log(format!("Token Royalties: {:?}", royalty).as_bytes());
+        let sum: u32 = royalty.values().map(|a| *a).reduce(|a, b| a + b).unwrap();
+        assert_eq!(sum, 10000, "Royalties should sum to exactly 10000");
         
         let token = Token {
             owner_id,
