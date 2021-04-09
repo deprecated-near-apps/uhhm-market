@@ -3,9 +3,12 @@ use crate::*;
 #[near_bindgen]
 impl Contract {
     #[payable]
-    pub fn nft_mint(&mut self, token_id: TokenId, metadata: TokenMetadata) {
+    pub fn nft_mint(&mut self, token_id: TokenId, metadata: TokenMetadata, receiver_id: Option<ValidAccountId>) {
         let initial_storage_usage = env::storage_usage();
-        let owner_id = env::predecessor_account_id();
+        let mut owner_id = env::predecessor_account_id();
+        if let Some(receiver_id) = receiver_id {
+            owner_id = receiver_id.into();
+        }
         
         // royalties (should equal 10000)
         let mut royalty = HashMap::new();
