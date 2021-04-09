@@ -2,6 +2,10 @@ use crate::*;
 use near_sdk::{log, CryptoHash};
 use std::mem::size_of;
 
+pub(crate) fn royalty_to_payout(a: u32, b: Balance) -> Balance {
+    a as u128 * b / 10_000u128
+}
+
 pub(crate) fn hash_account_id(account_id: &AccountId) -> CryptoHash {
     let mut hash = CryptoHash::default();
     hash.copy_from_slice(&env::sha256(account_id.as_bytes()));

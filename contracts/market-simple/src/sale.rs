@@ -100,11 +100,7 @@ impl Contract {
         let contract_id: AccountId = nft_contract_id.into();
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
-        assert_eq!(
-            env::predecessor_account_id(),
-            sale.owner_id,
-            "Must be sale owner"
-        );
+        assert_eq!(env::predecessor_account_id(), sale.owner_id, "Must be sale owner");
         sale.conditions.insert(ft_token_id.into(), price);
         self.sales.insert(&contract_and_token_id, &sale);
     }
@@ -187,7 +183,7 @@ impl Contract {
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
         let sale = self.sales.remove(&contract_and_token_id).expect("No sale");
 
-        ext_contract::nft_transfer(
+        ext_contract::nft_transfer_payout(
             buyer_id.clone(),
             token_id.clone(),
             sale.owner_id.clone(),
@@ -228,8 +224,8 @@ impl Contract {
             PromiseResult::Successful(value) => {
                 // None means a bad payout from bad NFT contract
                 near_sdk::serde_json::from_slice::<Payout>(&value).ok().and_then(|payout| {
-                    // gas to do 8 FT transfers (and definitely 8 NEAR transfers)
-                    if payout.len() > 8 {
+                    // gas to do 10 FT transfers (and definitely 10 NEAR transfers)
+                    if payout.len() + sale.bids.len() > 8 {
                         None
                     } else {
                         // payouts must == sale.price, otherwise something wrong with NFT contract

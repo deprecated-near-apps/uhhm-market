@@ -87,7 +87,7 @@ describe('deploy contract ' + contractName, () => {
             console.log('\n\n storageMinimum:', storageMinimum, '\n\n');
             /// pay storageMinimum for all the royalty receiving accounts
             const promises = []
-            for (let i = 1; i < 8; i++) {
+            for (let i = 1; i < 6; i++) {
                 promises.push(stableAccount.functionCall(stableId, 'storage_deposit', { account_id: `a${i}.testnet` }, GAS, storageMinimum));
             }
             await Promise.all(promises);
@@ -155,29 +155,41 @@ describe('deploy contract ' + contractName, () => {
 		await bob.functionCall(contractId, 'nft_mint', {
             token_id,
             metadata,
+            royalties: {
+                [bobId]: 8500, // 5% will be taken by contract
+                'a1.testnet': 500,
+                'a2.testnet': 250,
+                'a3.testnet': 250,
+                'a4.testnet': 250,
+                'a5.testnet': 250,
+            },
             receiver_id: bobId,
         }, GAS, parseNearAmount('1'));
+
+        const token = await contract.nft_token({ token_id });
+        expect(token.owner_id).toEqual(bobId)
+        let sale_conditions = [
+            {
+                ft_token_id: stableId,
+                price: parseNearAmount('25')
+            },
+            {
+                ft_token_id: 'near',
+                price: parseNearAmount('5')
+            }
+        ];
+        if (sale_conditions.length + token.royalty.length > 8) {
+            throw new Error("Cannot have more than 8 royalties + sale collateral at the same time")
+        }
+
         await bob.functionCall(contractId, 'nft_approve', {
             token_id,
             account_id: marketId,
-            msg: JSON.stringify({
-                sale_conditions:[
-                    {
-                        ft_token_id: stableId,
-                        price: parseNearAmount('25')
-                    },
-                    {
-                        ft_token_id: 'near',
-                        price: parseNearAmount('5')
-                    }
-                ]
-            })
+            msg: JSON.stringify({ sale_conditions })
         }, GAS, parseNearAmount('0.01'));
-        const token = await contract.nft_token({ token_id });
         const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_id: contractId, token_id });
 		console.log('\n\n', sale, '\n\n');
         expect(sale.conditions[stableId]).toEqual(parseNearAmount('25'))
-        expect(token.owner_id).toEqual(bobId)
 	});
 
 	test('enumerable tests', async () => {

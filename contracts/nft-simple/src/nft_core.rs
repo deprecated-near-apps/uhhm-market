@@ -14,6 +14,14 @@ pub trait NonFungibleTokenCore {
         token_id: TokenId,
         approval_id: Option<U64>,
         memo: Option<String>,
+    );
+
+    fn nft_transfer_payout(
+        &mut self,
+        receiver_id: ValidAccountId,
+        token_id: TokenId,
+        approval_id: Option<U64>,
+        memo: Option<String>,
         balance: Option<U128>,
     ) -> Option<Payout>;
 
@@ -93,6 +101,30 @@ impl NonFungibleTokenCore for Contract {
         token_id: TokenId,
         approval_id: Option<U64>,
         memo: Option<String>,
+    ) {
+        assert_one_yocto();
+
+        let sender_id = env::predecessor_account_id();
+        let previous_token = self.internal_transfer(
+            &sender_id,
+            receiver_id.as_ref(),
+            &token_id,
+            approval_id,
+            memo,
+        );
+        refund_approved_account_ids(
+            previous_token.owner_id.clone(),
+            &previous_token.approved_account_ids,
+        );
+    }
+
+    #[payable]
+    fn nft_transfer_payout(
+        &mut self,
+        receiver_id: ValidAccountId,
+        token_id: TokenId,
+        approval_id: Option<U64>,
+        memo: Option<String>,
         balance: Option<U128>,
     ) -> Option<Payout> {
         assert_one_yocto();
@@ -117,7 +149,7 @@ impl NonFungibleTokenCore for Contract {
             let mut payout: Payout = HashMap::new();
             for (k, v) in token.royalty.iter() {
                 let key = k.clone();
-                payout.insert(key, v.multiply_balance(balance_u128));
+                payout.insert(key, royalty_to_payout(*v, balance_u128));
             }
             Some(payout)
         } else {
@@ -255,6 +287,7 @@ impl NonFungibleTokenCore for Contract {
                 token_id,
                 owner_id: token.owner_id,
                 metadata,
+                royalty: token.royalty,
                 approved_account_ids: token.approved_account_ids,
             })
         } else {

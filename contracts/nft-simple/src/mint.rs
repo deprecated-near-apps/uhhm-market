@@ -3,7 +3,13 @@ use crate::*;
 #[near_bindgen]
 impl Contract {
     #[payable]
-    pub fn nft_mint(&mut self, token_id: TokenId, metadata: TokenMetadata, receiver_id: Option<ValidAccountId>) {
+    pub fn nft_mint(
+        &mut self,
+        token_id: TokenId,
+        metadata: TokenMetadata,
+        royalties: Option<HashMap<AccountId, u32>>,
+        receiver_id: Option<ValidAccountId>,
+    ) {
         let initial_storage_usage = env::storage_usage();
         let mut owner_id = env::predecessor_account_id();
         if let Some(receiver_id) = receiver_id {
@@ -12,38 +18,25 @@ impl Contract {
         
         // royalties (should equal 10000)
         let mut royalty = HashMap::new();
-        royalty.insert(
-            owner_id.clone(),
-            SafeFraction::new(8000),
-        );
-        royalty.insert(
-            "a1.testnet".to_string(),
-            SafeFraction::new(500),
-        );
-        royalty.insert(
-            "a2.testnet".to_string(),
-            SafeFraction::new(250),
-        );
-        royalty.insert(
-            "a3.testnet".to_string(),
-            SafeFraction::new(250),
-        );
-        royalty.insert(
-            "a4.testnet".to_string(),
-            SafeFraction::new(250),
-        );
-        royalty.insert(
-            "a5.testnet".to_string(),
-            SafeFraction::new(250),
-        );
-        royalty.insert(
-            "a6.testnet".to_string(),
-            SafeFraction::new(250),
-        );
-        royalty.insert(
-            "a7.testnet".to_string(),
-            SafeFraction::new(250),
-        );
+        // nft contract owner gets 5%
+        royalty.insert(self.owner_id.clone(), 500);
+        // user royalties arg?
+        if let Some(royalties) = royalties {
+            let sum: u32 = royalties.values().map(|a| *a).reduce(|a, b| a + b).unwrap();
+            assert_eq!(sum, 10000, "Royalties should sum to exactly 10000");
+            assert!(royalties.len() < 7, "Cannot add more than 6 royalty amounts");
+            for (account, mut amount) in royalties {
+                if account == owner_id {
+                    amount -= 500;
+                }
+                royalty.insert(account, amount);
+            }
+        } else {
+            // owner gets rest of royalties if no royalties arg
+            royalty.insert(owner_id.clone(), 9500);
+        }
+
+        env::log(format!("minting token with royalties: {:?}", royalty).as_bytes());
         
         let token = Token {
             owner_id,

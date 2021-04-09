@@ -13,7 +13,6 @@ use crate::internal::*;
 pub use crate::metadata::*;
 pub use crate::mint::*;
 pub use crate::nft_core::*;
-pub use crate::safe_fraction::*;
 pub use crate::token::*;
 pub use crate::enumerable::*;
 
@@ -21,7 +20,6 @@ mod internal;
 mod metadata;
 mod mint;
 mod nft_core;
-mod safe_fraction;
 mod token;
 mod enumerable;
 
