@@ -1,4 +1,3 @@
-
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LookupMap, LookupSet};
 use near_sdk::json_types::{ValidAccountId, U128, U64};
@@ -20,8 +19,9 @@ mod sale;
 mod ft_callbacks;
 mod nft_callbacks;
 
-#[global_allocator]
-static ALLOC: near_sdk::wee_alloc::WeeAlloc<'_> = near_sdk::wee_alloc::WeeAlloc::INIT;
+near_sdk::setup_alloc!();
+
+// TODO check seller supports storage_deposit at ft_token_id they want to post sale in
 
 /// measuring how many royalties can be paid
 const GAS_FOR_FT_TRANSFER: Gas = 10_000_000_000_000;
@@ -32,6 +32,7 @@ const NO_DEPOSIT: Balance = 0;
 const STORAGE_AMOUNT: u128 = 100_000_000_000_000_000_000_000;
 
 pub type TokenId = String;
+pub type FungibleTokenId = AccountId;
 pub type ContractAndTokenId = String;
 pub type Payout = HashMap<AccountId, u128>;
 
