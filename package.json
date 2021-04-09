@@ -40,8 +40,5 @@
         "test": "cross-env REACT_APP_ENV=dev jest app.test.js --useStderr",
         "test:server": "cross-env REACT_APP_ENV=dev jest server.test.js --useStderr",
         "deploy": "cross-env REACT_APP_ENV=prod yarn build && cp -a static/* dist && gh-pages -d dist"
-    },
-    "jest": {
-        "testEnvironment": "jest-environment-uint8array"
     }
 }

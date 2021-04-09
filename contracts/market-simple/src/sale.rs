@@ -240,6 +240,25 @@ impl Contract {
 
         env::log(format!("Royalty {:?}", payout).as_bytes());
 
+        // Payback bids that were not claimed
+        for (bid_ft, bid) in &sale.bids {
+            if ft_token_id != *bid_ft {
+                env::log(format!("{} bid repayment {:?} to {}", bid_ft.clone(), bid.price.clone(), bid.owner_id.clone()).as_bytes());
+                if bid_ft == "near" {
+                    Promise::new(bid.owner_id.clone()).transfer(u128::from(bid.price));
+                } else {
+                    ext_contract::ft_transfer(
+                        bid.owner_id.clone(),
+                        bid.price,
+                        None,
+                        &ft_token_id,
+                        1,
+                        GAS_FOR_FT_TRANSFER,
+                    );
+                }
+            }
+        }
+
         // NEAR payouts
         if ft_token_id == "near" {
             for (receiver_id, amount) in &payout {
