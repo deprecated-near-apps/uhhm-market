@@ -148,7 +148,7 @@ describe('deploy contract ' + contractName, () => {
 		expect(balance).toEqual(amount);
 	});
 
-    test('bob: FT storage, market storage, NFT mint, approve sale with FT', async () => {
+    test('bob: NFT mint, approve sale with FT and NEAR fixed price', async () => {
         const token_id = tokenIds[0]
 		await bob.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum);
         await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket);
@@ -258,7 +258,7 @@ describe('deploy contract ' + contractName, () => {
 
     /// near purchase
 
-    test('bob: nft mint, approve sale with NEAR open for bids', async () => {
+    test('bob: nft mint, approve sale with NEAR fixed price', async () => {
         const token_id = tokenIds[1]
         await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket).catch(() => {});
 		await bob.functionCall(contractId, 'nft_mint', { token_id, metadata }, GAS, parseNearAmount('1'));
