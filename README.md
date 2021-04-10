@@ -11,9 +11,10 @@ High level diagram of NFT sale on Market using Fungible Token:
 ## TODO / DONE:
 - [x] basic purchase of NFT with FT
 - [x] demo pay out royalties (FTs and NEAR)
-- [ ] test and determine standards for markets (best practice?) to buy/sell NFTs (finish standard) with FTs (already standard)
+- [x] test and determine standards for markets (best practice?) to buy/sell NFTs (finish standard) with FTs (already standard)
+- [x] demo some basic auction types, secondary markets and 
 - [ ] connect with bridged tokens e.g. buy and sell with wETH/nDAI (or whatever we call these)
-- [ ] demo some basic auction types, secondary markets and frontend example
+- [ ] frontend example
 
 ## Notes:
 
