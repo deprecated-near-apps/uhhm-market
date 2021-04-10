@@ -1,5 +1,4 @@
 use crate::*;
-use near_sdk::borsh::{self};
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
@@ -141,7 +140,7 @@ impl Contract {
             if let Some(current_bid) = current_bid {
                 // refund current bid holder
                 let current_price: u128 = current_bid.price.into();
-                assert!(deposit <= current_price, "Can't pay less than or equal to current bid price: {}", current_price);
+                assert!(deposit > current_price, "Can't pay less than or equal to current bid price: {}", current_price);
                 Promise::new(current_bid.owner_id.clone()).transfer(current_bid.price.into());
                 sale.bids.insert(near_token_id, new_bid);
             } else {

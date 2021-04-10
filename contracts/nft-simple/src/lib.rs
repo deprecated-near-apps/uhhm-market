@@ -42,7 +42,7 @@ pub struct Contract {
     pub metadata: LazyOption<NFTMetadata>,
 
     //custom fields for owner
-    pub owner_royalty: u32,
+    pub contract_royalty: u32,
 }
 
 /// Helper structure to for keys of the persistent collections.
@@ -71,7 +71,7 @@ impl Contract {
                 StorageKey::NftMetadata.try_to_vec().unwrap(),
                 Some(&metadata),
             ),
-            owner_royalty: 100,
+            contract_royalty: 100,
         };
 
         this.measure_min_token_storage_cost();
@@ -102,14 +102,14 @@ impl Contract {
 
     /// custom setters for owner
 
-    pub fn set_owner_royalty(&mut self, owner_royalty: u32) {
-        self.owner_royalty = owner_royalty;
+    pub fn set_contract_royalty(&mut self, contract_royalty: u32) {
+        self.contract_royalty = contract_royalty;
     }
 
     /// custom views
 
-    pub fn get_owner_royalty(&self) -> u32 {
-        self.owner_royalty
+    pub fn get_contract_royalty(&self) -> u32 {
+        self.contract_royalty
     }
 }
 

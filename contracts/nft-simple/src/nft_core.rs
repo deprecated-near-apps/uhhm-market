@@ -94,6 +94,7 @@ trait NonFungibleTokenResolver {
 
 #[near_bindgen]
 impl NonFungibleTokenCore for Contract {
+
     #[payable]
     fn nft_transfer(
         &mut self,
@@ -103,7 +104,6 @@ impl NonFungibleTokenCore for Contract {
         memo: Option<String>,
     ) {
         assert_one_yocto();
-
         let sender_id = env::predecessor_account_id();
         let previous_token = self.internal_transfer(
             &sender_id,
@@ -128,7 +128,6 @@ impl NonFungibleTokenCore for Contract {
         balance: Option<U128>,
     ) -> Option<Payout> {
         assert_one_yocto();
-
         let sender_id = env::predecessor_account_id();
         let previous_token = self.internal_transfer(
             &sender_id,
@@ -156,9 +155,14 @@ impl NonFungibleTokenCore for Contract {
             None
         };
 
-        // add sender_id as new owner_royalty receiver
-        let owner_royalty = token.royalty.remove(&previous_token.owner_id).unwrap();
-        token.royalty.insert(sender_id, owner_royalty);
+        // add receiver_id as new owner_royalty receiver
+        let mut owner_royalty = token.royalty.remove(&previous_token.owner_id).unwrap();
+        // token sold by nft contract owner - add perpetual royalty
+        if self.owner_id == previous_token.owner_id {
+            token.royalty.insert(self.owner_id.clone(), self.contract_royalty);
+            owner_royalty -= self.contract_royalty;
+        }
+        token.royalty.insert(receiver_id.as_ref().to_string(), owner_royalty);
         self.tokens_by_id.insert(&token_id, &token);
 
         payout

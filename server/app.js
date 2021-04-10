@@ -6,8 +6,8 @@ const { withNear } = require('./middleware/near');
 const { near, contractAccount } = require('./utils/near-utils');
 const { contractName, networkId, GAS, contractMethods, GUESTS_ACCOUNT_SECRET } = getConfig();
 const {
-    Account,
-    KeyPair,
+	Account,
+	KeyPair,
 	utils: {
 		format: {
 			parseNearAmount
@@ -29,14 +29,14 @@ app.get('/', (req, res) => {
 /// WARNING NO RESTRICTION ON THIS ENDPOINT
 app.post('/add-guest', async (req, res) => {
 	const { account_id, public_key } = req.body;
-    const contractId = account_id.substr(account_id.indexOf('.') + 1)
-    /// setup signer for guestAccount txs
-    const guestId = 'guests.' + contractId
-    const guestKeyPair = KeyPair.fromString(GUESTS_ACCOUNT_SECRET)
-    near.connection.signer.keyStore.setKey(networkId, guestId, guestKeyPair);
-    const guestsAccount = new Account(near.connection, guestId)
-    /// try adding key to guestAccount and guest record to contract
-    console.log('\nAdding guest account:', account_id)
+	const contractId = account_id.substr(account_id.indexOf('.') + 1);
+	/// setup signer for guestAccount txs
+	const guestId = 'guests.' + contractId;
+	const guestKeyPair = KeyPair.fromString(GUESTS_ACCOUNT_SECRET);
+	near.connection.signer.keyStore.setKey(networkId, guestId, guestKeyPair);
+	const guestsAccount = new Account(near.connection, guestId);
+	/// try adding key to guestAccount and guest record to contract
+	console.log('\nAdding guest account:', account_id);
 	try {
 		const addKey = await guestsAccount.addKey(public_key, contractId, contractMethods.changeMethods, parseNearAmount('0.1'));
 		const add_guest = await contractAccount.functionCall(contractId, 'add_guest', { account_id, public_key }, GAS);

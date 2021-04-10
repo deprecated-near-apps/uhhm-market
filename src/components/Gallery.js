@@ -3,12 +3,12 @@ import * as nearAPI from 'near-api-js';
 import { get, set, del } from '../utils/storage';
 import { GAS, parseNearAmount } from '../state/near';
 import { 
-    marketId,
-    contractName,
+	marketId,
+	contractName,
 	getContract,
 	formatAccountId,
-    createGuestAccount,
-    marketDeposit,
+	createGuestAccount,
+	marketDeposit,
 } from '../utils/near-utils';
 
 const ADD_SALE = '__ADD_SALE';
@@ -34,32 +34,32 @@ export const Gallery = ({ near, signedIn, contractAccount, account, localKeys, l
 		setFetching(true);
 		const contract = getContract(contractAccount);
 		const token_ids = await contract.get_token_ids();
-        console.log(token_ids)
+		console.log(token_ids);
 		const newItems = [];
 		for (let i = 0; i < token_ids.length; i++) {
-            const token_id = token_ids[i]
+			const token_id = token_ids[i];
 			const data = await contract.nft_token({
 				token_id
 			});
-            data.sales = []
-            for (let j = 0; j < data.approved_account_ids.length; j++) {
-                const marketId = data.approved_account_ids[j]
-                /// gotta get sale from marketplace contract
-                try {
-                    const sale = await contractAccount.viewFunction(marketId, 'get_sale', {
-                        token_contract_id: contractAccount.accountId,
-                        token_id
-                    });
-                    data.sales.push(sale)
-                } catch (e) {
-                    console.warn(e)
-                    const sale = get(ADD_SALE, {})
-                    if (sale.price) {
-                        del(ADD_SALE)
-                        await account.functionCall(marketId, 'add_sale', sale, GAS, marketDeposit)
-                    }
-                }
-            }
+			data.sales = [];
+			for (let j = 0; j < data.approved_account_ids.length; j++) {
+				const marketId = data.approved_account_ids[j];
+				/// gotta get sale from marketplace contract
+				try {
+					const sale = await contractAccount.viewFunction(marketId, 'get_sale', {
+						token_contract_id: contractAccount.accountId,
+						token_id
+					});
+					data.sales.push(sale);
+				} catch (e) {
+					console.warn(e);
+					const sale = get(ADD_SALE, {});
+					if (sale.price) {
+						del(ADD_SALE);
+						await account.functionCall(marketId, 'add_sale', sale, GAS, marketDeposit);
+					}
+				}
+			}
 			newItems.push({
 				...data,
 				token_id
@@ -72,12 +72,12 @@ export const Gallery = ({ near, signedIn, contractAccount, account, localKeys, l
 	};
 
 	const handlePurchase = async (token_id) => {
-        if (!account) return
+		if (!account) return;
 		update('loading', true);
 		const item = items.find(({ token_id: id }) => token_id === id);
-        if (!item.sales.length) return
+		if (!item.sales.length) return;
 		await account.functionCall(marketId, 'purchase', {
-            token_contract_id: contractName,
+			token_contract_id: contractName,
 			token_id: token_id,
 		}, GAS, item.sales[0].price);
 		await loadItems();
@@ -88,20 +88,20 @@ export const Gallery = ({ near, signedIn, contractAccount, account, localKeys, l
 		update('loading', true);
 		if (!account) {
 			const guestAccount = createGuestAccount(near, KeyPair.fromString(localKeys.accessSecret));
-            try {
-                await guestAccount.functionCall(contractName, 'nft_remove_sale_guest', {
-                    token_id,
-                    market_id: marketId,
-                }, GAS)
-            } catch(e) {
-                console.warn(e)
-            }
-            await guestAccount.functionCall(contractName, 'nft_add_sale_guest', {
-                token_id,
-                price: parseNearAmount(amount),
-                market_id: marketId,
-                market_deposit: marketDeposit
-            }, GAS)
+			try {
+				await guestAccount.functionCall(contractName, 'nft_remove_sale_guest', {
+					token_id,
+					market_id: marketId,
+				}, GAS);
+			} catch(e) {
+				console.warn(e);
+			}
+			await guestAccount.functionCall(contractName, 'nft_add_sale_guest', {
+				token_id,
+				price: parseNearAmount(amount),
+				market_id: marketId,
+				market_deposit: marketDeposit
+			}, GAS);
 		} else {
 			try {
 				const sale = await account.viewFunction(marketId, 'get_sale', { token_contract_id: contractName, token_id });
@@ -111,9 +111,9 @@ export const Gallery = ({ near, signedIn, contractAccount, account, localKeys, l
 					token_contract_id: contractName,
 					token_id,
 					price: parseNearAmount(amount)
-				}, GAS)
+				}, GAS);
 			} catch(e) {
-				console.warn(e)
+				console.warn(e);
 				/// paying above marketDeposit, but after sale deposit will be paid back
 				await account.functionCall(contractName, 'nft_approve_account_id', {
 					token_id,
@@ -122,9 +122,9 @@ export const Gallery = ({ near, signedIn, contractAccount, account, localKeys, l
 						beneficiary: account.accountId,
 						price: parseNearAmount(amount)
 					})
-				}, GAS, parseNearAmount('0.1001'))
+				}, GAS, parseNearAmount('0.1001'));
 			}
-        }
+		}
 		await loadItems();
 		update('loading', false);
 	};
@@ -139,9 +139,9 @@ export const Gallery = ({ near, signedIn, contractAccount, account, localKeys, l
 		mine = items.filter(({ owner_id }) => owner_id === accountId);
 	} else {
 		market = items;
-    }
+	}
 
-    console.log(mine)
+	console.log(mine);
 
 	return <>
 		{signedIn && <div className="filters">
@@ -155,14 +155,14 @@ export const Gallery = ({ near, signedIn, contractAccount, account, localKeys, l
 				{filter === 1 && <p>Owned by {formatAccountId(owner_id)}</p>}
 				{
 					sales.map(({ price }, i) =>
-                        <div key={i}>
-                            <p>Price {formatNearAmount(price, 2)}</p>
-                            {
-                                account && account.accountId !== owner_id &&
+						<div key={i}>
+							<p>Price {formatNearAmount(price, 2)}</p>
+							{
+								account && account.accountId !== owner_id &&
                                  <button onClick={() => handlePurchase(token_id)}>Purchase</button>
-                            }
-                        </div>
-                    ) 
+							}
+						</div>
+					) 
 				}
 				{filter === 2 && <>
 					<input placeholder="Price (N)" value={amount} onChange={(e) => setAmount(e.target.value)} />

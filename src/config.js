@@ -1,4 +1,4 @@
-const contractName = 'dev-1618011891442-7366323';
+const contractName = 'dev-1618072907912-6655112';
 
 module.exports = function getConfig() {
 	let config = {
@@ -19,14 +19,14 @@ module.exports = function getConfig() {
 			GUESTS_ACCOUNT_SECRET: '7UVfzoKZL4WZGF98C3Ue7tmmA6QamHCiB1Wd5pkxVPAc7j6jf3HXz5Y9cR93Y68BfGDtMLQ9Q29Njw5ZtzGhPxv',
 			contractMethods: {
 				changeMethods: [
-                    'new', 'nft_mint', 'nft_transfer', 'add_guest', 'remove_guest',
-                    'nft_approve_account_id', 
-                    'nft_mint_guest', 'nft_add_sale_guest', 'nft_remove_sale_guest', 'upgrade_guest'
-                ],
+					'new', 'nft_mint', 'nft_transfer', 'add_guest', 'remove_guest',
+					'nft_approve_account_id', 
+					'nft_mint_guest', 'nft_add_sale_guest', 'nft_remove_sale_guest', 'upgrade_guest'
+				],
 				viewMethods: ['get_guest', 'get_token_ids', 'nft_token', 'get_sale'],
 			},
-            marketDeposit: '100000000000000000000000',
-            marketId: 'market.' + contractName
+			marketDeposit: '100000000000000000000000',
+			marketId: 'market.' + contractName
 		};
 	}
     

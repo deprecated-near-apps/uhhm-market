@@ -7,7 +7,7 @@ impl Contract {
         &mut self,
         token_id: TokenId,
         metadata: TokenMetadata,
-        royalties: Option<HashMap<AccountId, u32>>,
+        perpetual_royalties: Option<HashMap<AccountId, u32>>,
         receiver_id: Option<ValidAccountId>,
     ) {
         let initial_storage_usage = env::storage_usage();
@@ -15,30 +15,34 @@ impl Contract {
         if let Some(receiver_id) = receiver_id {
             owner_id = receiver_id.into();
         }
-        
+
         let mut royalty = HashMap::new();
-        // nft contract owner
-        if self.owner_royalty != 0 {
-            royalty.insert(self.owner_id.clone(), self.owner_royalty);
-        }
-        // user royalties arg?
-        if let Some(royalties) = royalties {
-            assert!(royalties.len() < 7, "Cannot add more than 6 royalty amounts");
-            for (account, mut amount) in royalties {
-                if account == owner_id {
-                    amount -= self.owner_royalty;
-                }
+        let mut total_perpetual = 0;
+        // user added perpetual_royalties (percentage paid with every transfer)
+        if let Some(perpetual_royalties) = perpetual_royalties {
+            assert!(perpetual_royalties.len() < 7, "Cannot add more than 6 perpetual royalty amounts");
+            for (account, amount) in perpetual_royalties {
                 royalty.insert(account, amount);
+                total_perpetual += amount;
             }
+        }
+
+        // arbitrary
+        assert!(total_perpetual < 2001, "Perpetual royalties cannot be more than 20%");
+
+        if self.owner_id != owner_id {
+            royalty.insert(owner_id.clone(), 10000 - total_perpetual - self.contract_royalty);
+            royalty.insert(self.owner_id.clone(), self.contract_royalty);
         } else {
-            // owner gets rest of royalties if no royalties arg
-            royalty.insert(owner_id.clone(), 10000 - self.owner_royalty);
+            // contract owner minting for primary sale
+            royalty.insert(self.owner_id.clone(), 10000 - total_perpetual);
         }
 
         env::log(format!("Token Royalties: {:?}", royalty).as_bytes());
         let sum: u32 = royalty.values().map(|a| *a).reduce(|a, b| a + b).unwrap();
-        assert_eq!(sum, 10000, "Royalties should sum to exactly 10000");
+        assert_eq!(sum, 10000, "Royalties sum must be exactly 10000");
         
+        // create token
         let token = Token {
             owner_id,
             approved_account_ids: Default::default(),

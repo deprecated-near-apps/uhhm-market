@@ -6,7 +6,7 @@ export const {
 	networkId, nodeUrl, walletUrl, nameSuffix,
 	contractName, contractMethods,
 	accessKeyMethods,
-    marketId, marketDeposit,
+	marketId, marketDeposit,
 } = getConfig();
 
 const {
@@ -15,13 +15,13 @@ const {
 	InMemorySigner,
 } = nearAPI;
 
-let near
+let near;
 
 export const setSignerFromSeed = async (accountId, seedPhrase) => {
-    const { secretKey } = parseSeedPhrase(seedPhrase);
-    const keyPair = KeyPair.fromString(secretKey);
-    near.connection.signer.keyStore.setKey(networkId, accountId, keyPair);
-}
+	const { secretKey } = parseSeedPhrase(seedPhrase);
+	const keyPair = KeyPair.fromString(secretKey);
+	near.connection.signer.keyStore.setKey(networkId, accountId, keyPair);
+};
 export function formatAccountId (accountId, len = 16) {
 	if (accountId.length > len) {
 		return accountId.substr(0, len - 3) + '...';

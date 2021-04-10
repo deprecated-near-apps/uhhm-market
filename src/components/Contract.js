@@ -2,8 +2,8 @@ import React, {useEffect, useState} from 'react';
 import * as nearAPI from 'near-api-js';
 import { GAS, parseNearAmount } from '../state/near';
 import { 
-    contractName,
-    createGuestAccount,
+	contractName,
+	createGuestAccount,
 	accessKeyMethods,
 	createAccessKeyAccount,
 	getContract,
@@ -20,9 +20,9 @@ export const Contract = ({ near, update, localKeys = {}, account }) => {
 	const [freebies, setFreebies] = useState(0);
     
 	const checkFreebies = async () => {
-        if (!localKeys.accessPublic) return
+		if (!localKeys.accessPublic) return;
 		const guestAccount = createGuestAccount(near, KeyPair.fromString(localKeys.accessSecret));
-        const guest = await guestAccount.viewFunction(contractName, 'get_guest', { public_key: localKeys.accessPublic })
+		const guest = await guestAccount.viewFunction(contractName, 'get_guest', { public_key: localKeys.accessPublic });
 		setFreebies(guest.mints + 1);
 	};
 	useEffect(checkFreebies, []);
@@ -45,12 +45,12 @@ export const Contract = ({ near, update, localKeys = {}, account }) => {
         
 		const contract = getContract(appAccount);
 		await contract[!account ? 'nft_mint_guest' : 'nft_mint']({
-            token_id: 'token-' + Date.now(),
+			token_id: 'token-' + Date.now(),
 			metadata,
 		}, GAS, deposit);
 		checkFreebies();
 		update('loading', false);
-        setMetadata('')
+		setMetadata('');
 	};
 
 	return <>

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 
 import * as nearAPI from 'near-api-js';
-import { updateWallet } from '../state/near'
+import { updateWallet } from '../state/near';
 import {
-    getContract,
-    contractMethods,
+	getContract,
+	contractMethods,
 	GAS
 } from '../utils/near-utils';
 const {
@@ -24,8 +24,8 @@ export const Wallet = ({ wallet, account, update, dispatch, handleClose }) => {
 		if (account) loadProceeds();
 	}, []);
 	const loadProceeds = async () => {
-        const contract = getContract(account, contractMethods);
-        console.log(await contract.get_proceeds({ owner_id: account.accountId }))
+		const contract = getContract(account, contractMethods);
+		console.log(await contract.get_proceeds({ owner_id: account.accountId }));
 		setProceeds(formatNearAmount(await contract.get_proceeds({ owner_id: account.accountId }), 2));
 	};
 
@@ -37,8 +37,8 @@ export const Wallet = ({ wallet, account, update, dispatch, handleClose }) => {
 			account_id: account.accountId,
 			beneficiary: accountId,
 		}, GAS);
-        loadProceeds();
-        dispatch(updateWallet());
+		loadProceeds();
+		dispatch(updateWallet());
 		update('loading', false);
 	};
 
