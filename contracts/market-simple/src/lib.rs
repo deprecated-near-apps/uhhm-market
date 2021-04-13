@@ -96,4 +96,8 @@ impl Contract {
     pub fn storage_amount(&self) -> U128 {
         U128(STORAGE_AMOUNT)
     }
+    
+    pub fn storage_paid(&self, account_id: AccountId) -> bool {
+        self.storage_deposits.contains(&account_id)
+    }
 }

@@ -16,6 +16,7 @@ impl FungibleTokenReceiver for Contract {
         
         let contract_and_token_id = format!("{}:{}", nft_contract_id, token_id);
         let sale = self.sales.get(&contract_and_token_id).expect("No sale in ft_on_transfer");
+        assert_ne!(sale.owner_id, sender_id, "Cannot bid on your own sale.");
         let ft_token_id = env::predecessor_account_id();
         let price = *sale.conditions.get(&ft_token_id).expect("Not for sale in that token type");
 

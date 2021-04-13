@@ -61,8 +61,8 @@ const App = () => {
 
 		<div id="tabs">
 
-			<div onClick={() => update('app.tab', 1)} style={{ background: tab === 1 ? '#FFB259' : ''}}>For Sale</div>
-			<div onClick={() => update('app.tab', 2)} style={{ background: tab === 2 ? '#FFB259' : ''}}>All NFTs</div>
+			<div onClick={() => update('app.tab', 1)} style={{ background: tab === 1 ? '#FFB259' : ''}}>Market</div>
+			<div onClick={() => update('app.tab', 2)} style={{ background: tab === 2 ? '#FFB259' : ''}}>My NFTs</div>
 			<div onClick={() => update('app.tab', 3)} style={{ background: tab === 3 ? '#FFB259' : ''}}>Mint</div>
 
 		</div>
@@ -76,7 +76,7 @@ const App = () => {
             </div>
 		}
 		<div id="gallery">
-			<Gallery {...{ tab, loading, contractAccount }} />
+			<Gallery {...{ tab, loading, contractAccount, account }} />
 		</div>
 	</>;
 };

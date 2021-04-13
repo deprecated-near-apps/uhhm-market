@@ -5,11 +5,17 @@ impl Contract {
     #[payable]
     pub fn nft_mint(
         &mut self,
-        token_id: TokenId,
+        token_id: Option<TokenId>,
         metadata: TokenMetadata,
         perpetual_royalties: Option<HashMap<AccountId, u32>>,
         receiver_id: Option<ValidAccountId>,
     ) {
+
+        let mut final_token_id = format!("{}", self.token_metadata_by_id.len() + 1);
+        if let Some(token_id) = token_id {
+            final_token_id = token_id
+        }
+
         let initial_storage_usage = env::storage_usage();
         let mut owner_id = env::predecessor_account_id();
         if let Some(receiver_id) = receiver_id {
@@ -50,11 +56,11 @@ impl Contract {
             royalty,
         };
         assert!(
-            self.tokens_by_id.insert(&token_id, &token).is_none(),
+            self.tokens_by_id.insert(&final_token_id, &token).is_none(),
             "Token already exists"
         );
-        self.token_metadata_by_id.insert(&token_id, &metadata);
-        self.internal_add_token_to_owner(&token.owner_id, &token_id);
+        self.token_metadata_by_id.insert(&final_token_id, &metadata);
+        self.internal_add_token_to_owner(&token.owner_id, &final_token_id);
 
         let new_token_size_in_bytes = env::storage_usage() - initial_storage_usage;
         let required_storage_in_bytes =

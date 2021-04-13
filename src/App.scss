@@ -21,8 +21,8 @@ body {
 
 @media only screen and (min-width: $width) {
     body {
-        border-left: 2px solid rgba(0, 0, 0, 0.1);
-        border-right: 2px solid rgba(0, 0, 0, 0.1);
+        border-left: 2px solid #ddd;
+        border-right: 2px solid #ddd;
     }
 }
 
@@ -39,8 +39,7 @@ body::-webkit-scrollbar {
     } 
   } 
 .loading {
-    width: 100%;
-    max-width: $width;
+    width: 100vw;
     height: 100vh;
     background: rgba(255, 255, 255, 0.9);
     z-index: 10000;
@@ -86,7 +85,7 @@ body::-webkit-scrollbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 2px solid #ddd;
     > div {
         padding: 16px;
         width: 50%;
@@ -106,8 +105,8 @@ body::-webkit-scrollbar {
     #profile {
         position: absolute;
         padding: 16px;
-        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-        box-shadow: 0 0 16px rgba(0, 0, 0, 0.1);
+        border-bottom: 2px solid #ddd;
+        box-shadow: 0 0 16px #ccc;
         background: white;
         z-index: 9999;
         top: 80px;
@@ -126,12 +125,12 @@ body::-webkit-scrollbar {
     width: 100vw;
     max-width: $width;
     margin-left: $margin-fix;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
     cursor: pointer;
-    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 0 16px rgba(0, 0, 0, 0.1);
+    border-bottom: 2px solid #ddd;
+    box-shadow: 0 0 16px #ddd;
     > div:not(:last-child) {
-        border-right: #888;
+        border-right: 2px solid #ddd;
     }
     > div {
         height: 100%;
@@ -151,7 +150,7 @@ body::-webkit-scrollbar {
         margin-bottom: 16px;
     }
     .item {
-        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        border-bottom: 2px solid #ddd;
         padding: 16px;
         padding-top: 0;
         margin-bottom: 16px;
@@ -159,15 +158,23 @@ body::-webkit-scrollbar {
             width: 100vw;
             max-width: $width;
             margin-left: $margin-fix;
+            margin-bottom: 8px;
         }
         button {
             margin: 0;
+        }
+        .offers {
+            height: 48px;
+            border-top: 2px solid #ddd;
+            padding-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
     }
 }
 
 #contract {
-    height: 232px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -175,7 +182,32 @@ body::-webkit-scrollbar {
     text-align: center;
 }
 
-button, input {
+.button-group {
+    margin-left: -8px;
+    margin-bottom: -8px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.margin {
+    margin: 16px;
+}
+
+.margin-bottom {
+    margin-bottom: 16px;
+}
+
+.center {
+    text-align: center;
+}
+
+h4 {
+    margin: 16px 0;
+}
+
+button, input, select {
     border: 2px solid #0072CE;
     padding: 12px;
     font-family: 'Inter', sans-serif !important;
@@ -183,8 +215,16 @@ button, input {
     outline: none !important;
 }
 
-button {
+button, select {
+    background: white;
     margin: 8px;
+}
+
+select {
+    height: 44px;
+}
+
+button {
     &:hover {
         background: #FFB259;
     }
@@ -192,8 +232,7 @@ button {
 
 input {
     margin: 8px 0;
-    display: block;
-    width: 100%;
+    width: 50%;
 }
 
 

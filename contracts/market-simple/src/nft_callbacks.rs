@@ -56,7 +56,7 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
             }
         }
         
-        env::log(format!("add_sale for owner: {}", &owner_id).as_bytes());
+        // env::log(format!("add_sale for owner: {}", &owner_id).as_bytes());
 
         let bids = HashMap::new();
 

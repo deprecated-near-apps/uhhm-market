@@ -61,6 +61,7 @@ impl Contract {
         let sale = self.internal_remove_sale(nft_contract_id.into(), token_id);
         let owner_id = env::predecessor_account_id();
         assert_eq!(owner_id, sale.owner_id, "Must be sale owner");
+        self.refund_bids(&sale.bids, None);
     }
 
     pub fn update_price(
@@ -87,10 +88,11 @@ impl Contract {
         let contract_id: AccountId = nft_contract_id.into();
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
+        let buyer_id = env::predecessor_account_id();
+        assert_ne!(sale.owner_id, buyer_id, "Cannot bid on your own sale.");
         let near_token_id = "near".to_string();
         let price = u128::from(*sale.conditions.get(&near_token_id).expect("Not for sale in NEAR"));
         let deposit = env::attached_deposit();
-        let buyer_id = env::predecessor_account_id();
 
         // there's a fixed price user can buy for
         if deposit == price {
@@ -208,7 +210,7 @@ impl Contract {
         let payout = if let Some(payout_option) = payout_option {
             payout_option
         } else {
-            env::log(format!("Refunding {} to {}", u128::from(price), buyer_id).as_bytes());
+            // env::log(format!("Refunding {} to {}", u128::from(price), buyer_id).as_bytes());
             // refund NEAR
             if ft_token_id == "near" {
                 Promise::new(buyer_id).transfer(u128::from(price));
@@ -217,25 +219,10 @@ impl Contract {
             return price;
         };
 
-        env::log(format!("Payouts {:?}", payout).as_bytes());
+        // env::log(format!("Payouts {:?}", payout).as_bytes());
 
         // Payback bids that were not claimed
-        for (bid_ft, bid) in &sale.bids {
-            if ft_token_id != *bid_ft {
-                if bid_ft == "near" {
-                    Promise::new(bid.owner_id.clone()).transfer(u128::from(bid.price));
-                } else {
-                    ext_contract::ft_transfer(
-                        bid.owner_id.clone(),
-                        bid.price,
-                        None,
-                        &ft_token_id,
-                        1,
-                        GAS_FOR_FT_TRANSFER,
-                    );
-                }
-            }
-        }
+        self.refund_bids(&sale.bids, Some(ft_token_id.clone()));
 
         // NEAR payouts
         if ft_token_id == "near" {
@@ -258,6 +245,31 @@ impl Contract {
             }
             // keep all FTs (already transferred for payouts)
             U128(0)
+        }
+    }
+
+    #[private]
+    pub fn refund_bids(&mut self, bids: &HashMap<FungibleTokenId, Bid>, ft_token_id: Option<FungibleTokenId>) {
+        let mut ft_used = "".to_string();
+        if let Some(ft_token_id) = ft_token_id {
+            ft_used = ft_token_id
+        }
+        for (bid_ft, bid) in bids {
+            if ft_used == *bid_ft {
+                continue;
+            }
+            if bid_ft == "near" {
+                Promise::new(bid.owner_id.clone()).transfer(u128::from(bid.price));
+            } else {
+                ext_contract::ft_transfer(
+                    bid.owner_id.clone(),
+                    bid.price,
+                    None,
+                    bid_ft,
+                    1,
+                    GAS_FOR_FT_TRANSFER,
+                );
+            }
         }
     }
 }

@@ -2,10 +2,9 @@ import React, {useEffect, useState} from 'react';
 import * as nearAPI from 'near-api-js';
 import { GAS, parseNearAmount } from '../state/near';
 import { 
+	contractId,
 	contractName,
 	createGuestAccount,
-	accessKeyMethods,
-	createAccessKeyAccount,
 	getContract,
 } from '../utils/near-utils';
 
@@ -13,38 +12,21 @@ const {
 	KeyPair,
 } = nearAPI;
 
-export const Contract = ({ near, update, localKeys = {}, account }) => {
-	if (!account && !localKeys.signedIn) return null;
+export const Contract = ({ near, update, account }) => {
+	if (!account) return <p>Please connect your NEAR Wallet</p>;
 
-	const [metadata, setMetadata] = useState('');
-	const [freebies, setFreebies] = useState(0);
-    
-	const checkFreebies = async () => {
-		if (!localKeys.accessPublic) return;
-		const guestAccount = createGuestAccount(near, KeyPair.fromString(localKeys.accessSecret));
-		const guest = await guestAccount.viewFunction(contractName, 'get_guest', { public_key: localKeys.accessPublic });
-		setFreebies(guest.mints + 1);
-	};
-	useEffect(checkFreebies, []);
+	const [media, setMedia] = useState('');
 
 	const handleMint = async () => {
-		if (!metadata.length) {
+		if (!media.length) {
 			alert('Please enter some metadata');
 			return;
 		}
 		update('loading', true);
-		let appAccount = account;
-		let accountId, deposit;
-		if (!appAccount) {
-			appAccount = createGuestAccount(near, KeyPair.fromString(localKeys.accessSecret));
-			accountId = localKeys.accessAccountId;
-		} else {
-			accountId = account.accountId;
-			deposit = parseNearAmount('1');
-		}
-        
-		const contract = getContract(appAccount);
-		await contract[!account ? 'nft_mint_guest' : 'nft_mint']({
+		
+		const metadata = { media };
+		const deposit = parseNearAmount('0.1');
+		await account.functionCall(contractId, 'nft_mint', {
 			token_id: 'token-' + Date.now(),
 			metadata,
 		}, GAS, deposit);
@@ -55,24 +37,8 @@ export const Contract = ({ near, update, localKeys = {}, account }) => {
 
 	return <>
 		<h3>Mint Something</h3>
-		{ 
-			!account ? <>
-				{
-					freebies > 0 && <>{
-						freebies < 4 ? <>
-							<p>{freebies} / 3 Free Mint</p>
-							<input placeholder="Metadata (Image URL)" value={metadata} onChange={(e) => setMetadata(e.target.value)} />
-							<button onClick={() => handleMint()}>Mint</button>
-						</> :
-							<p>You are out of free mints 😭</p>
-					}</>
-				}
-			</> :
-				<>
-					<input placeholder="Metadata (Image URL)" value={metadata} onChange={(e) => setMetadata(e.target.value)} />
-					<button onClick={() => handleMint()}>Mint</button>
-				</>
-		}
+		<input className="full-width" placeholder="Metadata (Image URL)" value={media} onChange={(e) => setMedia(e.target.value)} />
+		<button onClick={() => handleMint()}>Mint</button>
 	</>;
 };
 
