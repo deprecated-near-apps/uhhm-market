@@ -15,7 +15,7 @@ const {
 	utils: { format: { formatNearAmount } }
 } = nearAPI;
 
-export const Gallery = ({ contractAccount, loading }) => {
+export const Gallery = ({ tab, contractAccount, loading }) => {
 	if (!contractAccount) return null;
 
 	const [tokens, setTokens] = useState([]);
@@ -53,13 +53,10 @@ export const Gallery = ({ contractAccount, loading }) => {
 	};
 
 	return <>
-		<div className="filters">
-			<button onClick={() => setFilter(1)} style={{ background: filter === 1 ? '#FFB259' : ''}}>All NFTs</button>
-			<button onClick={() => setFilter(2)} style={{ background: filter === 2 ? '#FFB259' : ''}}>For Sale</button>
-		</div>
+		
 
 		{
-			filter === 1 && tokens.map(({ metadata: { media }, owner_id, sales, token_id }) => 
+			tab === 1 && sales.map(({ metadata: { media }, owner_id, sales, token_id }) => 
 			<div key={token_id} className="item">
 				<img src={media} />
 				<div className="line"></div>
@@ -71,7 +68,7 @@ export const Gallery = ({ contractAccount, loading }) => {
 		}
 
 		{
-			filter === 2 && sales.map(({ metadata: { media }, owner_id, sales, token_id }) => 
+			tab === 2 && tokens.map(({ metadata: { media }, owner_id, sales, token_id }) => 
 			<div key={token_id} className="item">
 				<img src={media} />
 				<div className="line"></div>

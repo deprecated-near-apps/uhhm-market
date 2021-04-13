@@ -1,19 +1,29 @@
 
 $width: 500px;
+$margin-fix: -16px;
 
 * {
     box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 html {
     overflow: hidden;
 }
 body {
-    margin: 0;
+    margin: 0 auto;
     width: 100vw;
     max-width: $width;
     height: 100vh;
     overflow-y: scroll;
     font-family: 'Inter', sans-serif !important;
+}
+
+@media only screen and (min-width: $width) {
+    body {
+        border-left: 2px solid rgba(0, 0, 0, 0.1);
+        border-right: 2px solid rgba(0, 0, 0, 0.1);
+    }
 }
 
 body::-webkit-scrollbar {
@@ -66,47 +76,94 @@ body::-webkit-scrollbar {
 }
 
 #menu {
+    position: relative;
     background: white;
-    box-shadow: 0 0 16px rgba(0, 0, 0, 0.1);
-    z-index: 9998;
-    position: fixed;
-    top: 0;
-    left: 0;
+    height: 80px;
+    width: 100vw;
+    max-width: $width;
+    margin-top: -16px;
+    margin-left: $margin-fix;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
     > div {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100vw;
-        max-width: $width;
-        > div {
-            padding: 16px;
-            width: 50%;
-        }
-        > div:nth-child(1) {
-            text-align: left;
-        }
-        > div:nth-child(2) {
-            text-align: right;
-        }
+        padding: 16px;
+        width: 50%;
+    }
+    > div:nth-child(1) {
+        text-align: left;
+    }
+    > div:nth-child(2) {
+        text-align: right;
     }
     img {
-        width: 64px;
+        width: 48px;
         cursor: pointer;
         outline: none !important;
     }
+
+    #profile {
+        position: absolute;
+        padding: 16px;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0 16px rgba(0, 0, 0, 0.1);
+        background: white;
+        z-index: 9999;
+        top: 80px;
+        left: 0;
+        width: 100vw;
+        max-width: $width;
+        text-align: center;
+    }
 }
 
-#profile {
-    padding: 16px;
-    box-shadow: 0 0 16px rgba(0, 0, 0, 0.1);
-    background: white;
-    z-index: 9999;
-    position: fixed;
-    top: 96px;
-    left: 0;
+#tabs {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 48px;
     width: 100vw;
     max-width: $width;
-    text-align: center;
+    margin-left: $margin-fix;
+    margin-bottom: 32px;
+    cursor: pointer;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 16px rgba(0, 0, 0, 0.1);
+    > div:not(:last-child) {
+        border-right: #888;
+    }
+    > div {
+        height: 100%;
+        width: 100%;
+        line-height: 48px;
+        text-align: center;
+    }
+}
+
+#gallery {
+    width: 100vw;
+    max-width: $width;
+    margin-left: $margin-fix;
+    padding-bottom: 16px;
+    .filters {
+        text-align: center;
+        margin-bottom: 16px;
+    }
+    .item {
+        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        padding: 16px;
+        padding-top: 0;
+        margin-bottom: 16px;
+        img {
+            width: 100vw;
+            max-width: $width;
+            margin-left: $margin-fix;
+        }
+        button {
+            margin: 0;
+        }
+    }
 }
 
 #contract {
@@ -116,31 +173,6 @@ body::-webkit-scrollbar {
     justify-content: center;
     align-items: center;
     text-align: center;
-}
-
-#gallery {
-    margin-top: 96px;
-    padding-bottom: 16px;
-    .filters {
-        text-align: center;
-        margin-bottom: 16px;
-    }
-    .item {
-        border: 2px solid rgba(0, 0, 0, 0.1);
-        padding: 16px;
-        margin-bottom: 16px;
-        .line {
-            margin: 16px 0 0 -16px;
-            width: calc(100% + 32px);
-            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-        }
-        img {
-            width: 100%;
-        }
-        button {
-            margin-left: 0;
-        }
-    }
 }
 
 button, input {
@@ -163,3 +195,6 @@ input {
     display: block;
     width: 100%;
 }
+
+
+

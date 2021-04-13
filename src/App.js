@@ -13,10 +13,9 @@ import './App.scss';
 
 const App = () => {
 	const { state, dispatch, update } = useContext(appStore);
-
-	console.log(state);
     
 	const { near, wallet, contractAccount, account, loading } = state;
+
     
 	const [profile, setProfile] = useState(false);
 
@@ -31,6 +30,8 @@ const App = () => {
 		setProfile(false);
 	}
     
+	const { tab } = state.app;
+
 	return <>
 		{ loading && <div className="loading">
 			<img src={NearLogo} />
@@ -39,27 +40,34 @@ const App = () => {
         
 		<div id="menu">
 			<div>
-				<div>
-					<img style={{ opacity: signedIn ? 1 : 0.25 }} src={Avatar} 
-						onClick={() => setProfile(!profile)}
-					/>
-				</div>
-				<div>
-					{ !signedIn ? <Wallet {...{ wallet }} /> : account.accountId }
-				</div>
+				<img style={{ opacity: signedIn ? 1 : 0.25 }} src={Avatar} 
+					onClick={() => setProfile(!profile)}
+				/>
 			</div>
+			<div>
+				{ !signedIn ? <Wallet {...{ wallet }} /> : account.accountId }
+			</div>
+			{
+				profile && signedIn && <div id="profile">
+					<div>
+						{
+							wallet && wallet.signedIn && <Wallet {...{ wallet, account, update, dispatch, handleClose: () => setProfile(false) }} />
+						}
+					</div>
+				</div>
+			}
+		</div>
+		
+
+		<div id="tabs">
+
+			<div onClick={() => update('app.tab', 1)} style={{ background: tab === 1 ? '#FFB259' : ''}}>For Sale</div>
+			<div onClick={() => update('app.tab', 2)} style={{ background: tab === 2 ? '#FFB259' : ''}}>All NFTs</div>
+			<div onClick={() => update('app.tab', 3)} style={{ background: tab === 3 ? '#FFB259' : ''}}>Mint</div>
+
 		</div>
 
-		{
-			profile && signedIn && <div id="profile">
-				<div>
-					{
-						wallet && wallet.signedIn && <Wallet {...{ wallet, account, update, dispatch, handleClose: () => setProfile(false) }} />
-					}
-				</div>
-			</div>
-		}
-		{ signedIn &&
+		{ signedIn && tab === 3 &&
             <div id="contract">
             	{
             		signedIn &&
@@ -68,7 +76,7 @@ const App = () => {
             </div>
 		}
 		<div id="gallery">
-			<Gallery {...{ near, signedIn, contractAccount, account, loading, update }} />
+			<Gallery {...{ tab, loading, contractAccount }} />
 		</div>
 	</>;
 };

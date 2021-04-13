@@ -5,6 +5,7 @@ import { initNear } from './near';
 const initialState = {
 	app: {
 		mounted: false,
+		tab: 1,
 	},
 	near: {
 		initialized: false,
