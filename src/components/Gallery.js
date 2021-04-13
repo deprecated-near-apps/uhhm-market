@@ -30,19 +30,30 @@ export const Gallery = ({ near, signedIn, contractAccount, account, localKeys, l
 
 	const loadItems = async () => {
 		setFetching(true);
-		setTokens(await contractAccount.viewFunction(contractId, 'nft_tokens', {
+		const tokens = await contractAccount.viewFunction(contractId, 'nft_tokens', {
 			from_index: '0',
 			limit: '20'
-		}));
+		})
+		setTokens(tokens);
 
-		setSales(await contractAccount.viewFunction(marketId, 'get_sales_by_nft_contract_id', {
+		const sales = await contractAccount.viewFunction(marketId, 'get_sales_by_nft_contract_id', {
 			nft_contract_id: contractId,
 			from_index: '0',
 			limit: '50'
-		}));
+		})
+		// merge sale listing with nft token data
+		for (let i = 0; i < sales.length; i++) {
+			const { token_id } = sales[i];
+			let token = tokens.find(({ token_id: t }) => t === token_id);
+			// don't have it in state, go find token data
+			if (!token) {
+				token = await contractAccount.viewFunction(contractId, 'nft_token', { token_id })
+			}
+			sales[i] = Object.assign(sales[i], token)
+		}
+		setSales(sales);
+		setFetching(false);
 	};
-
-	console.log(sales)
 
 	return <>
 		<div className="filters">
