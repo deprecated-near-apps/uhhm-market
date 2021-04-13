@@ -6,7 +6,6 @@ export const {
 	networkId, nodeUrl, walletUrl, nameSuffix,
 	contractName, contractMethods,
 	accessKeyMethods,
-	marketId, marketDeposit,
 } = getConfig();
 
 const {
@@ -16,6 +15,10 @@ const {
 } = nearAPI;
 
 let near;
+
+// alias
+export const contractId = contractName;
+export const marketId = 'market.' + contractName;
 
 export const setSignerFromSeed = async (accountId, seedPhrase) => {
 	const { secretKey } = parseSeedPhrase(seedPhrase);

@@ -110,7 +110,6 @@ body::-webkit-scrollbar {
 }
 
 #contract {
-    margin-top: 96px;
     height: 232px;
     display: flex;
     flex-direction: column;
@@ -120,6 +119,7 @@ body::-webkit-scrollbar {
 }
 
 #gallery {
+    margin-top: 96px;
     padding-bottom: 16px;
     .filters {
         text-align: center;

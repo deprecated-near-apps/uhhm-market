@@ -4,7 +4,6 @@ import { appStore, onAppMount } from './state/app';
 
 import { Wallet } from './components/Wallet';
 import { Contract } from './components/Contract';
-import { Keys } from './components/Keys';
 import { Gallery } from './components/Gallery';
 
 import Avatar from 'url:./img/avatar.jpg';
@@ -17,7 +16,7 @@ const App = () => {
 
 	console.log(state);
     
-	const { near, wallet, contractAccount, account, localKeys, loading } = state;
+	const { near, wallet, contractAccount, account, loading } = state;
     
 	const [profile, setProfile] = useState(false);
 
@@ -26,11 +25,7 @@ const App = () => {
 	};
 	useEffect(onMount, []);
 
-	const signedIn = ((wallet && wallet.signedIn) || (localKeys && localKeys.signedIn));
-	let accountId = '';
-	if (signedIn) {
-		accountId = account ? account.accountId : <span>Guest Account<br />{localKeys.accessAccountId.split('.')[0]}</span>;
-	}
+	const signedIn = ((wallet && wallet.signedIn));
 
 	if (profile && !signedIn) {
 		setProfile(false);
@@ -50,7 +45,7 @@ const App = () => {
 					/>
 				</div>
 				<div>
-					{ !signedIn ? <Wallet {...{ wallet }} /> : accountId }
+					{ !signedIn ? <Wallet {...{ wallet }} /> : account.accountId }
 				</div>
 			</div>
 		</div>
@@ -61,30 +56,19 @@ const App = () => {
 					{
 						wallet && wallet.signedIn && <Wallet {...{ wallet, account, update, dispatch, handleClose: () => setProfile(false) }} />
 					}
-					{
-						localKeys && localKeys.signedIn && <Keys {...{ near, update, localKeys }} />
-					}
 				</div>
 			</div>
-		}
-
-		{ !signedIn &&
-            <div id="guest">
-            	<>
-            		<Keys {...{ near, update, localKeys }} />
-            	</>
-            </div>
 		}
 		{ signedIn &&
             <div id="contract">
             	{
             		signedIn &&
-                    <Contract {...{ near, update, localKeys, wallet, account }} />
+                    <Contract {...{ near, update, wallet, account }} />
             	}
             </div>
 		}
 		<div id="gallery">
-			<Gallery {...{ near, signedIn, contractAccount, account, localKeys, loading, update }} />
+			<Gallery {...{ near, signedIn, contractAccount, account, loading, update }} />
 		</div>
 	</>;
 };

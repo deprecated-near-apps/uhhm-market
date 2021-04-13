@@ -1,13 +1,13 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LookupMap, LookupSet};
+use near_sdk::collections::{LookupMap, LookupSet, UnorderedSet, UnorderedMap};
 use near_sdk::json_types::{ValidAccountId, U128, U64};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     env, ext_contract, near_bindgen, AccountId, Balance, Gas, PanicOnDefault, Promise,
     PromiseResult,
 };
+use std::cmp::min;
 use std::collections::HashMap;
-use std::convert::TryFrom;
 
 use crate::internal::*;
 use crate::external::*;
@@ -16,6 +16,7 @@ use crate::sale::*;
 mod internal;
 mod external;
 mod sale;
+mod sale_views;
 mod ft_callbacks;
 mod nft_callbacks;
 
@@ -23,11 +24,6 @@ near_sdk::setup_alloc!();
 
 // TODO check seller supports storage_deposit at ft_token_id they want to post sale in
 
-/// measuring how many royalties can be paid
-const GAS_FOR_FT_TRANSFER: Gas = 10_000_000_000_000;
-/// seems to be the max TGas can attach to resolve_purchase
-const GAS_FOR_ROYALTIES: Gas = 130_000_000_000_000;
-const GAS_FOR_NFT_TRANSFER: Gas = 15_000_000_000_000;
 const NO_DEPOSIT: Balance = 0;
 const STORAGE_AMOUNT: u128 = 100_000_000_000_000_000_000_000;
 
@@ -40,7 +36,9 @@ pub type Payout = HashMap<AccountId, u128>;
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
     pub owner_id: AccountId,
-    pub sales: LookupMap<ContractAndTokenId, Sale>,
+    pub sales: UnorderedMap<ContractAndTokenId, Sale>,
+    pub by_owner_id: LookupMap<AccountId, UnorderedSet<ContractAndTokenId>>,
+    pub by_nft_contract_id: LookupMap<AccountId, UnorderedSet<TokenId>>,
     pub ft_token_ids: LookupSet<AccountId>,
     pub storage_deposits: LookupSet<AccountId>,
 }
@@ -50,18 +48,24 @@ impl Contract {
     #[init]
     pub fn new(owner_id: ValidAccountId) -> Self {
         assert!(!env::state_exists(), "Already initialized");
-        Self {
+        let mut this = Self {
             owner_id: owner_id.into(),
-            sales: LookupMap::new(b"s".to_vec()),
+            sales: UnorderedMap::new(b"s".to_vec()),
+            by_owner_id: LookupMap::new(b"b".to_vec()),
+            by_nft_contract_id: LookupMap::new(b"n".to_vec()),
             ft_token_ids: LookupSet::new(b"t".to_vec()),
             storage_deposits: LookupSet::new(b"d".to_vec()),
-        }
+        };
+        // support NEAR by default
+        this.ft_token_ids.insert(&"near".to_string());
+
+        this
     }
 
     /// only owner
-    pub fn add_token(&mut self, ft_contract_id: ValidAccountId) -> bool {
+    pub fn add_token(&mut self, ft_token_id: ValidAccountId) -> bool {
         self.assert_owner();
-        self.ft_token_ids.insert(ft_contract_id.as_ref())
+        self.ft_token_ids.insert(ft_token_id.as_ref())
     }
 
     #[payable]
@@ -83,8 +87,10 @@ impl Contract {
         }
     }
 
-    pub fn supports_token(&self, ft_contract_id: ValidAccountId) -> bool {
-        self.ft_token_ids.contains(ft_contract_id.as_ref())
+    /// views
+
+    pub fn supports_token(&self, ft_token_id: ValidAccountId) -> bool {
+        self.ft_token_ids.contains(ft_token_id.as_ref())
     }
 
     pub fn storage_amount(&self) -> U128 {

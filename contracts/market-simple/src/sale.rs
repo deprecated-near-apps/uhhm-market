@@ -1,5 +1,11 @@
 use crate::*;
 
+/// measuring how many royalties can be paid
+const GAS_FOR_FT_TRANSFER: Gas = 10_000_000_000_000;
+/// seems to be max Tgas can attach to resolve_purchase
+const GAS_FOR_ROYALTIES: Gas = 120_000_000_000_000;
+const GAS_FOR_NFT_TRANSFER: Gas = 15_000_000_000_000;
+
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Bid {
@@ -38,55 +44,14 @@ pub struct PurchaseArgs {
 
 #[near_bindgen]
 impl Contract {
-    #[payable]
-    pub fn add_sale(
-        &mut self,
-        nft_contract_id: ValidAccountId,
-        token_id: String,
-        owner_id: ValidAccountId,
-        approval_id: U64,
-        sale_args: SaleArgs,
-    ) {
-        assert!(
-            self.storage_deposits.contains(owner_id.as_ref()),
-            "Must call storage_deposit with {} to sell on this market.",
-            STORAGE_AMOUNT
-        );
-        let contract_id: AccountId = nft_contract_id.into();
 
-        let SaleArgs {
-            sale_conditions
-        } = sale_args;
+    /// for add sale see: nft_callbacks.rs
 
-        let mut conditions = HashMap::new();
-
-        for item in sale_conditions {
-            let Price{
-                price,
-                ft_token_id,
-            } = item;
-            if let Some(price) = price {
-                // sale is denominated in FT
-                conditions.insert(ft_token_id, price);
-            } else {
-                // accepting bids
-                conditions.insert(ft_token_id, U128(0));
-            }
-        }
-        
-        env::log(format!("add_sale for owner: {}", owner_id.as_ref()).as_bytes());
-
-        let bids = HashMap::new();
-
-        self.sales.insert(
-            &format!("{}:{}", contract_id, token_id),
-            &Sale {
-                owner_id: owner_id.into(),
-                approval_id,
-                conditions,
-                bids,
-            },
-        );
+    /// TODO remove without redirect to wallet? panic reverts
+    pub fn remove_sale(&mut self, nft_contract_id: ValidAccountId, token_id: String) {
+        let sale = self.internal_remove_sale(nft_contract_id.into(), token_id);
+        let owner_id = env::predecessor_account_id();
+        assert_eq!(owner_id, sale.owner_id, "Must be sale owner");
     }
 
     pub fn update_price(
@@ -102,13 +67,6 @@ impl Contract {
         assert_eq!(env::predecessor_account_id(), sale.owner_id, "Must be sale owner");
         sale.conditions.insert(ft_token_id.into(), price);
         self.sales.insert(&contract_and_token_id, &sale);
-    }
-
-    /// should be able to pull a sale without yocto redirect to wallet?
-    pub fn remove_sale(&mut self, nft_contract_id: ValidAccountId, token_id: String) {
-        let contract_id: AccountId = nft_contract_id.into();
-        let sale = self.sales.remove(&format!("{}:{}", contract_id, token_id)).expect("No sale");
-        assert_eq!(env::predecessor_account_id(), sale.owner_id, "Must be sale owner");
     }
 
     #[payable]
@@ -152,18 +110,17 @@ impl Contract {
 
     pub fn accept_offer(&mut self, nft_contract_id: ValidAccountId, token_id: String, ft_token_id: ValidAccountId) {
         let contract_id: AccountId = nft_contract_id.into();
-        let contract_and_token_id = format!("{}:{}", contract_id, token_id);
-        let mut sale = self.sales.remove(&contract_and_token_id).expect("No sale");
-        // bid exists, user is accepting bid price as payment
+        let contract_and_token_id = format!("{}:{}", contract_id.clone(), token_id.clone());
+        let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
         let bid = sale.bids.remove(ft_token_id.as_ref()).expect("No bid");
         self.sales.insert(&contract_and_token_id, &sale);
-        // we have amount of ft_token_id in this contract
+        // panics at `self.internal_remove_sale` and reverts above if predecessor is not sale.owner_id
         self.process_purchase(
             contract_id,
             token_id,
             ft_token_id.into(),
-            bid.price,
-            bid.owner_id,
+            bid.price.clone(),
+            bid.owner_id.clone(),
         );
     }
 
@@ -178,17 +135,15 @@ impl Contract {
         price: U128,
         buyer_id: AccountId,
     ) -> Promise {
-        let contract_id: AccountId = nft_contract_id.into();
-        let contract_and_token_id = format!("{}:{}", contract_id, token_id);
-        let sale = self.sales.remove(&contract_and_token_id).expect("No sale");
-
+        let sale = self.internal_remove_sale(nft_contract_id.clone(), token_id.clone());
+        
         ext_contract::nft_transfer_payout(
             buyer_id.clone(),
-            token_id.clone(),
+            token_id,
             sale.owner_id.clone(),
             None,
             price,
-            &contract_id,
+            &nft_contract_id,
             1,
             GAS_FOR_NFT_TRANSFER,
         )
@@ -253,12 +208,11 @@ impl Contract {
             return price;
         };
 
-        env::log(format!("Royalty {:?}", payout).as_bytes());
+        env::log(format!("Payouts {:?}", payout).as_bytes());
 
         // Payback bids that were not claimed
         for (bid_ft, bid) in &sale.bids {
             if ft_token_id != *bid_ft {
-                env::log(format!("{} bid repayment {:?} to {}", bid_ft.clone(), bid.price.clone(), bid.owner_id.clone()).as_bytes());
                 if bid_ft == "near" {
                     Promise::new(bid.owner_id.clone()).transfer(u128::from(bid.price));
                 } else {
@@ -277,7 +231,6 @@ impl Contract {
         // NEAR payouts
         if ft_token_id == "near" {
             for (receiver_id, amount) in &payout {
-                env::log(format!("NEAR payout payment {} to {}", *amount, receiver_id).as_bytes());
                 Promise::new(receiver_id.to_string()).transfer(*amount);
             }
             // refund all FTs (won't be any)
@@ -285,7 +238,6 @@ impl Contract {
         } else {
         // FT payouts
             for (receiver_id, amount) in &payout {
-                env::log(format!("FT payout payment {} to {}", *amount, receiver_id).as_bytes());
                 ext_contract::ft_transfer(
                     receiver_id.to_string(),
                     U128(*amount),
@@ -298,13 +250,6 @@ impl Contract {
             // keep all FTs (already transferred for payouts)
             U128(0)
         }
-    }                             
-
-    pub fn get_sale(&self, nft_contract_id: ValidAccountId, token_id: String) -> Sale {
-        let contract_id: AccountId = nft_contract_id.into();
-        self.sales
-            .get(&format!("{}:{}", contract_id, token_id))
-            .expect("No sale")
     }
 }
 
