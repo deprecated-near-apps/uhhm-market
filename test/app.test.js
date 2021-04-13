@@ -396,4 +396,20 @@ describe('deploy contract ' + contractName, () => {
 		expect(new BN(bobBalanceAfter.total).sub(new BN(bobBalanceBefore.total)).gt(new BN(parseNearAmount('0.17')))).toEqual(true);
 	});
 
+	/// for testing frontend
+
+	test('alice lingering sale in marketplace', async () => {
+		const token_id = tokenIds[1];
+		await alice.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket).catch(() => {});
+		await alice.functionCall(contractId, 'nft_approve', {
+			token_id,
+			account_id: marketId,
+			msg: JSON.stringify({
+				sale_conditions: [{
+					ft_token_id: 'near',
+				}]
+			})
+		}, GAS, parseNearAmount('0.01'));
+	});
+
 });
