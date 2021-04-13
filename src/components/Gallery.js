@@ -15,21 +15,19 @@ const {
 	utils: { format: { formatNearAmount } }
 } = nearAPI;
 
-export const Gallery = ({ near, signedIn, contractAccount, account, localKeys, loading, update }) => {
+export const Gallery = ({ contractAccount, loading }) => {
 	if (!contractAccount) return null;
 
-	const [fetching, setFetching] = useState(false);
 	const [tokens, setTokens] = useState([]);
 	const [sales, setSales] = useState([]);
 	const [amount, setAmount] = useState('');
 	const [filter, setFilter] = useState(1);
 
 	useEffect(() => {
-		if (!fetching && !loading) loadItems();
+		if (!loading) loadItems();
 	}, [loading]);
 
 	const loadItems = async () => {
-		setFetching(true);
 		const tokens = await contractAccount.viewFunction(contractId, 'nft_tokens', {
 			from_index: '0',
 			limit: '20'
@@ -52,7 +50,6 @@ export const Gallery = ({ near, signedIn, contractAccount, account, localKeys, l
 			sales[i] = Object.assign(sales[i], token)
 		}
 		setSales(sales);
-		setFetching(false);
 	};
 
 	return <>
