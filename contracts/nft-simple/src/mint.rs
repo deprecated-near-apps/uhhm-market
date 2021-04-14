@@ -40,7 +40,7 @@ impl Contract {
         // enforce minting caps by token_type 
         if token_type.is_some() {
             let token_type = token_type.clone().unwrap();
-            let cap = u64::from(*self.supply_cap_by_type.get(&token_type).expect("Token type must have hard cap."));
+            let cap = u64::from(*self.supply_cap_by_type.get(&token_type).expect("Token type must have supply cap."));
             let supply = u64::from(self.nft_supply_for_type(&token_type));
             assert!(supply < cap, "Cannot mint anymore of token type.");
             let mut tokens_per_type = self.tokens_per_type.get(&token_type).unwrap_or_else(|| {
