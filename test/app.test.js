@@ -67,9 +67,6 @@ describe('deploy contract ' + contractName, () => {
 
 		await contractAccount.functionCall(contractName, 'set_contract_royalty', { contract_royalty }, GAS);
 		await contractAccount.functionCall(contractName, 'add_token_type', { token_type: tokenTypes[0], hard_cap: '1' }, GAS);
-		// immediately unlock transfers
-		// TODO don't do this and test it first
-		await contractAccount.functionCall(contractName, 'unlock_token_type', { token_type: tokenTypes[0] }, GAS);
 		
 		/// create or get stableAccount and deploy ft.wasm (if not already deployed)
 		stableAccount = await createOrInitAccount(stableId, GUESTS_ACCOUNT_SECRET);
@@ -181,6 +178,24 @@ describe('deploy contract ' + contractName, () => {
 		const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + ':' + token_id });
 		console.log('\n\n', sale, '\n\n');
 		expect(sale.conditions.near).toEqual(parseNearAmount('1'));
+	});
+
+	test('token transfer locked - owner unlocks token transfer token type', async () => {
+		const token_id = tokenIds[0];
+		try {
+			await contractAccount.functionCall(contractId, 'nft_transfer', {
+				receiver_id: bobId,
+				token_id
+			});
+			expect(false);
+		} catch(e) {
+			expect(true);
+		}
+		await contractAccount.functionCall(contractName, 'unlock_token_type', { token_type: tokenTypes[0] }, GAS);
+		const tokenLocked = await contractAccount.viewFunction(contractName, 'is_token_locked', { token_id });
+		expect(tokenLocked).toEqual(false);
+		const tokenTypeLocked = await contractAccount.viewFunction(contractName, 'is_token_type_locked', { token_type: tokenTypes[0] });
+		expect(tokenTypeLocked).toEqual(false);
 	});
 
 	test('get sales by owner id', async () => {

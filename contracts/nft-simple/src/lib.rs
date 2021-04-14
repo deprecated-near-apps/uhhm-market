@@ -146,6 +146,17 @@ impl Contract {
     pub fn get_supply_caps(&self) -> TypeSupplyCaps {
         self.supply_cap_by_type.clone()
     }
+
+    pub fn is_token_type_locked(&self, token_type: TokenId) -> bool {
+        self.token_types_locked.contains(&token_type)
+    }
+
+    pub fn is_token_locked(&self, token_id: TokenId) -> bool {
+        let token = self.tokens_by_id.get(&token_id).expect("No token");
+        assert_eq!(token.token_type.is_some(), true, "Token must have type");
+        let token_type = token.token_type.unwrap();
+        self.token_types_locked.contains(&token_type)
+    }
 }
 
 #[cfg(test)]

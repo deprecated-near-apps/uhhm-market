@@ -8,10 +8,7 @@ impl Contract {
         &mut self,
         token_id: Option<TokenId>,
     ) {
-        let token = self.tokens_by_id.get(&token_id).expect("No token");
-        assert_eq!(token.token_type.is_some(), true, "Token must have type");
-        let token_type = token.token_type.unwrap();
-        self.token_types_locked.get(&token_type).expect("Token must be locked");
+        assert_eq!(self.is_token_locked(token_id), true, "Token must be locked");
         //TODO burn token
     }
 }
