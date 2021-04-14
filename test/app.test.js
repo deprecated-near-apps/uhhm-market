@@ -19,7 +19,7 @@ const {
 	networkId, GAS, GUESTS_ACCOUNT_SECRET
 } = getConfig();
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 50000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
 
 describe('deploy contract ' + contractName, () => {
 	let alice, aliceId, bob, bobId,
