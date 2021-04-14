@@ -23,6 +23,8 @@ mod nft_core;
 mod token;
 mod enumerable;
 
+pub type HardCaps = HashMap<String, U64>;
+
 near_sdk::setup_alloc!();
 
 #[near_bindgen]
@@ -41,7 +43,12 @@ pub struct Contract {
 
     pub metadata: LazyOption<NFTMetadata>,
 
-    //custom fields for owner
+    /// custom fields
+
+    pub hard_cap_by_type: HardCaps,
+
+    pub tokens_per_type: LookupMap<String, UnorderedSet<TokenId>>,
+
     pub contract_royalty: u32,
 }
 
@@ -53,12 +60,13 @@ pub enum StorageKey {
     TokensById,
     TokenMetadataById,
     NftMetadata,
+    TokensPerType,
 }
 
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new(owner_id: ValidAccountId, metadata: NFTMetadata) -> Self {
+    pub fn new(owner_id: ValidAccountId, metadata: NFTMetadata, hard_cap_by_type: HardCaps) -> Self {
         let mut this = Self {
             tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
             tokens_by_id: LookupMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
@@ -71,6 +79,8 @@ impl Contract {
                 StorageKey::NftMetadata.try_to_vec().unwrap(),
                 Some(&metadata),
             ),
+            hard_cap_by_type,
+            tokens_per_type: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
             contract_royalty: 100,
         };
 
@@ -110,6 +120,10 @@ impl Contract {
 
     pub fn get_contract_royalty(&self) -> u32 {
         self.contract_royalty
+    }
+
+    pub fn get_hard_caps(&self) -> HardCaps {
+        self.hard_cap_by_type.clone()
     }
 }
 

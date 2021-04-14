@@ -47,8 +47,7 @@ impl Contract {
         env::log(format!("Token Royalties: {:?}", royalty).as_bytes());
         let sum: u32 = royalty.values().map(|a| *a).reduce(|a, b| a + b).unwrap();
         assert_eq!(sum, 10000, "Royalties sum must be exactly 10000");
-        
-        // create token
+
         let token = Token {
             owner_id,
             approved_account_ids: Default::default(),
@@ -62,6 +61,21 @@ impl Contract {
         self.token_metadata_by_id.insert(&final_token_id, &metadata);
         self.internal_add_token_to_owner(&token.owner_id, &final_token_id);
 
+        // custom enforce limits to special token types 
+        // type is based on metadata.extra
+        // check the hard_cap_by_type limits
+        if metadata.extra.is_some() {
+            let token_type = metadata.extra.unwrap();
+            let cap = u64::from(*self.hard_cap_by_type.get(&token_type).expect("Token type must have hard cap."));
+            let supply = u64::from(self.nft_supply_for_type(&token_type));
+            assert!(supply < cap, "Cannot mint anymore of token type.");
+            let mut tokens_per_type = self.tokens_per_type.get(&token_type).unwrap_or_else(|| {
+                UnorderedSet::new(hash_account_id(&token_type).try_to_vec().unwrap())
+            });
+            tokens_per_type.insert(&final_token_id);
+            self.tokens_per_type.insert(&token_type, &tokens_per_type);
+        }
+        
         let new_token_size_in_bytes = env::storage_usage() - initial_storage_usage;
         let required_storage_in_bytes =
             self.extra_storage_in_bytes_per_token + new_token_size_in_bytes;

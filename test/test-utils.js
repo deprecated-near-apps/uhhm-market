@@ -21,6 +21,10 @@ async function initContract() {
 				spec: 'nft-1',
 				name: 'Test NFT',
 				symbol: 'TNFT',
+			},
+			hard_cap_by_type: {
+				test: '1000000',
+				'another-token-type': '100'
 			}
 		};
 		await contract.new(newArgs);
