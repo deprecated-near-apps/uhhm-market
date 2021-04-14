@@ -34,7 +34,7 @@ export const initNear = () => async ({ update, getState, dispatch }) => {
 	let account;
 	if (wallet.signedIn) {
 		account = wallet.account();
-		wallet.balance = formatNearAmount((await wallet.account().getAccountBalance()).available, 2);
+		wallet.balance = formatNearAmount((await wallet.account().getAccountBalance()).available, 4);
 		await update('', { near, wallet, contractAccount, account });
 	}
 

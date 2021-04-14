@@ -117,6 +117,12 @@ body::-webkit-scrollbar {
     }
 }
 
+.line {
+    width: 100%;
+    margin: 16px; 
+    border-bottom: 2px solid #ddd;
+}
+
 #tabs {
     display: flex;
     justify-content: space-around;
@@ -165,7 +171,7 @@ body::-webkit-scrollbar {
         }
         .offers {
             height: 48px;
-            border-top: 2px solid #ddd;
+            border-top: 1px solid #ddd;
             padding-top: 8px;
             display: flex;
             justify-content: space-between;

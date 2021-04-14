@@ -103,7 +103,7 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 			}
 			sales[i] = Object.assign(sales[i], token);
 		}
-		setSales(sales.filter(({owner_id}) => owner_id != accountId));
+		setSales(sales.filter(({ owner_id }) => owner_id != accountId));
 	};
 
 	/// setters
@@ -119,7 +119,7 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 			}, GAS, parseNearAmount(offerPrice));
 		} else {
 			///todo ft_transfer_call
-			
+
 		}
 	};
 
@@ -154,15 +154,30 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 		}, GAS, parseNearAmount('0.01'));
 	};
 
-	sales;
+	console.log(tokens)
 
 	return <>
 		{
-			tab === 1 && sales.map(({ metadata: { media }, owner_id, token_id, conditions = {}, bids = {} }) =>
+			tab === 1 && sales.map(({
+				metadata: { media },
+				owner_id,
+				token_id,
+				conditions = {},
+				bids = {},
+				royalty = {}
+			}) =>
 				<div key={token_id} className="item">
 					<img src={media} />
-					<div className="line"></div>
 					<p>Owned by {formatAccountId(owner_id)}</p>
+					<h4>Royalties</h4>
+					{
+						Object.keys(royalty).length > 0 ?
+							Object.entries(royalty).map(([receiver, amount]) => <div key={receiver}>
+								{receiver} - {amount / 100}%
+						</div>)
+							:
+							<p>This token has no royalties.</p>
+					}
 					{
 						Object.keys(conditions).length > 0 && <>
 							<h4>Sale Conditions</h4>
@@ -182,7 +197,7 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 						Object.keys(bids).length > 0 && <>
 							<h4>Offers</h4>
 							{
-								Object.entries(bids).map(([ft_token_id, {owner_id, price}]) => <div className="offers" key={ft_token_id}>
+								Object.entries(bids).map(([ft_token_id, { owner_id, price }]) => <div className="offers" key={ft_token_id}>
 									<div>
 										{price === '0' ? 'open' : formatNearAmount(price, 4)} - {token2symbol[ft_token_id]} by {owner_id}
 									</div>
@@ -197,11 +212,26 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 			tab === 2 && <>
 				{!tokens.length && <p className="margin">No NFTs. Try minting something!</p>}
 				{
-					tokens.map(({ metadata: { media }, owner_id, token_id, conditions = {}, bids = {} }) =>
-						<div key={token_id} className="item">
+					tokens.map(({
+						metadata: { media },
+						owner_id,
+						token_id,
+						conditions = {},
+						bids = {},
+						royalty = {}
+					}) => <div key={token_id} className="item">
 							<img src={media} />
 							{
 								storage ? <>
+									<h4>Royalties</h4>
+									{
+										Object.keys(royalty).length > 0 ?
+											Object.entries(royalty).map(([receiver, amount]) => <div key={receiver}>
+												{receiver} - {amount / 100}%
+									</div>)
+											:
+											<p>This token has no royalties.</p>
+									}
 									{
 										Object.keys(conditions).length > 0 && <>
 											<h4>Current Sale Conditions</h4>
@@ -239,12 +269,12 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 															price: parseNearAmount(price),
 															ft_token_id: token,
 														}]))
-														setPrice('');
-														setToken('near');
+													setPrice('');
+													setToken('near');
 												}}>Add</button>
 											</div>
 											<div>
-												<i style={{fontSize: '0.75rem'}}>Note: price 0 means open offers</i>
+												<i style={{ fontSize: '0.75rem' }}>Note: price 0 means open offers</i>
 											</div>
 										</>
 									}
@@ -252,7 +282,7 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 										Object.keys(bids).length > 0 && <>
 											<h4>Offers</h4>
 											{
-												Object.entries(bids).map(([ft_token_id, {owner_id, price}]) => <div className="offers" key={ft_token_id}>
+												Object.entries(bids).map(([ft_token_id, { owner_id, price }]) => <div className="offers" key={ft_token_id}>
 													<div>
 														{price === '0' ? 'open' : formatNearAmount(price, 4)} - {token2symbol[ft_token_id]}
 													</div>
@@ -267,7 +297,6 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 										<button onClick={() => handleRegisterStorage()}>Register with Market to Sell</button>
 									</div>
 							}
-
 						</div>)
 				}
 			</>
