@@ -16,6 +16,7 @@ export const Contract = ({ near, update, account }) => {
 	if (!account) return <p>Please connect your NEAR Wallet</p>;
 
 	const [media, setMedia] = useState('');
+	const [royalties, setRoyalties] = useState(false);
 
 	const handleMint = async () => {
 		if (!media.length) {
@@ -38,6 +39,14 @@ export const Contract = ({ near, update, account }) => {
 	return <>
 		<h3>Mint Something</h3>
 		<input className="full-width" placeholder="Metadata (Image URL)" value={media} onChange={(e) => setMedia(e.target.value)} />
+
+		<button onClick={() => setRoyalties()}>Add Royalties</button>
+		{
+			royalties && <>
+				<input className="full-width" placeholder="Metadata (Image URL)" value={media} onChange={(e) => setMedia(e.target.value)} />
+			</>
+		}
+
 		<button onClick={() => handleMint()}>Mint</button>
 	</>;
 };

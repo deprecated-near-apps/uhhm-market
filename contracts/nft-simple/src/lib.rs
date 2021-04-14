@@ -26,8 +26,8 @@ mod enumerable;
 // CUSTOM types
 pub type TokenType = String;
 pub type TypeSupplyCaps = HashMap<TokenType, U64>;
-pub const CONTRACT_ROYALTY_CAP: u32 = 1001;
-pub const MINTER_ROYALTY_CAP: u32 = 2001;
+pub const CONTRACT_ROYALTY_CAP: u32 = 1000;
+pub const MINTER_ROYALTY_CAP: u32 = 2000;
 
 near_sdk::setup_alloc!();
 
@@ -123,7 +123,7 @@ impl Contract {
 
     pub fn set_contract_royalty(&mut self, contract_royalty: u32) {
         self.assert_owner();
-        assert!(contract_royalty < CONTRACT_ROYALTY_CAP, "Contract royalties limited to 10% for owner");
+        assert!(contract_royalty <= CONTRACT_ROYALTY_CAP, "Contract royalties limited to 10% for owner");
         self.contract_royalty = contract_royalty;
     }
 

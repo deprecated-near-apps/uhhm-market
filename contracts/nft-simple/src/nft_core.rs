@@ -159,7 +159,7 @@ impl NonFungibleTokenCore for Contract {
                 payout.insert(self.owner_id.clone(), royalty_to_payout(self.contract_royalty, balance_u128));
                 total_perpetual += self.contract_royalty;
             }
-            assert!(total_perpetual < MINTER_ROYALTY_CAP + CONTRACT_ROYALTY_CAP, "Royalties should not be more than caps");
+            assert!(total_perpetual <= MINTER_ROYALTY_CAP + CONTRACT_ROYALTY_CAP, "Royalties should not be more than caps");
             // payout to previous owner
             payout.insert(previous_token.owner_id, royalty_to_payout(10000 - total_perpetual, balance_u128));
             Some(payout)

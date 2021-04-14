@@ -26,7 +26,7 @@ const allTokens = Object.keys(token2symbol);
 const getTokenOptions = (value, setter, accepted = allTokens) => (
 	<select value={value} onChange={(e) => setter(e.target.value)}>
 		{
-			accepted.map((value) => <option key={value} value={value}>NEAR</option>)
+			accepted.map((value) => <option key={value} value={value}>{token2symbol[value]}</option>)
 		}
 	</select>);
 
@@ -44,7 +44,7 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 	/// updating user tokens
 	const [tokens, setTokens] = useState([]);
 	const [storage, setStorage] = useState(false);
-	const [price, setPrice] = useState('0');
+	const [price, setPrice] = useState('');
 	const [token, setToken] = useState('near');
 	const [saleConditions, setSaleConditions] = useState([]);
 
@@ -152,8 +152,6 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 			account_id: marketId,
 			msg: JSON.stringify({ sale_conditions: saleConditions })
 		}, GAS, parseNearAmount('0.01'));
-		setPrice('0');
-		setToken('near');
 	};
 
 	sales;
@@ -229,16 +227,21 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 									{
 										accountId === owner_id && <>
 											<div>
+												<h4>Add Sale Conditions</h4>
 												<input type="number" placeholder="Price" value={price} onChange={(e) => setPrice(e.target.value)} />
 												{
 													getTokenOptions(token, setToken)
 												}
-												<button onClick={() => setSaleConditions(saleConditions
-													.filter(({ ft_token_id }) => ft_token_id !== token)
-													.concat([{
-														price: parseNearAmount(price),
-														ft_token_id: token,
-													}]))}>Add</button>
+												<button onClick={() => {
+													setSaleConditions(saleConditions
+														.filter(({ ft_token_id }) => ft_token_id !== token)
+														.concat([{
+															price: parseNearAmount(price),
+															ft_token_id: token,
+														}]))
+														setPrice('');
+														setToken('near');
+												}}>Add</button>
 											</div>
 											<div>
 												<i style={{fontSize: '0.75rem'}}>Note: price 0 means open offers</i>
