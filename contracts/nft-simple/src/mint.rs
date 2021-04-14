@@ -36,12 +36,16 @@ impl Contract {
         // arbitrary
         assert!(total_perpetual < 2001, "Perpetual royalties cannot be more than 20%");
 
+        let mut owner_key = "owner:".to_string();
         if self.owner_id != owner_id {
-            royalty.insert(owner_id.clone(), 10000 - total_perpetual - self.contract_royalty);
+            // protect owner_id royalty entry from being replaced in nft_transfer_payout
+            owner_key.push_str(&owner_id);
+            royalty.insert(owner_key, 10000 - total_perpetual - self.contract_royalty);
             royalty.insert(self.owner_id.clone(), self.contract_royalty);
         } else {
+            owner_key.push_str(&self.owner_id);
             // contract owner minting for primary sale
-            royalty.insert(self.owner_id.clone(), 10000 - total_perpetual);
+            royalty.insert(owner_key, 10000 - total_perpetual);
         }
 
         env::log(format!("Token Royalties: {:?}", royalty).as_bytes());

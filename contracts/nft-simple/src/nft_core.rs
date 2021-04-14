@@ -142,12 +142,18 @@ impl NonFungibleTokenCore for Contract {
         );
 
         // compute payouts based on balance option
+        let prev_owner_id = previous_token.owner_id;
         let mut token = self.tokens_by_id.get(&token_id).expect("No token");
         let payout = if let Some(balance) = balance {
             let balance_u128 = u128::from(balance);
             let mut payout: Payout = HashMap::new();
             for (k, v) in token.royalty.iter() {
-                let key = k.clone();
+                let mut key = k.clone();
+                // owner_id is prefixed with owner: to prevent royalty overwrites
+                // replace this before sending payouts to market
+                if key.contains(&prev_owner_id) {
+                    key = prev_owner_id.clone()
+                }
                 payout.insert(key, royalty_to_payout(*v, balance_u128));
             }
             Some(payout)
@@ -156,13 +162,20 @@ impl NonFungibleTokenCore for Contract {
         };
 
         // add receiver_id as new owner_royalty receiver
-        let mut owner_royalty = token.royalty.remove(&previous_token.owner_id).unwrap();
+
+        // protect owner_id royalty entry from being replaced in nft_transfer_payout
+        let mut owner_key = "owner:".to_string();
+        owner_key.push_str(&prev_owner_id);
+        let mut owner_royalty = token.royalty.remove(&owner_key).unwrap();
         // token sold by nft contract owner - add perpetual royalty
-        if self.owner_id == previous_token.owner_id {
+        if self.owner_id == prev_owner_id {
             token.royalty.insert(self.owner_id.clone(), self.contract_royalty);
             owner_royalty -= self.contract_royalty;
         }
-        token.royalty.insert(receiver_id.as_ref().to_string(), owner_royalty);
+        // protect owner_id royalty entry from being replaced in nft_transfer_payout
+        owner_key = "owner:".to_string();
+        owner_key.push_str(receiver_id.as_ref());
+        token.royalty.insert(owner_key, owner_royalty);
         self.tokens_by_id.insert(&token_id, &token);
 
         payout
