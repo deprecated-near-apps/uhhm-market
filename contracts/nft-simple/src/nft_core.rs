@@ -118,6 +118,7 @@ impl NonFungibleTokenCore for Contract {
         );
     }
 
+    // CUSTOM - this method is included for marketplaces that respect royalties
     #[payable]
     fn nft_transfer_payout(
         &mut self,
@@ -142,41 +143,29 @@ impl NonFungibleTokenCore for Contract {
         );
 
         // compute payouts based on balance option
-        let prev_owner_id = previous_token.owner_id;
-        let mut token = self.tokens_by_id.get(&token_id).expect("No token");
+        // adds in contract_royalty and computes previous owner royalty from remainder
+        let royalty = self.tokens_by_id.get(&token_id).expect("No token").royalty;
+        let mut total_perpetual = 0;
         let payout = if let Some(balance) = balance {
             let balance_u128 = u128::from(balance);
             let mut payout: Payout = HashMap::new();
-            for (k, v) in token.royalty.iter() {
-                let mut key = k.clone();
-                // owner_id is prefixed with owner: to prevent royalty overwrites
-                // replace this before sending payouts to market
-                if key.contains(&prev_owner_id) {
-                    key = prev_owner_id.clone()
-                }
+            for (k, v) in royalty.iter() {
+                let key = k.clone();
                 payout.insert(key, royalty_to_payout(*v, balance_u128));
+                total_perpetual += *v;
             }
+            // payout to contract owner - may be previous token owner -> then they get remainder of balance
+            if self.contract_royalty > 0 && self.owner_id != previous_token.owner_id {
+                payout.insert(self.owner_id.clone(), royalty_to_payout(self.contract_royalty, balance_u128));
+                total_perpetual += self.contract_royalty;
+            }
+            assert!(total_perpetual < MINTER_ROYALTY_CAP + CONTRACT_ROYALTY_CAP, "Royalties should not be more than caps");
+            // payout to previous owner
+            payout.insert(previous_token.owner_id, royalty_to_payout(10000 - total_perpetual, balance_u128));
             Some(payout)
         } else {
             None
         };
-
-        // add receiver_id as new owner_royalty receiver
-
-        // protect owner_id royalty entry from being replaced in nft_transfer_payout
-        let mut owner_key = "owner:".to_string();
-        owner_key.push_str(&prev_owner_id);
-        let mut owner_royalty = token.royalty.remove(&owner_key).unwrap();
-        // token sold by nft contract owner - add perpetual royalty
-        if self.owner_id == prev_owner_id {
-            token.royalty.insert(self.owner_id.clone(), self.contract_royalty);
-            owner_royalty -= self.contract_royalty;
-        }
-        // protect owner_id royalty entry from being replaced in nft_transfer_payout
-        owner_key = "owner:".to_string();
-        owner_key.push_str(receiver_id.as_ref());
-        token.royalty.insert(owner_key, owner_royalty);
-        self.tokens_by_id.insert(&token_id, &token);
 
         payout
     }
@@ -306,6 +295,7 @@ impl NonFungibleTokenCore for Contract {
                 metadata,
                 royalty: token.royalty,
                 approved_account_ids: token.approved_account_ids,
+                token_type: token.token_type,
             })
         } else {
             None

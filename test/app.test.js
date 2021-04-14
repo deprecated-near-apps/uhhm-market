@@ -28,19 +28,21 @@ describe('deploy contract ' + contractName, () => {
 
 	const metadata = {
 		media: 'https://media1.tenor.com/images/4c1d96a989150e7019bfbabbebd2ff36/tenor.gif?itemid=20269144',
-		extra: 'cap-test',
 	};
 	const metadata2 = {
 		media: 'https://media1.tenor.com/images/818161c07948bac34aa7c5f5712ec3d7/tenor.gif?itemid=15065455',
-		extra: 'test',
 	};
-
+	const t = Date.now()
 	const tokenIds = [
-		'token' + Date.now(),
-		'token' + Date.now() + 1,
-		'token' + Date.now() + 2
+		'token' + t,
+		'token' + (t + 1),
+		'token' + (t + 2)
 	];
-
+	const tokenTypes = [
+		'type' + t,
+		'type' + (t + 1),
+		'type' + (t + 2)
+	]
 	const contract_royalty = 500;
 
 	/// contractAccount.accountId is the NFT contract and contractAccount is the owner
@@ -64,6 +66,10 @@ describe('deploy contract ' + contractName, () => {
 		console.log('\n\n Bob accountId:', bobId, '\n\n');
 
 		await contractAccount.functionCall(contractName, 'set_contract_royalty', { contract_royalty }, GAS);
+		await contractAccount.functionCall(contractName, 'add_token_type', { token_type: tokenTypes[0], hard_cap: '1' }, GAS);
+		// immediately unlock transfers
+		// TODO don't do this and test it first
+		await contractAccount.functionCall(contractName, 'unlock_token_type', { token_type: tokenTypes[0] }, GAS);
 		
 		/// create or get stableAccount and deploy ft.wasm (if not already deployed)
 		stableAccount = await createOrInitAccount(stableId, GUESTS_ACCOUNT_SECRET);
@@ -149,6 +155,7 @@ describe('deploy contract ' + contractName, () => {
 		await contractAccount.functionCall(contractId, 'nft_mint', {
 			token_id,
 			metadata,
+			token_type: tokenTypes[0],
 			perpetual_royalties: {
 				'a1.testnet': 500,
 				'a2.testnet': 250,
@@ -355,16 +362,20 @@ describe('deploy contract ' + contractName, () => {
 	test('bob fails to mint past hard cap for token type', async () => {
 		const token_id = tokenIds[1];
 		try {
-			await bob.functionCall(contractId, 'nft_mint', { token_id, metadata }, GAS, parseNearAmount('1'));
+			await bob.functionCall(contractId, 'nft_mint', {
+				token_id,
+				metadata,
+				token_type: tokenTypes[0]
+			}, GAS, parseNearAmount('1'));
 			expect(false);
 		} catch (e) {
 			expect(true);
 		}
-		const hardCap = await bob.viewFunction(contractId, 'nft_supply_for_type', { token_type: metadata.extra });
+		const hardCap = await bob.viewFunction(contractId, 'nft_supply_for_type', { token_type: tokenTypes[0] });
 		expect(hardCap).toEqual('1');
 	});
 
-	test('bob: nft mint, approve sale with NEAR open for bids', async () => {
+	test('bob: nft mint (no type), approve sale with NEAR open for bids', async () => {
 		const token_id = tokenIds[1];
 		await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket).catch(() => {});
 		await bob.functionCall(contractId, 'nft_mint', { token_id, metadata: metadata2 }, GAS, parseNearAmount('1'));

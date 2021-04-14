@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::cmp::min;
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap, UnorderedSet};
+use near_sdk::collections::{LazyOption, LookupMap, LookupSet, UnorderedMap, UnorderedSet};
 use near_sdk::json_types::{Base64VecU8, ValidAccountId, U64, U128};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
@@ -23,7 +23,11 @@ mod nft_core;
 mod token;
 mod enumerable;
 
-pub type HardCaps = HashMap<String, U64>;
+// CUSTOM types
+pub type TokenType = String;
+pub type TypeSupplyCaps = HashMap<TokenType, U64>;
+pub const CONTRACT_ROYALTY_CAP: u32 = 1001;
+pub const MINTER_ROYALTY_CAP: u32 = 2001;
 
 near_sdk::setup_alloc!();
 
@@ -43,12 +47,10 @@ pub struct Contract {
 
     pub metadata: LazyOption<NFTMetadata>,
 
-    /// custom fields
-
-    pub hard_cap_by_type: HardCaps,
-
-    pub tokens_per_type: LookupMap<String, UnorderedSet<TokenId>>,
-
+    /// CUSTOM fields
+    pub supply_cap_by_type: TypeSupplyCaps,
+    pub tokens_per_type: LookupMap<TokenType, UnorderedSet<TokenId>>,
+    pub token_types_locked: LookupSet<TokenType>,
     pub contract_royalty: u32,
 }
 
@@ -61,12 +63,13 @@ pub enum StorageKey {
     TokenMetadataById,
     NftMetadata,
     TokensPerType,
+    TokenTypesLocked,
 }
 
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new(owner_id: ValidAccountId, metadata: NFTMetadata, hard_cap_by_type: HardCaps) -> Self {
+    pub fn new(owner_id: ValidAccountId, metadata: NFTMetadata, supply_cap_by_type: TypeSupplyCaps) -> Self {
         let mut this = Self {
             tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
             tokens_by_id: LookupMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
@@ -79,10 +82,16 @@ impl Contract {
                 StorageKey::NftMetadata.try_to_vec().unwrap(),
                 Some(&metadata),
             ),
-            hard_cap_by_type,
+            supply_cap_by_type,
             tokens_per_type: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
-            contract_royalty: 100,
+            token_types_locked: LookupSet::new(StorageKey::TokenTypesLocked.try_to_vec().unwrap()),
+            contract_royalty: 0,
         };
+
+        // CUSTOM - tokens are locked by default
+        for (token_type, _) in &this.supply_cap_by_type {
+            this.token_types_locked.insert(&token_type);
+        }
 
         this.measure_min_token_storage_cost();
 
@@ -110,20 +119,32 @@ impl Contract {
         self.tokens_per_owner.remove(&tmp_account_id);
     }
 
-    /// custom setters for owner
+    /// CUSTOM - setters for owner
 
     pub fn set_contract_royalty(&mut self, contract_royalty: u32) {
+        self.assert_owner();
+        assert!(contract_royalty < CONTRACT_ROYALTY_CAP, "Contract royalties limited to 10% for owner");
         self.contract_royalty = contract_royalty;
     }
 
-    /// custom views
+    pub fn add_token_type(&mut self, token_type: String, hard_cap: U64) {
+        self.assert_owner();
+        self.token_types_locked.insert(&token_type);
+        self.supply_cap_by_type.insert(token_type, hard_cap);
+    }
+
+    pub fn unlock_token_type(&mut self, token_type: String) {
+        self.token_types_locked.remove(&token_type);
+    }
+
+    /// CUSTOM - views
 
     pub fn get_contract_royalty(&self) -> u32 {
         self.contract_royalty
     }
 
-    pub fn get_hard_caps(&self) -> HardCaps {
-        self.hard_cap_by_type.clone()
+    pub fn get_supply_caps(&self) -> TypeSupplyCaps {
+        self.supply_cap_by_type.clone()
     }
 }
 
