@@ -108,11 +108,9 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 
 	/// setters
 
-
-
 	const handleOffer = async (token_id) => {
 		if (offerToken !== 'near') {
-			alert('currently only accepting NEAR offers');
+			return alert('currently only accepting NEAR offers');
 		}
 		if (offerToken === 'near') {
 			await account.functionCall(marketId, 'offer', {
@@ -123,9 +121,18 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 			///todo ft_transfer_call
 			
 		}
-		
 	};
 
+	const handleAcceptOffer = async (token_id, ft_token_id) => {
+		if (ft_token_id !== 'near') {
+			return alert('currently only accepting NEAR offers');
+		}
+		await account.functionCall(marketId, 'accept_offer', {
+			nft_contract_id: contractId,
+			token_id,
+			ft_token_id,
+		}, GAS);
+	};
 
 	const handleRegisterStorage = async () => {
 		const storageMarket = await account.viewFunction(marketId, 'storage_amount', {}, GAS);
@@ -179,9 +186,8 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 							{
 								Object.entries(bids).map(([ft_token_id, {owner_id, price}]) => <div className="offers" key={ft_token_id}>
 									<div>
-										{price === '0' ? 'open' : formatNearAmount(price, 4)} - {token2symbol[ft_token_id]}
+										{price === '0' ? 'open' : formatNearAmount(price, 4)} - {token2symbol[ft_token_id]} by {owner_id}
 									</div>
-									{ owner_id === accountId && <button>Remove</button>}
 								</div>)
 							}
 						</>
@@ -247,7 +253,7 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 													<div>
 														{price === '0' ? 'open' : formatNearAmount(price, 4)} - {token2symbol[ft_token_id]}
 													</div>
-													<button>Accept</button>
+													<button onClick={() => handleAcceptOffer(token_id, ft_token_id)}>Accept</button>
 												</div>)
 											}
 										</>
