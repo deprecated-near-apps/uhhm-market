@@ -27,10 +27,12 @@ describe('deploy contract ' + contractName, () => {
 		storageMinimum, storageMarket;
 
 	const metadata = {
-		media: 'https://media1.tenor.com/images/4c1d96a989150e7019bfbabbebd2ff36/tenor.gif?itemid=20269144'
+		media: 'https://media1.tenor.com/images/4c1d96a989150e7019bfbabbebd2ff36/tenor.gif?itemid=20269144',
+		extra: 'cap-test',
 	};
 	const metadata2 = {
-		media: 'https://media1.tenor.com/images/818161c07948bac34aa7c5f5712ec3d7/tenor.gif?itemid=15065455'
+		media: 'https://media1.tenor.com/images/818161c07948bac34aa7c5f5712ec3d7/tenor.gif?itemid=15065455',
+		extra: 'test',
 	};
 
 	const tokenIds = [
@@ -286,7 +288,7 @@ describe('deploy contract ' + contractName, () => {
 		expect(sale.bids['near'].price).toEqual(parseNearAmount('1'));
 	});
 
-    test('alice outbids contract owner', async () => {
+	test('alice outbids contract owner', async () => {
 		const token_id = tokenIds[0];
 
 		const contractBalanceBefore = await getAccountBalance(contractId);
@@ -350,10 +352,22 @@ describe('deploy contract ' + contractName, () => {
 
 	/// near bid
 
+	test('bob fails to mint past hard cap for token type', async () => {
+		const token_id = tokenIds[1];
+		try {
+			await bob.functionCall(contractId, 'nft_mint', { token_id, metadata }, GAS, parseNearAmount('1'));
+			expect(false);
+		} catch (e) {
+			expect(true);
+		}
+		const hardCap = await bob.viewFunction(contractId, 'nft_supply_for_type', { token_type: metadata.extra });
+		expect(hardCap).toEqual('1');
+	});
+
 	test('bob: nft mint, approve sale with NEAR open for bids', async () => {
 		const token_id = tokenIds[1];
 		await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket).catch(() => {});
-		await bob.functionCall(contractId, 'nft_mint', { token_id, metadata }, GAS, parseNearAmount('1'));
+		await bob.functionCall(contractId, 'nft_mint', { token_id, metadata: metadata2 }, GAS, parseNearAmount('1'));
 		await bob.functionCall(contractId, 'nft_approve', {
 			token_id,
 			account_id: marketId,

@@ -24,6 +24,7 @@ async function initContract() {
 			},
 			hard_cap_by_type: {
 				test: '1000000',
+				'cap-test': '1',
 				'another-token-type': '100'
 			}
 		};
