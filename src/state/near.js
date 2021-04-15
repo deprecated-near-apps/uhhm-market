@@ -27,6 +27,7 @@ export const initNear = () => async ({ update, getState, dispatch }) => {
 		signOut.call(wallet);
 		update('wallet.signedIn', false);
 		update('', { account: null });
+		update('app.tab', 1);
 	};
 
 	wallet.signedIn = wallet.isSignedIn();

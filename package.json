@@ -30,7 +30,6 @@
         "start:deploy": "yarn test:deploy && yarn start",
         "start": "cross-env REACT_APP_ENV=dev parcel src/index.html --open",
         "prebuild": "yarn clean",
-        "build": "parcel build src/index.html --no-source-maps",
         "clean": "rimraf ./dist ./parcel-cache",
         "fix": "eslint src/ test/ server/ --fix",
         "build:contracts": "cd contracts/nft-simple && ./build.sh && cd ../.. && cd contracts/market-simple && ./build.sh && cd ../.. && cd contracts/ft && ./build.sh && cd ../..",
@@ -40,6 +39,8 @@
         "test:deploy": "yarn dev:deploy && yarn test",
         "test": "cross-env REACT_APP_ENV=dev jest app.test.js --useStderr",
         "test:server": "cross-env REACT_APP_ENV=dev jest server.test.js --useStderr",
+
+        "build": "parcel build src/index.html --no-source-maps --public-url https://near-apps.github.io/nft-market/",
         "deploy": "cross-env REACT_APP_ENV=dev yarn build && gh-pages -d dist"
     }
 }

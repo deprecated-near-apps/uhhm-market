@@ -186,7 +186,7 @@ describe('deploy contract ' + contractName, () => {
 			await contractAccount.functionCall(contractId, 'nft_transfer', {
 				receiver_id: bobId,
 				token_id
-			});
+			}, 1);
 			expect(false);
 		} catch(e) {
 			expect(true);
@@ -393,7 +393,13 @@ describe('deploy contract ' + contractName, () => {
 	test('bob: nft mint (no type), approve sale with NEAR open for bids', async () => {
 		const token_id = tokenIds[1];
 		await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket).catch(() => {});
-		await bob.functionCall(contractId, 'nft_mint', { token_id, metadata: metadata2 }, GAS, parseNearAmount('1'));
+		await bob.functionCall(contractId, 'nft_mint', {
+			token_id,
+			metadata: metadata2,
+			perpetual_royalties: {
+				[bobId]: 500,
+			},
+		}, GAS, parseNearAmount('1'));
 		await bob.functionCall(contractId, 'nft_approve', {
 			token_id,
 			account_id: marketId,
@@ -444,6 +450,9 @@ describe('deploy contract ' + contractName, () => {
 		await alice.functionCall(contractId, 'nft_approve', {
 			token_id,
 			account_id: marketId,
+			perpetual_royalties: {
+				[aliceId]: 500,
+			},
 			msg: JSON.stringify({
 				sale_conditions: [{
 					ft_token_id: 'near',

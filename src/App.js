@@ -13,10 +13,10 @@ import './App.scss';
 
 const App = () => {
 	const { state, dispatch, update } = useContext(appStore);
-    
+
 	const { near, wallet, contractAccount, account, loading } = state;
 
-    
+
 	const [profile, setProfile] = useState(false);
 
 	const onMount = () => {
@@ -29,23 +29,23 @@ const App = () => {
 	if (profile && !signedIn) {
 		setProfile(false);
 	}
-    
-	const { tab } = state.app;
+
+	const { tab, sort } = state.app;
 
 	return <>
 		{ loading && <div className="loading">
 			<img src={NearLogo} />
 		</div>
 		}
-        
+
 		<div id="menu">
 			<div>
-				<img style={{ opacity: signedIn ? 1 : 0.25 }} src={Avatar} 
+				<img style={{ opacity: signedIn ? 1 : 0.25 }} src={Avatar}
 					onClick={() => setProfile(!profile)}
 				/>
 			</div>
 			<div>
-				{ !signedIn ? <Wallet {...{ wallet }} /> : account.accountId }
+				{!signedIn ? <Wallet {...{ wallet }} /> : account.accountId}
 			</div>
 			{
 				profile && signedIn && <div id="profile">
@@ -57,26 +57,26 @@ const App = () => {
 				</div>
 			}
 		</div>
-		
 
-		<div id="tabs">
 
-			<div onClick={() => update('app.tab', 1)} style={{ background: tab === 1 ? '#fed' : ''}}>Market</div>
-			<div onClick={() => update('app.tab', 2)} style={{ background: tab === 2 ? '#fed' : ''}}>My NFTs</div>
-			<div onClick={() => update('app.tab', 3)} style={{ background: tab === 3 ? '#fed' : ''}}>Mint</div>
-
-		</div>
+		{
+			signedIn && <div id="tabs">
+				<div onClick={() => update('app.tab', 1)} style={{ background: tab === 1 ? '#fed' : '' }}>Market</div>
+				<div onClick={() => update('app.tab', 2)} style={{ background: tab === 2 ? '#fed' : '' }}>My NFTs</div>
+				<div onClick={() => update('app.tab', 3)} style={{ background: tab === 3 ? '#fed' : '' }}>Mint</div>
+			</div>
+		}
 
 		{ signedIn && tab === 3 &&
-            <div id="contract">
-            	{
-            		signedIn &&
-                    <Contract {...{ near, update, wallet, account }} />
-            	}
-            </div>
+			<div id="contract">
+				{
+					signedIn &&
+					<Contract {...{ near, update, wallet, account }} />
+				}
+			</div>
 		}
 		<div id="gallery">
-			<Gallery {...{ tab, loading, contractAccount, account }} />
+			<Gallery {...{ tab, sort, update, loading, contractAccount, account }} />
 		</div>
 	</>;
 };

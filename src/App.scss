@@ -38,6 +38,26 @@ body::-webkit-scrollbar {
       transform: rotateY(-360deg); 
     } 
   } 
+
+  @keyframes pulse { 
+    from 
+    { 
+      transform: scale(1, 1); 
+    } 
+    to { 
+        transform: scale(1.15, 1.15);
+    } 
+  } 
+
+  .pulse-button {
+    animation-name: pulse; 
+        animation-timing-function: linear; 
+        animation-iteration-count: infinite; 
+        animation-direction: alternate;
+        animation-duration: 1s; 
+  }
+
+
 .loading {
     width: 100vw;
     height: 100vh;

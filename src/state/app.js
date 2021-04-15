@@ -6,6 +6,7 @@ const initialState = {
 	app: {
 		mounted: false,
 		tab: 1,
+		sort: 1,
 	},
 	near: {
 		initialized: false,

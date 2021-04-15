@@ -24,17 +24,20 @@ export const Contract = ({ near, update, account }) => {
 			alert('Please enter some metadata');
 			return;
 		}
-		update('loading', true);
 
 		// shape royalties data for minting and check max is < 20%
 		let perpetual_royalties = Object.entries(royalties).map(([receiver, royalty]) => ({
 			[receiver]: royalty * 100
 		})).reduce((acc, cur) => Object.assign(acc, cur), {})
-		if (Object.entries(perpetual_royalties).reduce((a, c) => a + c, 0) > 2000) {
+		if (Object.values(perpetual_royalties).reduce((a, c) => a + c, 0) > 2000) {
 			return alert('Cannot add more than 20% in perpetual NFT royalties when minting')
 		}
 		
-		const metadata = { media };
+		update('loading', true);
+		const metadata = { 
+			media,
+			issued_at: Date.now().toString()
+		};
 		const deposit = parseNearAmount('0.1');
 		await account.functionCall(contractId, 'nft_mint', {
 			token_id: 'token-' + Date.now(),

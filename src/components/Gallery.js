@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import * as nearAPI from 'near-api-js';
-import { get, set, del } from '../utils/storage';
 import { GAS, parseNearAmount } from '../state/near';
 import {
 	marketId,
@@ -21,6 +20,15 @@ const token2symbol = {
 	"usdc": "USDC",
 	"usdt": "USDT",
 };
+
+const n2f = (amount) => parseFloat(parseNearAmount(amount, 8))
+
+const sortFunctions = {
+	1: (a, b) => parseInt(a.metadata.issued_at || '0') - parseInt(b.metadata.issued_at || '0'),
+	2: (b, a) => parseInt(a.metadata.issued_at || '0') - parseInt(b.metadata.issued_at || '0'),
+	3: (a, b) => n2f((a.conditions || {near: '0'}).near) - n2f((b.conditions || {near: '0'}).near),
+	4: (b, a) => n2f((a.conditions || {near: '0'}).near) - n2f((b.conditions || {near: '0'}).near),
+}
 const allTokens = Object.keys(token2symbol);
 
 const getTokenOptions = (value, setter, accepted = allTokens) => (
@@ -30,7 +38,7 @@ const getTokenOptions = (value, setter, accepted = allTokens) => (
 		}
 	</select>);
 
-export const Gallery = ({ tab, contractAccount, account, loading }) => {
+export const Gallery = ({ tab, sort, update, contractAccount, account, loading }) => {
 	if (!contractAccount) return null;
 
 	let accountId = '';
@@ -50,9 +58,6 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 
 	useEffect(() => {
 		if (!loading) loadItems();
-
-
-
 	}, [loading]);
 
 	const loadItems = async () => {
@@ -64,7 +69,7 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 			const tokens = await contractAccount.viewFunction(contractId, 'nft_tokens_for_owner', {
 				account_id: account.accountId,
 				from_index: '0',
-				limit: '20'
+				limit: '50'
 			});
 			const sales = await contractAccount.viewFunction(marketId, 'get_sales_by_owner_id', {
 				account_id: account.accountId,
@@ -88,7 +93,7 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 		const sales = await contractAccount.viewFunction(marketId, 'get_sales_by_nft_contract_id', {
 			nft_contract_id: contractId,
 			from_index: '0',
-			limit: '50'
+			limit: '100'
 		});
 		const tokens = await contractAccount.viewFunction(contractId, 'nft_tokens_batch', {
 			token_ids: sales.filter(({ nft_contract_id }) => nft_contract_id === contractId).map(({ token_id }) => token_id)
@@ -103,7 +108,7 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 			}
 			sales[i] = Object.assign(sales[i], token);
 		}
-		setSales(sales.filter(({ owner_id }) => owner_id != accountId));
+		setSales(sales);
 	};
 
 	/// setters
@@ -139,7 +144,7 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 		await account.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket).catch(() => { });
 	};
 
-	const handleSaleUpdate = async (token_id) => {
+	const handleSaleUpdate = async (token_id, newSaleConditions) => {
 		const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + ":" + token_id }).catch(() => { });
 		if (sale) {
 			await account.functionCall(marketId, 'remove_sale', {
@@ -150,13 +155,22 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 		await account.functionCall(contractId, 'nft_approve', {
 			token_id,
 			account_id: marketId,
-			msg: JSON.stringify({ sale_conditions: saleConditions })
+			msg: JSON.stringify({ sale_conditions: newSaleConditions })
 		}, GAS, parseNearAmount('0.01'));
 	};
 
-	console.log(tokens)
+	sales.sort(sortFunctions[sort])
+	tokens.sort(sortFunctions[sort])
 
 	return <>
+		{
+			tab < 3 && 
+			<center>
+				<button onClick={() => update('app.sort', sort === 2 ? 1 : 2)} style={{ background: sort === 1 || sort === 2 ? '#fed' : ''}}>Date {sort === 1 && '⬆️'}{sort === 2 && '⬇️'}</button>
+				<button onClick={() => update('app.sort', sort === 4 ? 3 : 4)} style={{ background: sort === 3 || sort === 4 ? '#fed' : ''}}>Price {sort === 3 && '⬆️'}{sort === 4 && '⬇️'}</button>
+				{/* <button onClick={() => update('app.sort', sort === 6 ? 5 : 6)} style={{ background: sort === 5 || sort === 6 ? '#fed' : ''}}>Offers {sort === 5 && '⬆️'}{sort === 6 && '⬇️'}</button> */}
+			</center>
+		}
 		{
 			tab === 1 && sales.map(({
 				metadata: { media },
@@ -168,7 +182,7 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 			}) =>
 				<div key={token_id} className="item">
 					<img src={media} />
-					<p>Owned by {formatAccountId(owner_id)}</p>
+					<p>{accountId !== owner_id ? `Owned by ${formatAccountId(owner_id)}` : `You own this!`}</p>
 					<h4>Royalties</h4>
 					{
 						Object.keys(royalty).length > 0 ?
@@ -186,21 +200,29 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 									{price === '0' ? 'open' : formatNearAmount(price, 4)} - {token2symbol[ft_token_id]}
 								</div>)
 							}
-							<input type="number" placeholder="Price" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
 							{
-								getTokenOptions(offerToken, setOfferToken, Object.keys(conditions))
+								accountId !== owner_id && <>
+									<input type="number" placeholder="Price" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
+									{
+										getTokenOptions(offerToken, setOfferToken, Object.keys(conditions))
+									}
+									<button onClick={() => handleOffer(token_id)}>Offer</button>
+								</>
 							}
-							<button onClick={() => handleOffer(token_id)}>Offer</button>
 						</>
 					}
 					{
 						Object.keys(bids).length > 0 && <>
 							<h4>Offers</h4>
 							{
-								Object.entries(bids).map(([ft_token_id, { owner_id, price }]) => <div className="offers" key={ft_token_id}>
+								Object.entries(bids).map(([ft_token_id, { owner_id: bid_owner_id, price }]) => <div className="offers" key={ft_token_id}>
 									<div>
-										{price === '0' ? 'open' : formatNearAmount(price, 4)} - {token2symbol[ft_token_id]} by {owner_id}
+										{price === '0' ? 'open' : formatNearAmount(price, 4)} - {token2symbol[ft_token_id]} by {bid_owner_id}
 									</div>
+									{
+										accountId === owner_id &&
+										<button onClick={() => handleAcceptOffer(token_id, ft_token_id)}>Accept</button>
+									}
 								</div>)
 							}
 						</>
@@ -251,7 +273,7 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 													{price === '0' ? 'open' : formatNearAmount(price, 4)} - {token2symbol[ft_token_id]}
 												</div>)
 											}
-											<button onClick={() => handleSaleUpdate(token_id)}>Update Sale Conditions</button>
+											<button className="pulse-button" onClick={() => handleSaleUpdate(token_id)}>Update Sale Conditions</button>
 										</div>
 									}
 									{
@@ -263,14 +285,21 @@ export const Gallery = ({ tab, contractAccount, account, loading }) => {
 													getTokenOptions(token, setToken)
 												}
 												<button onClick={() => {
-													setSaleConditions(saleConditions
+													if (!price.length) {
+														return alert('Enter a price');
+													}
+													const newSaleConditions = saleConditions
 														.filter(({ ft_token_id }) => ft_token_id !== token)
 														.concat([{
 															price: parseNearAmount(price),
 															ft_token_id: token,
-														}]))
+														}])
+													setSaleConditions(newSaleConditions)
 													setPrice('');
 													setToken('near');
+													if (window.confirm('Update now?')) {
+														handleSaleUpdate(token_id, newSaleConditions)
+													}
 												}}>Add</button>
 											</div>
 											<div>
