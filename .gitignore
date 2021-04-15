@@ -17,6 +17,7 @@ package-lock.json
 #contracts
 target
 out
+notes
 
 # testing
 /coverage

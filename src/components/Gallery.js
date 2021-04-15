@@ -38,14 +38,17 @@ const getTokenOptions = (value, setter, accepted = allTokens) => (
 		}
 	</select>);
 
-export const Gallery = ({ tab, sort, update, contractAccount, account, loading }) => {
+export const Gallery = ({ app, update, contractAccount, account, loading }) => {
 	if (!contractAccount) return null;
+
+	const { tab, sort, filter } = app;
 
 	let accountId = '';
 	if (account) accountId = account.accountId;
 
 	/// market
 	const [sales, setSales] = useState([]);
+	const [allTokens, setAllTokens] = useState([]);
 	const [offerPrice, setOfferPrice] = useState('');
 	const [offerToken, setOfferToken] = useState('near');
 
@@ -109,6 +112,14 @@ export const Gallery = ({ tab, sort, update, contractAccount, account, loading }
 			sales[i] = Object.assign(sales[i], token);
 		}
 		setSales(sales);
+
+		// all tokens
+		const allTokens = await contractAccount.viewFunction(contractId, 'nft_tokens', {
+			from_index: '0',
+			limit: '100'
+		})
+		console.log(allTokens)
+		setAllTokens(allTokens);
 	};
 
 	/// setters
@@ -159,20 +170,28 @@ export const Gallery = ({ tab, sort, update, contractAccount, account, loading }
 		}, GAS, parseNearAmount('0.01'));
 	};
 
-	sales.sort(sortFunctions[sort])
+	let market = sales
+	if (tab !== 2 && filter === 1) {
+		market = market.concat(allTokens.filter(({ token_id }) => !market.some(({ token_id: t}) => t === token_id)))
+	}
+	market.sort(sortFunctions[sort])
 	tokens.sort(sortFunctions[sort])
 
 	return <>
 		{
 			tab < 3 && 
 			<center>
+				{
+					tab !== 2 && <button onClick={() => update('app.filter', filter === 2 ? 1 : 2)} style={{background: '#fed'}}>{filter === 1 ? 'All' : 'Sales'}</button>
+				}
 				<button onClick={() => update('app.sort', sort === 2 ? 1 : 2)} style={{ background: sort === 1 || sort === 2 ? '#fed' : ''}}>Date {sort === 1 && '⬆️'}{sort === 2 && '⬇️'}</button>
-				<button onClick={() => update('app.sort', sort === 4 ? 3 : 4)} style={{ background: sort === 3 || sort === 4 ? '#fed' : ''}}>Price {sort === 3 && '⬆️'}{sort === 4 && '⬇️'}</button>
-				{/* <button onClick={() => update('app.sort', sort === 6 ? 5 : 6)} style={{ background: sort === 5 || sort === 6 ? '#fed' : ''}}>Offers {sort === 5 && '⬆️'}{sort === 6 && '⬇️'}</button> */}
+				{
+					tab !== 2 && <button onClick={() => update('app.sort', sort === 4 ? 3 : 4)} style={{ background: sort === 3 || sort === 4 ? '#fed' : ''}}>Price {sort === 3 && '⬆️'}{sort === 4 && '⬇️'}</button>
+				}
 			</center>
 		}
 		{
-			tab === 1 && sales.map(({
+			tab === 1 && market.map(({
 				metadata: { media },
 				owner_id,
 				token_id,
@@ -183,14 +202,17 @@ export const Gallery = ({ tab, sort, update, contractAccount, account, loading }
 				<div key={token_id} className="item">
 					<img src={media} />
 					<p>{accountId !== owner_id ? `Owned by ${formatAccountId(owner_id)}` : `You own this!`}</p>
-					<h4>Royalties</h4>
-					{
-						Object.keys(royalty).length > 0 ?
-							Object.entries(royalty).map(([receiver, amount]) => <div key={receiver}>
-								{receiver} - {amount / 100}%
-						</div>)
-							:
-							<p>This token has no royalties.</p>
+					{ Object.keys(conditions).length > 0 && <>
+						<h4>Royalties</h4>
+							{
+								Object.keys(royalty).length > 0 ?
+									Object.entries(royalty).map(([receiver, amount]) => <div key={receiver}>
+										{receiver} - {amount / 100}%
+								</div>)
+									:
+									<p>This token has no royalties.</p>
+							}
+						</>
 					}
 					{
 						Object.keys(conditions).length > 0 && <>

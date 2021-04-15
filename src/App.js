@@ -14,7 +14,7 @@ import './App.scss';
 const App = () => {
 	const { state, dispatch, update } = useContext(appStore);
 
-	const { near, wallet, contractAccount, account, loading } = state;
+	const { app, app: {tab}, near, wallet, contractAccount, account, loading } = state;
 
 
 	const [profile, setProfile] = useState(false);
@@ -30,13 +30,13 @@ const App = () => {
 		setProfile(false);
 	}
 
-	const { tab, sort } = state.app;
-
 	return <>
 		{ loading && <div className="loading">
 			<img src={NearLogo} />
 		</div>
 		}
+
+		<div className="background"></div>
 
 		<div id="menu">
 			<div>
@@ -76,7 +76,7 @@ const App = () => {
 			</div>
 		}
 		<div id="gallery">
-			<Gallery {...{ tab, sort, update, loading, contractAccount, account }} />
+			<Gallery {...{ app, update, loading, contractAccount, account }} />
 		</div>
 	</>;
 };

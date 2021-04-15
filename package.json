@@ -26,11 +26,10 @@
         "last 2 Chrome versions"
     ],
     "scripts": {
-        "prestart": "yarn clean",
+        "prestart": "rm -rf ./parcel-cache",
         "start:deploy": "yarn test:deploy && yarn start",
         "start": "cross-env REACT_APP_ENV=dev parcel src/index.html --open",
-        "prebuild": "yarn clean",
-        "clean": "rimraf ./dist ./parcel-cache",
+        "prebuild": "rm -rf ./dist",
         "fix": "eslint src/ test/ server/ --fix",
         "build:contracts": "cd contracts/nft-simple && ./build.sh && cd ../.. && cd contracts/market-simple && ./build.sh && cd ../.. && cd contracts/ft && ./build.sh && cd ../..",
         "patch:config": "node ./utils/patch-config.js",
