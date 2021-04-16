@@ -15,13 +15,14 @@ export const Contract = ({ near, update, account }) => {
 	if (!account) return <p>Please connect your NEAR Wallet</p>;
 
 	const [media, setMedia] = useState('');
+	const [validMedia, setValidMedia] = useState('');
 	const [royalties, setRoyalties] = useState({});
 	const [royalty, setRoyalty] = useState([]);
 	const [receiver, setReceiver] = useState([]);
 
 	const handleMint = async () => {
-		if (!media.length) {
-			alert('Please enter some metadata');
+		if (!media.length || !validMedia) {
+			alert('Please enter a valid Image Link. You should see a preview below!');
 			return;
 		}
 
@@ -51,8 +52,11 @@ export const Contract = ({ near, update, account }) => {
 
 	return <>
 		<h4>Mint Something</h4>
-		<input className="full-width" placeholder="Metadata (Image URL)" value={media} onChange={(e) => setMedia(e.target.value)} />
-
+		<input className="full-width" placeholder="Image Link" value={media} onChange={(e) => setMedia(e.target.value)} />
+		<img src={media} onLoad={() => setValidMedia(true)} onError={() => setValidMedia(false)} />
+		
+		{ !validMedia && <p>Image link is invalid.</p> }
+		
 		<h4>Royalties</h4>
 		{
 			Object.keys(royalties).length > 0 ? 

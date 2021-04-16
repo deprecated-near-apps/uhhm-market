@@ -41,6 +41,8 @@ Differences from `nft-simple` NFT standard reference implementation:
 
 Associated Video Demos (most recent at top)
 
+[![NEAR Protocol - Demo NFT Marketplace Walkthough](https://img.youtube.com/vi/AevmMAtkIr4/0.jpg)](https://www.youtube.com/watch?v=AevmMAtkIr4)
+
 [![Live App Review 19 - NFT Marketplace with Fungible Token Transfers and Royalty Distribution](https://img.youtube.com/vi/sGTC3rs8OJQ/0.jpg)](https://youtu.be/sGTC3rs8OJQ)
 
 Some additional ideas around user onboarding:

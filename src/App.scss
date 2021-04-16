@@ -20,16 +20,6 @@ body {
     box-shadow: 0 0 16px rgba(0, 0, 0, 0.1),
         0 0 64px rgba(0, 0, 0, 0.1);
 }
-.background {
-    position: fixed;
-    opacity: 0.05;
-    transform: translateX(-50vw) translateY(-50vw) rotate(-12deg);
-    width: 200vw;
-    height: 200vh;
-    background: url('./img/near_logo.png');
-    background-size: 200px;
-    z-index: -1;
-}
 
 @media only screen and (min-width: $width) {
     body {
@@ -39,6 +29,16 @@ body {
     #root > div {
         margin-left: -18px;
     }
+}
+.background {
+    position: fixed;
+    opacity: 0.05;
+    transform: translateX(-50vw) translateY(-50vw) rotate(-10deg);
+    width: 200vw;
+    height: 200vh;
+    background: url('./img/near_logo.png') !important;
+    background-size: 400px !important;
+    z-index: -1;
 }
 
 body::-webkit-scrollbar {
@@ -98,6 +98,7 @@ body::-webkit-scrollbar {
     padding: 16px;
     width: 100%;
     height: 100%;
+    background: white;
     > div {
 
         background: white;
@@ -190,10 +191,6 @@ body::-webkit-scrollbar {
     max-width: $width;
     margin-left: $margin-fix;
     padding-bottom: 16px;
-    .filters {
-        text-align: center;
-        margin-bottom: 16px;
-    }
     .item {
         border-bottom: 2px solid #ddd;
         padding: 16px;
@@ -229,6 +226,10 @@ body::-webkit-scrollbar {
     justify-content: center;
     align-items: center;
     text-align: center;
+    img {
+        width: 100%;
+        margin-bottom: 16px;
+    }
 }
 
 .button-group {

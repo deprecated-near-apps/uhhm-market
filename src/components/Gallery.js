@@ -158,16 +158,19 @@ export const Gallery = ({ app, update, contractAccount, account, loading }) => {
 	const handleSaleUpdate = async (token_id, newSaleConditions) => {
 		const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + ":" + token_id }).catch(() => { });
 		if (sale) {
-			await account.functionCall(marketId, 'remove_sale', {
+			await account.functionCall(marketId, 'update_price', {
 				nft_contract_id: contractId,
 				token_id,
+				ft_token_id: newSaleConditions[0].ft_token_id,
+				price: newSaleConditions[0].price
 			}, GAS);
+		} else {
+			await account.functionCall(contractId, 'nft_approve', {
+				token_id,
+				account_id: marketId,
+				msg: JSON.stringify({ sale_conditions: newSaleConditions })
+			}, GAS, parseNearAmount('0.01'));
 		}
-		await account.functionCall(contractId, 'nft_approve', {
-			token_id,
-			account_id: marketId,
-			msg: JSON.stringify({ sale_conditions: newSaleConditions })
-		}, GAS, parseNearAmount('0.01'));
 	};
 
 	let market = sales
@@ -223,7 +226,7 @@ export const Gallery = ({ app, update, contractAccount, account, loading }) => {
 								</div>)
 							}
 							{
-								accountId !== owner_id && <>
+								accountId.length && accountId !== owner_id && <>
 									<input type="number" placeholder="Price" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
 									{
 										getTokenOptions(offerToken, setOfferToken, Object.keys(conditions))
