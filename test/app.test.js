@@ -234,7 +234,7 @@ describe('deploy contract ' + contractName, () => {
 		expect(new BN(contractBalanceAfter.total).sub(new BN(contractBalanceBefore.total)).gt(new BN(parseNearAmount('0.79')))).toEqual(true);
 	});
 
-	test('contract account registers with market contract', async () => {
+	test('contract account registers bob with market contract', async () => {
 		await contractAccount.functionCall(marketId, 'storage_deposit', { account_id: bobId }, GAS, storageMarket).catch(() => {});
 		const result = await contractAccount.viewFunction(marketId, 'storage_paid', { account_id: bobId });
 		expect(result).toEqual(true);
