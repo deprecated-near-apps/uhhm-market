@@ -76,7 +76,7 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
         let mut by_owner_id = self.by_owner_id.get(&owner_id).unwrap_or_else(|| {
             UnorderedSet::new(hash_account_id(&owner_id, Some("by_owner_id".to_string())).try_to_vec().unwrap())
         });
-        assert!(by_owner_id.len() < 51, "Only 20 active sales allowed on this market");
+        assert!(by_owner_id.len() <= MAX_SALES_PER_ACCOUNT.into(), "Only 20 active sales allowed on this market");
         by_owner_id.insert(&contract_and_token_id);
         self.by_owner_id.insert(&owner_id, &by_owner_id);
 

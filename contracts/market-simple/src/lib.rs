@@ -26,6 +26,7 @@ near_sdk::setup_alloc!();
 
 const NO_DEPOSIT: Balance = 0;
 const STORAGE_AMOUNT: u128 = 100_000_000_000_000_000_000_000;
+const MAX_SALES_PER_ACCOUNT: u8 = 20;
 
 pub type TokenId = String;
 pub type FungibleTokenId = AccountId;
