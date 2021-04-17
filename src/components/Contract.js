@@ -29,9 +29,9 @@ export const Contract = ({ near, update, account }) => {
 		// shape royalties data for minting and check max is < 20%
 		let perpetual_royalties = Object.entries(royalties).map(([receiver, royalty]) => ({
 			[receiver]: royalty * 100
-		})).reduce((acc, cur) => Object.assign(acc, cur), {})
+		})).reduce((acc, cur) => Object.assign(acc, cur), {});
 		if (Object.values(perpetual_royalties).reduce((a, c) => a + c, 0) > 2000) {
-			return alert('Cannot add more than 20% in perpetual NFT royalties when minting')
+			return alert('Cannot add more than 20% in perpetual NFT royalties when minting');
 		}
 		
 		update('loading', true);
@@ -60,23 +60,23 @@ export const Contract = ({ near, update, account }) => {
 		<h4>Royalties</h4>
 		{
 			Object.keys(royalties).length > 0 ? 
-			Object.entries(royalties).map(([receiver, royalty]) => <div key={receiver}>
-				{receiver} - {royalty} % <button onClick={() => {
-					delete royalties[receiver]
-					setRoyalties(Object.assign({}, royalties))
-				}}>❌</button>
-			</div>)
-			:
-			<p>No royalties added yet.</p>
+				Object.entries(royalties).map(([receiver, royalty]) => <div key={receiver}>
+					{receiver} - {royalty} % <button onClick={() => {
+						delete royalties[receiver];
+						setRoyalties(Object.assign({}, royalties));
+					}}>❌</button>
+				</div>)
+				:
+				<p>No royalties added yet.</p>
 		}
 		<input className="full-width" placeholder="Account ID" value={receiver} onChange={(e) => setReceiver(e.target.value)} />
 		<input type="number" className="full-width" placeholder="Percentage" value={royalty} onChange={(e) => setRoyalty(e.target.value)} />
 		<button onClick={async () => {
 			const exists = await isAccountTaken(receiver);
-			if (!exists) return alert(`Account: ${receiver} does not exist on ${networkId ==='default' ? 'testnet' : 'mainnet'}.`)
+			if (!exists) return alert(`Account: ${receiver} does not exist on ${networkId ==='default' ? 'testnet' : 'mainnet'}.`);
 			setRoyalties(Object.assign({}, royalties, {
 				[receiver]: royalty
-			}))
+			}));
 		}}>Add Royalty</button>
 
 		<div className="line"></div>

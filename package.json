@@ -39,7 +39,8 @@
         "test": "cross-env REACT_APP_ENV=dev jest app.test.js --useStderr",
         "test:server": "cross-env REACT_APP_ENV=dev jest server.test.js --useStderr",
 
+        "patch:deploy-config": "node ./utils/patch-deploy-config.js",
         "build": "parcel build src/index.html --no-source-maps --public-url https://near-apps.github.io/nft-market/",
-        "deploy": "cross-env REACT_APP_ENV=dev yarn build && gh-pages -d dist"
+        "deploy": "yarn patch:deploy-config && cross-env REACT_APP_ENV=dev yarn build && gh-pages -d dist"
     }
 }

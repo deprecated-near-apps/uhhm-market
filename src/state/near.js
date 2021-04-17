@@ -19,6 +19,8 @@ export const {
 export const initNear = () => async ({ update, getState, dispatch }) => {
 	const { near, wallet, contractAccount } = await getWallet();
 
+	console.log(near);
+
 	wallet.signIn = () => {
 		wallet.requestSignIn(contractName, 'Blah Blah');
 	};

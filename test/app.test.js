@@ -32,7 +32,7 @@ describe('deploy contract ' + contractName, () => {
 	const metadata2 = {
 		media: 'https://media1.tenor.com/images/818161c07948bac34aa7c5f5712ec3d7/tenor.gif?itemid=15065455',
 	};
-	const t = Date.now()
+	const t = Date.now();
 	const tokenIds = [
 		'token' + t,
 		'token' + (t + 1),
@@ -42,7 +42,7 @@ describe('deploy contract ' + contractName, () => {
 		'type' + t,
 		'type' + (t + 1),
 		'type' + (t + 2)
-	]
+	];
 	const contract_royalty = 500;
 
 	/// contractAccount.accountId is the NFT contract and contractAccount is the owner
@@ -234,10 +234,15 @@ describe('deploy contract ' + contractName, () => {
 		expect(new BN(contractBalanceAfter.total).sub(new BN(contractBalanceBefore.total)).gt(new BN(parseNearAmount('0.79')))).toEqual(true);
 	});
 
+	test('contract account registers with market contract', async () => {
+		await contractAccount.functionCall(marketId, 'storage_deposit', { account_id: bobId }, GAS, storageMarket).catch(() => {});
+		const result = await contractAccount.viewFunction(marketId, 'storage_paid', { account_id: bobId });
+		expect(result).toEqual(true);
+	});
+
 	test('bob approves sale with FT and NEAR (fixed prices)', async () => {
 		const token_id = tokenIds[0];
 		await bob.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum).catch(() => {});
-		await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket).catch(() => {});
 		const token = await contract.nft_token({ token_id });
 		let sale_conditions = [
 			{

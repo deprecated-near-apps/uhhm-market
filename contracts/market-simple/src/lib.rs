@@ -69,10 +69,15 @@ impl Contract {
     }
 
     #[payable]
-    pub fn storage_deposit(&mut self) -> bool {
-        assert_eq!(self.storage_deposits.contains(&env::predecessor_account_id()), false, "Already paid for storage");
-        assert_eq!(env::attached_deposit(), STORAGE_AMOUNT, "Attach {}", STORAGE_AMOUNT);
-        self.storage_deposits.insert(&env::predecessor_account_id())
+    pub fn storage_deposit(&mut self, account_id: Option<AccountId>) -> bool {
+        let storage_account_id = if let Some(account_id) = account_id {
+            account_id
+        } else {
+            env::predecessor_account_id()
+        };
+        assert_eq!(self.storage_deposits.contains(&storage_account_id), false, "Already paid for storage");
+        assert_eq!(env::attached_deposit(), STORAGE_AMOUNT, "Required attached deposit of {}", STORAGE_AMOUNT);
+        self.storage_deposits.insert(&storage_account_id)
     }
 
     #[payable]
@@ -97,7 +102,7 @@ impl Contract {
         U128(STORAGE_AMOUNT)
     }
     
-    pub fn storage_paid(&self, account_id: AccountId) -> bool {
-        self.storage_deposits.contains(&account_id)
+    pub fn storage_paid(&self, account_id: ValidAccountId) -> bool {
+        self.storage_deposits.contains(account_id.as_ref())
     }
 }
