@@ -26,8 +26,8 @@ const n2f = (amount) => parseFloat(parseNearAmount(amount, 8));
 const sortFunctions = {
 	1: (a, b) => parseInt(a.metadata.issued_at || '0') - parseInt(b.metadata.issued_at || '0'),
 	2: (b, a) => parseInt(a.metadata.issued_at || '0') - parseInt(b.metadata.issued_at || '0'),
-	3: (a, b) => n2f((a.conditions || {near: '0'}).near) - n2f((b.conditions || {near: '0'}).near),
-	4: (b, a) => n2f((a.conditions || {near: '0'}).near) - n2f((b.conditions || {near: '0'}).near),
+	3: (a, b) => n2f(a.conditions?.near || '0') - n2f(b.conditions?.near || '0'),
+	4: (b, a) => n2f(a.conditions?.near || '0') - n2f(b.conditions?.near || '0'),
 };
 const allTokens = Object.keys(token2symbol);
 
@@ -226,7 +226,7 @@ export const Gallery = ({ app, update, contractAccount, account, loading }) => {
 								</div>)
 							}
 							{
-								accountId.length && accountId !== owner_id && <>
+								accountId.length > 0 && accountId !== owner_id && <>
 									<input type="number" placeholder="Price" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
 									{
 										getTokenOptions(offerToken, setOfferToken, Object.keys(conditions))
