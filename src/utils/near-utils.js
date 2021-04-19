@@ -9,12 +9,21 @@ export const {
 } = getConfig();
 
 const {
+	Near,
+	keyStores,
 	Account,
+	WalletAccount,
 	Contract,
 	InMemorySigner,
 } = nearAPI;
 
-let near;
+export const near = new Near({
+	networkId,
+	nodeUrl,
+	deps: {
+		keyStore: new keyStores.BrowserLocalStorageKeyStore()
+	},
+});
 
 // alias
 export const contractId = contractName;
@@ -37,10 +46,11 @@ export function getContract(account, methods = contractMethods) {
 }
 
 export const getWallet = async () => {
-	near = await nearAPI.connect({
-		networkId, nodeUrl, walletUrl, deps: { keyStore: new nearAPI.keyStores.BrowserLocalStorageKeyStore() },
-	});
-	const wallet = new nearAPI.WalletAccount(near);
+	const contractId = 'app-name.account-id.near';
+	const wallet = new WalletAccount(near);
+
+	// walletAccount instance gets access key for contractId
+	
 	const contractAccount = new Account(near.connection, contractName);
 	return { near, wallet, contractAccount };
 };
