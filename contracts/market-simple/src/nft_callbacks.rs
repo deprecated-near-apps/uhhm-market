@@ -24,11 +24,9 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
         approval_id: U64,
         msg: String,
     ) {
-        assert!(
-            self.storage_deposits.contains(&owner_id),
-            "Must call storage_deposit with {} to sell on this market.",
-            STORAGE_AMOUNT
-        );
+
+        let owner_paid_storage = self.storage_deposits.get(&owner_id).unwrap_or(0);
+        assert!(owner_paid_storage >= STORAGE_PER_SALE, "Required minimum storage to sell on market: {}", STORAGE_PER_SALE);
 
         let nft_contract_id = env::predecessor_account_id();
         let sale_args: SaleArgs = near_sdk::serde_json::from_str(&msg).expect("Not valid SaleArgs");
@@ -76,7 +74,10 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
         let mut by_owner_id = self.by_owner_id.get(&owner_id).unwrap_or_else(|| {
             UnorderedSet::new(hash_account_id(&owner_id, Some("by_owner_id".to_string())).try_to_vec().unwrap())
         });
-        assert!(by_owner_id.len() <= MAX_SALES_PER_ACCOUNT.into(), "Only 20 active sales allowed on this market");
+
+
+        let owner_occupied_storage = u128::from(by_owner_id.len()) * STORAGE_PER_SALE;
+        assert!(owner_paid_storage > owner_occupied_storage, "User has more sales than storage paid");
         by_owner_id.insert(&contract_and_token_id);
         self.by_owner_id.insert(&owner_id, &by_owner_id);
 

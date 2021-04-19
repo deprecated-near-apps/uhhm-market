@@ -25,8 +25,7 @@ near_sdk::setup_alloc!();
 // TODO check seller supports storage_deposit at ft_token_id they want to post sale in
 
 const NO_DEPOSIT: Balance = 0;
-const STORAGE_AMOUNT: u128 = 100_000_000_000_000_000_000_000;
-const MAX_SALES_PER_ACCOUNT: u8 = 20;
+const STORAGE_PER_SALE: u128 = 10_000_000_000_000_000_000_000;
 
 pub type TokenId = String;
 pub type FungibleTokenId = AccountId;
@@ -41,7 +40,7 @@ pub struct Contract {
     pub by_owner_id: LookupMap<AccountId, UnorderedSet<ContractAndTokenId>>,
     pub by_nft_contract_id: LookupMap<AccountId, UnorderedSet<TokenId>>,
     pub ft_token_ids: LookupSet<AccountId>,
-    pub storage_deposits: LookupSet<AccountId>,
+    pub storage_deposits: LookupMap<AccountId, Balance>,
 }
 
 #[near_bindgen]
@@ -55,7 +54,7 @@ impl Contract {
             by_owner_id: LookupMap::new(b"b".to_vec()),
             by_nft_contract_id: LookupMap::new(b"n".to_vec()),
             ft_token_ids: LookupSet::new(b"t".to_vec()),
-            storage_deposits: LookupSet::new(b"d".to_vec()),
+            storage_deposits: LookupMap::new(b"d".to_vec()),
         };
         // support NEAR by default
         this.ft_token_ids.insert(&"near".to_string());
@@ -70,23 +69,25 @@ impl Contract {
     }
 
     #[payable]
-    pub fn storage_deposit(&mut self, account_id: Option<AccountId>) -> bool {
+    pub fn storage_deposit(&mut self, account_id: Option<AccountId>) {
         let storage_account_id = if let Some(account_id) = account_id {
             account_id
         } else {
             env::predecessor_account_id()
         };
-        assert_eq!(self.storage_deposits.contains(&storage_account_id), false, "Already paid for storage");
-        assert_eq!(env::attached_deposit(), STORAGE_AMOUNT, "Required attached deposit of {}", STORAGE_AMOUNT);
-        self.storage_deposits.insert(&storage_account_id)
+        let deposit = env::attached_deposit();
+        assert!(deposit >= STORAGE_PER_SALE, "Requires minimum deposit of {}", STORAGE_PER_SALE);
+        let mut balance: u128 = self.storage_deposits.get(&storage_account_id).unwrap_or(0);
+        balance += deposit;
+        self.storage_deposits.insert(&storage_account_id, &balance);
     }
 
     #[payable]
     pub fn storage_withdraw(&mut self) -> bool {
-        assert_one_yocto();
         let predecessor = env::predecessor_account_id();
-        if self.storage_deposits.remove(&predecessor) {
-            Promise::new(predecessor).transfer(STORAGE_AMOUNT);
+        let amount = self.storage_deposits.remove(&predecessor);
+        if let Some(amount) = amount {
+            Promise::new(predecessor).transfer(amount);
             true
         } else {
             false
@@ -100,10 +101,10 @@ impl Contract {
     }
 
     pub fn storage_amount(&self) -> U128 {
-        U128(STORAGE_AMOUNT)
+        U128(STORAGE_PER_SALE)
     }
     
-    pub fn storage_paid(&self, account_id: ValidAccountId) -> bool {
-        self.storage_deposits.contains(account_id.as_ref())
+    pub fn storage_paid(&self, account_id: ValidAccountId) -> U128 {
+        U128(self.storage_deposits.get(account_id.as_ref()).unwrap_or(0))
     }
 }

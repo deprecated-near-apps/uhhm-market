@@ -148,7 +148,7 @@ describe('deploy contract ' + contractName, () => {
 
 	test('NFT contract owner mints nft and approves fixed price near sale', async () => {
 		const token_id = tokenIds[0];
-		await contractAccount.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket).catch(() => {});
+		await contractAccount.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket)
 		await contractAccount.functionCall(contractId, 'nft_mint', {
 			token_id,
 			metadata,
@@ -235,14 +235,21 @@ describe('deploy contract ' + contractName, () => {
 	});
 
 	test('contract account registers bob with market contract', async () => {
-		await contractAccount.functionCall(marketId, 'storage_deposit', { account_id: bobId }, GAS, storageMarket).catch(() => {});
+		await contractAccount.functionCall(marketId, 'storage_deposit', { account_id: bobId }, GAS, storageMarket)
 		const result = await contractAccount.viewFunction(marketId, 'storage_paid', { account_id: bobId });
-		expect(result).toEqual(true);
+		expect(result).toEqual(parseNearAmount('0.01'));
+	});
+
+	test('bob withdraws storage', async () => {
+		await bob.functionCall(marketId, 'storage_withdraw', {}, GAS)
+		const result = await contractAccount.viewFunction(marketId, 'storage_paid', { account_id: bobId });
+		expect(result).toEqual('0');
 	});
 
 	test('bob approves sale with FT and NEAR (fixed prices)', async () => {
 		const token_id = tokenIds[0];
-		await bob.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum).catch(() => {});
+		await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket)
+		await bob.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum)
 		const token = await contract.nft_token({ token_id });
 		let sale_conditions = [
 			{
@@ -397,7 +404,12 @@ describe('deploy contract ' + contractName, () => {
 
 	test('bob: nft mint (no type), approve sale with NEAR open for bids', async () => {
 		const token_id = tokenIds[1];
-		await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket).catch(() => {});
+		await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket)
+
+		/// bob just double paid for storage (check this)
+		const result = await contractAccount.viewFunction(marketId, 'storage_paid', { account_id: bobId });
+		expect(result).toEqual(parseNearAmount('0.02'));
+
 		await bob.functionCall(contractId, 'nft_mint', {
 			token_id,
 			metadata: metadata2,
@@ -451,7 +463,7 @@ describe('deploy contract ' + contractName, () => {
 
 	test('alice lingering sale in marketplace', async () => {
 		const token_id = tokenIds[1];
-		await alice.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket).catch(() => {});
+		await alice.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket)
 		await alice.functionCall(contractId, 'nft_approve', {
 			token_id,
 			account_id: marketId,
