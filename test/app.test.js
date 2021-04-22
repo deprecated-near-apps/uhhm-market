@@ -32,7 +32,7 @@ describe('deploy contract ' + contractName, () => {
 	const metadata2 = {
 		media: 'https://media1.tenor.com/images/818161c07948bac34aa7c5f5712ec3d7/tenor.gif?itemid=15065455',
 	};
-	const now = Date.now()
+	const now = Date.now();
 	const tokenTypes = [
 		`typeA:${now}`,
 		`typeB:${now}`,
@@ -378,7 +378,7 @@ describe('deploy contract ' + contractName, () => {
 	test('alice purchase NFT with FT, alice gets NEAR, owner gets FTs back', async () => {
 		const token_id = tokenIds[0];
 		const marketFTBalance = await contractAccount.viewFunction(stableId, 'ft_balance_of', { account_id: marketId });
-		expect(marketFTBalance).toEqual(parseNearAmount('10'))
+		expect(marketFTBalance).toEqual(parseNearAmount('10'));
 		const ownerBalanceBefore = await contractAccount.viewFunction(stableId, 'ft_balance_of', { account_id: contractId });
 		const aliceBalanceBefore = await getAccountBalance(aliceId);
 		/// purchase = ft_transfer_call -> market: ft_on_transfer -> nft_transfer
