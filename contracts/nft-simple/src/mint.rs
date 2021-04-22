@@ -37,7 +37,7 @@ impl Contract {
         // royalty limit for minter capped at 20%
         assert!(total_perpetual <= MINTER_ROYALTY_CAP, "Perpetual royalties cannot be more than 20%");
 
-        // enforce minting caps by token_type 
+        // CUSTOM - enforce minting caps by token_type 
         if token_type.is_some() {
             let token_type = token_type.clone().unwrap();
             let cap = u64::from(*self.supply_cap_by_type.get(&token_type).expect("Token type must have supply cap."));

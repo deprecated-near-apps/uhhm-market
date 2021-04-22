@@ -32,10 +32,11 @@ describe('deploy contract ' + contractName, () => {
 	const metadata2 = {
 		media: 'https://media1.tenor.com/images/818161c07948bac34aa7c5f5712ec3d7/tenor.gif?itemid=15065455',
 	};
+	const now = Date.now()
 	const tokenTypes = [
-		'typeA',
-		'typeB',
-		'typeC'
+		`typeA:${now}`,
+		`typeB:${now}`,
+		`typeC:${now}`
 	];
 	const tokenIds = tokenTypes.map((type, i) => `${type}:${i}`);
 	const contract_royalty = 500;
@@ -154,6 +155,8 @@ describe('deploy contract ' + contractName, () => {
 				'a3.testnet': 250,
 				'a4.testnet': 250,
 				'a5.testnet': 250,
+				// 'a6.testnet': 250,
+				// 'a7.testnet': 250,
 			},
 		}, GAS, parseNearAmount('1'));
 
@@ -360,9 +363,23 @@ describe('deploy contract ' + contractName, () => {
 		expect(balance).toEqual(amount);
 	});
 
-	test('alice purchase NFT with FT', async () => {
+	test('contract owner bids with fts', async () => {
 		const token_id = tokenIds[0];
+		await contractAccount.functionCall(stableId, 'ft_transfer_call', {
+			receiver_id: marketId,
+			amount: parseNearAmount('10'),
+			msg: JSON.stringify({
+				nft_contract_id: contractName,
+				token_id,
+			})
+		}, GAS, 1);
+	});
 
+	test('alice purchase NFT with FT, alice gets NEAR, owner gets FTs back', async () => {
+		const token_id = tokenIds[0];
+		const marketFTBalance = await contractAccount.viewFunction(stableId, 'ft_balance_of', { account_id: marketId });
+		expect(marketFTBalance).toEqual(parseNearAmount('10'))
+		const ownerBalanceBefore = await contractAccount.viewFunction(stableId, 'ft_balance_of', { account_id: contractId });
 		const aliceBalanceBefore = await getAccountBalance(aliceId);
 		/// purchase = ft_transfer_call -> market: ft_on_transfer -> nft_transfer
 		await alice.functionCall(stableId, 'ft_transfer_call', {
@@ -385,7 +402,10 @@ describe('deploy contract ' + contractName, () => {
 		const bobBalance = await bob.viewFunction(stableId, 'ft_balance_of', { account_id: bobId });
 		expect(bobBalance).toEqual(parseNearAmount('16'));
 		// alice's bid of 1.1 NEAR was returned (check N diff > than 1.1 - gas)
+		const ownerBalanceAfter = await contractAccount.viewFunction(stableId, 'ft_balance_of', { account_id: contractId });
 		const aliceBalanceAfter = await getAccountBalance(aliceId);
+		// NOTE: owner received 5% royalty on NFT purchase
+		expect(new BN(ownerBalanceAfter).sub(new BN(ownerBalanceBefore)).toString()).toEqual(parseNearAmount('11'));
 		expect(new BN(aliceBalanceAfter.total).sub(new BN(aliceBalanceBefore.total)).gt(new BN(parseNearAmount('1')))).toEqual(true);
 	});
 

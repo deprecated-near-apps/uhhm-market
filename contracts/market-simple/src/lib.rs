@@ -4,7 +4,7 @@ use near_sdk::json_types::{ValidAccountId, U128, U64};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     assert_one_yocto, env, ext_contract, near_bindgen, AccountId, Balance, Gas, PanicOnDefault,
-    Promise, CryptoHash,
+    Promise, PromiseOrValue, CryptoHash,
 };
 use std::cmp::min;
 use std::collections::HashMap;
@@ -102,18 +102,19 @@ impl Contract {
     }
 
     #[payable]
-    pub fn storage_withdraw(&mut self) -> bool {
+    pub fn storage_withdraw(&mut self) {
         assert_one_yocto();
-        let predecessor = env::predecessor_account_id();
-        let amount = self.storage_deposits.remove(&predecessor);
-        // TODO: Remove sales from the amount.
-        if let Some(amount) = amount {
-            if amount > 0 {
-                Promise::new(predecessor).transfer(amount);
-            }
-            true
+        let owner_id = env::predecessor_account_id();
+        let mut amount = self.storage_deposits.remove(&owner_id).unwrap_or(0);
+        let sales = self.by_owner_id.get(&owner_id);
+        let len = if sales.is_some() {
+            sales.unwrap().len()
         } else {
-            false
+            0
+        };
+        amount -= u128::from(len) * STORAGE_PER_SALE;
+        if amount > 0 {
+            Promise::new(owner_id).transfer(amount);
         }
     }
 
