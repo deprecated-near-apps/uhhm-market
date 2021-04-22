@@ -1,7 +1,8 @@
 use crate::*;
+use near_sdk::promise_result_as_success;
 
 /// measuring how many royalties can be paid
-const GAS_FOR_FT_TRANSFER: Gas = 10_000_000_000_000;
+const GAS_FOR_FT_TRANSFER: Gas = 5_000_000_000_000;
 /// seems to be max Tgas can attach to resolve_purchase
 const GAS_FOR_ROYALTIES: Gas = 120_000_000_000_000;
 const GAS_FOR_NFT_TRANSFER: Gas = 15_000_000_000_000;
@@ -34,7 +35,7 @@ pub struct SaleJson {
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Price {
-    pub ft_token_id: AccountId,
+    pub ft_token_id: ValidAccountId,
     pub price: Option<U128>,
 }
 
@@ -47,23 +48,25 @@ pub struct SaleArgs {
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct PurchaseArgs {
-    pub nft_contract_id: AccountId,
+    pub nft_contract_id: ValidAccountId,
     pub token_id: TokenId,
 }
 
 #[near_bindgen]
 impl Contract {
-
     /// for add sale see: nft_callbacks.rs
 
     /// TODO remove without redirect to wallet? panic reverts
+    #[payable]
     pub fn remove_sale(&mut self, nft_contract_id: ValidAccountId, token_id: String) {
+        assert_one_yocto();
         let sale = self.internal_remove_sale(nft_contract_id.into(), token_id);
         let owner_id = env::predecessor_account_id();
         assert_eq!(owner_id, sale.owner_id, "Must be sale owner");
         self.refund_bids(&sale.bids, None);
     }
 
+    #[payable]
     pub fn update_price(
         &mut self,
         nft_contract_id: ValidAccountId,
@@ -71,37 +74,56 @@ impl Contract {
         ft_token_id: ValidAccountId,
         price: U128,
     ) {
+        assert_one_yocto();
         let contract_id: AccountId = nft_contract_id.into();
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
-        assert_eq!(env::predecessor_account_id(), sale.owner_id, "Must be sale owner");
+        assert_eq!(
+            env::predecessor_account_id(),
+            sale.owner_id,
+            "Must be sale owner"
+        );
+        if !self.ft_token_ids.contains(ft_token_id.as_ref()) {
+            env::panic(format!("Token {} not supported by this market", ft_token_id).as_bytes());
+        }
         sale.conditions.insert(ft_token_id.into(), price);
         self.sales.insert(&contract_and_token_id, &sale);
     }
 
     #[payable]
-    pub fn offer(
-        &mut self,
-        nft_contract_id: ValidAccountId,
-        token_id: String,
-    ) {
+    pub fn offer(&mut self, nft_contract_id: ValidAccountId, token_id: String) {
         let contract_id: AccountId = nft_contract_id.into();
         let contract_and_token_id = format!("{}:{}", contract_id, token_id);
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
         let buyer_id = env::predecessor_account_id();
         assert_ne!(sale.owner_id, buyer_id, "Cannot bid on your own sale.");
         let near_token_id = "near".to_string();
-        let price = u128::from(*sale.conditions.get(&near_token_id).expect("Not for sale in NEAR"));
+        let price = *sale
+            .conditions
+            .get(&near_token_id)
+            .expect("Not for sale in NEAR")
+            .0;
         let deposit = env::attached_deposit();
+        assert!(deposit > 0, "SCAM!");
 
         // there's a fixed price user can buy for
         if deposit == price {
-            self.process_purchase(contract_id, token_id, near_token_id, U128(deposit), buyer_id);
+            self.process_purchase(
+                contract_id,
+                token_id,
+                near_token_id,
+                U128(deposit),
+                buyer_id,
+            );
         } else {
-            assert!(price == 0 || deposit < price, "Can't pay more than fixed price: {}", price);
+            assert!(
+                price == 0 || deposit < price,
+                "Can't pay more than fixed price: {}",
+                price
+            );
             // buyer falls short of fixed price, or there is no fixed price
             // store a bid and refund any current bid lower
-            let new_bid = Bid{
+            let new_bid = Bid {
                 owner_id: buyer_id,
                 price: U128(deposit),
             };
@@ -109,7 +131,11 @@ impl Contract {
             if let Some(current_bid) = current_bid {
                 // refund current bid holder
                 let current_price: u128 = current_bid.price.into();
-                assert!(deposit > current_price, "Can't pay less than or equal to current bid price: {}", current_price);
+                assert!(
+                    deposit > current_price,
+                    "Can't pay less than or equal to current bid price: {}",
+                    current_price
+                );
                 Promise::new(current_bid.owner_id.clone()).transfer(current_bid.price.into());
                 sale.bids.insert(near_token_id, new_bid);
             } else {
@@ -119,7 +145,12 @@ impl Contract {
         }
     }
 
-    pub fn accept_offer(&mut self, nft_contract_id: ValidAccountId, token_id: String, ft_token_id: ValidAccountId) {
+    pub fn accept_offer(
+        &mut self,
+        nft_contract_id: ValidAccountId,
+        token_id: String,
+        ft_token_id: ValidAccountId,
+    ) {
         let contract_id: AccountId = nft_contract_id.into();
         let contract_and_token_id = format!("{}:{}", contract_id.clone(), token_id.clone());
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
@@ -135,10 +166,9 @@ impl Contract {
         );
     }
 
-    /// private 
+    /// private
 
-    #[private]
-    pub fn process_purchase(
+    fn process_purchase(
         &mut self,
         nft_contract_id: AccountId,
         token_id: String,
@@ -147,11 +177,11 @@ impl Contract {
         buyer_id: AccountId,
     ) -> Promise {
         let sale = self.internal_remove_sale(nft_contract_id.clone(), token_id.clone());
-        
+
         ext_contract::nft_transfer_payout(
             buyer_id.clone(),
             token_id,
-            sale.owner_id.clone(),
+            sale.approval_id,
             None,
             price,
             &nft_contract_id,
@@ -179,32 +209,30 @@ impl Contract {
         sale: Sale,
         price: U128,
     ) -> U128 {
-
         // checking for payout information
-        let payout_option = match env::promise_result(0) {
-            PromiseResult::NotReady => unreachable!(),
-            PromiseResult::Failed => {
-                None
-            },
-            PromiseResult::Successful(value) => {
-                // None means a bad payout from bad NFT contract
-                near_sdk::serde_json::from_slice::<Payout>(&value).ok().and_then(|payout| {
+        let payout_option = promise_result_as_success().and_then(|value| {
+            // None means a bad payout from bad NFT contract
+            near_sdk::serde_json::from_slice::<Payout>(&value)
+                .ok()
+                .and_then(|payout| {
                     // gas to do 10 FT transfers (and definitely 10 NEAR transfers)
-                    if payout.len() + sale.bids.len() > 8 {
+                    if payout.len() + sale.bids.len() > 8 || payout.is_empty() {
                         None
                     } else {
                         // payouts must == sale.price, otherwise something wrong with NFT contract
                         // TODO off by 1 e.g. payouts are fractions of 3333 + 3333 + 3333
-                        let sum: u128 = payout.values().map(|a| *a).reduce(|a, b| a + b).unwrap();
-                        if sum == u128::from(price) {
+                        let mut remainder = price.0;
+                        for &value in payout.values() {
+                            remainder = remainder.checked_sub(value)?;
+                        }
+                        if remainder == 0 {
                             Some(payout)
                         } else {
                             None
                         }
                     }
                 })
-            }
-        };
+        });
 
         // is payout option valid?
         let payout = if let Some(payout_option) = payout_option {
@@ -226,17 +254,17 @@ impl Contract {
 
         // NEAR payouts
         if ft_token_id == "near" {
-            for (receiver_id, amount) in &payout {
-                Promise::new(receiver_id.to_string()).transfer(*amount);
+            for (receiver_id, amount) in payout {
+                Promise::new(receiver_id).transfer(amount);
             }
             // refund all FTs (won't be any)
             price
         } else {
-        // FT payouts
-            for (receiver_id, amount) in &payout {
+            // FT payouts
+            for (receiver_id, amount) in payout {
                 ext_contract::ft_transfer(
-                    receiver_id.to_string(),
-                    U128(*amount),
+                    receiver_id,
+                    U128(amount),
                     None,
                     &ft_token_id,
                     1,
@@ -248,12 +276,12 @@ impl Contract {
         }
     }
 
-    #[private]
-    pub fn refund_bids(&mut self, bids: &HashMap<FungibleTokenId, Bid>, ft_token_id: Option<FungibleTokenId>) {
-        let mut ft_used = "".to_string();
-        if let Some(ft_token_id) = ft_token_id {
-            ft_used = ft_token_id
-        }
+    fn refund_bids(
+        &mut self,
+        bids: &HashMap<FungibleTokenId, Bid>,
+        ft_token_id: Option<FungibleTokenId>,
+    ) {
+        let ft_used = ft_token_id.unwrap_or_default();
         for (bid_ft, bid) in bids {
             if ft_used == *bid_ft {
                 continue;
