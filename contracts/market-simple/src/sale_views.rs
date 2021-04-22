@@ -27,7 +27,7 @@ impl Contract {
             let nft_contract_id = strings[0].to_string();
             let token_id = strings[1].to_string();
             let Sale {
-                owner_id: _, approval_id: _, conditions, bids
+                owner_id: _, approval_id: _, token_type: _, conditions, bids
             } = self.sales.get(&contract_and_token_id).unwrap();
             
             tmp.push(SaleJson {
@@ -59,7 +59,7 @@ impl Contract {
         for i in start..end {
             let token_id = keys.get(i).unwrap();
             let Sale {
-                owner_id: _, approval_id: _, conditions, bids
+                owner_id: _, approval_id: _, token_type: _, conditions, bids
             } = self.sales.get(&format!("{}:{}", &nft_contract_id, &token_id)).unwrap();
             
             tmp.push(SaleJson {
@@ -94,7 +94,7 @@ impl Contract {
             let nft_contract_id = strings[0].to_string();
             let token_id = strings[1].to_string();
             let Sale {
-                owner_id: _, approval_id: _, conditions, bids
+                owner_id: _, approval_id: _, token_type: _, conditions, bids
             } = self.sales.get(&contract_and_token_id).unwrap();
             
             tmp.push(SaleJson {

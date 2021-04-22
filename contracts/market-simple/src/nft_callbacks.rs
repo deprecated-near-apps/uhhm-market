@@ -65,6 +65,7 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
             &Sale {
                 owner_id: owner_id.clone().into(),
                 approval_id,
+                token_type: token_type.clone(),
                 conditions,
                 bids,
             },
