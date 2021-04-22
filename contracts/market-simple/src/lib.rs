@@ -4,7 +4,7 @@ use near_sdk::json_types::{ValidAccountId, U128, U64};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     assert_one_yocto, env, ext_contract, near_bindgen, AccountId, Balance, Gas, PanicOnDefault,
-    Promise, PromiseResult,
+    Promise, CryptoHash,
 };
 use std::cmp::min;
 use std::collections::HashMap;
@@ -32,7 +32,7 @@ pub type TokenId = String;
 pub type FungibleTokenId = AccountId;
 pub type ContractAndTokenId = String;
 // TODO: Capital U128
-pub type Payout = HashMap<AccountId, u128>;
+pub type Payout = HashMap<AccountId, U128>;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -41,8 +41,23 @@ pub struct Contract {
     pub sales: UnorderedMap<ContractAndTokenId, Sale>,
     pub by_owner_id: LookupMap<AccountId, UnorderedSet<ContractAndTokenId>>,
     pub by_nft_contract_id: LookupMap<AccountId, UnorderedSet<TokenId>>,
+    pub by_nft_token_type: LookupMap<AccountId, UnorderedSet<TokenId>>,
     pub ft_token_ids: LookupSet<AccountId>,
     pub storage_deposits: LookupMap<AccountId, Balance>,
+}
+
+/// Helper structure to for keys of the persistent collections.
+#[derive(BorshSerialize)]
+pub enum StorageKey {
+    Sales,
+    ByOwnerId,
+    ByOwnerIdInner { account_id_hash: CryptoHash },
+    ByNFTContractId,
+    ByNFTContractIdInner { account_id_hash: CryptoHash },
+    ByNFTTokenType,
+    ByNFTTokenTypeInner { token_type_hash: CryptoHash },
+    FTTokenIds,
+    StorageDeposits,
 }
 
 #[near_bindgen]
@@ -51,11 +66,12 @@ impl Contract {
     pub fn new(owner_id: ValidAccountId) -> Self {
         let mut this = Self {
             owner_id: owner_id.into(),
-            sales: UnorderedMap::new(b"s"),
-            by_owner_id: LookupMap::new(b"b"),
-            by_nft_contract_id: LookupMap::new(b"n"),
-            ft_token_ids: LookupSet::new(b"t"),
-            storage_deposits: LookupMap::new(b"d"),
+            sales: UnorderedMap::new(StorageKey::Sales.try_to_vec().unwrap()),
+            by_owner_id: LookupMap::new(StorageKey::ByOwnerId.try_to_vec().unwrap()),
+            by_nft_contract_id: LookupMap::new(StorageKey::ByNFTContractId.try_to_vec().unwrap()),
+            by_nft_token_type: LookupMap::new(StorageKey::ByNFTTokenType.try_to_vec().unwrap()),
+            ft_token_ids: LookupSet::new(StorageKey::FTTokenIds.try_to_vec().unwrap()),
+            storage_deposits: LookupMap::new(StorageKey::StorageDeposits.try_to_vec().unwrap()),
         };
         // support NEAR by default
         this.ft_token_ids.insert(&"near".to_string());

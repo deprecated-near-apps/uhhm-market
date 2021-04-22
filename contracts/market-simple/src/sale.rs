@@ -41,12 +41,6 @@ pub struct Price {
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
-pub struct SaleArgs {
-    pub sale_conditions: Vec<Price>,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(crate = "near_sdk::serde")]
 pub struct PurchaseArgs {
     pub nft_contract_id: ValidAccountId,
     pub token_id: TokenId,
@@ -98,7 +92,7 @@ impl Contract {
         let buyer_id = env::predecessor_account_id();
         assert_ne!(sale.owner_id, buyer_id, "Cannot bid on your own sale.");
         let near_token_id = "near".to_string();
-        let price = *sale
+        let price = sale
             .conditions
             .get(&near_token_id)
             .expect("Not for sale in NEAR")
@@ -166,9 +160,8 @@ impl Contract {
         );
     }
 
-    /// private
-
-    fn process_purchase(
+    #[private]
+    pub fn process_purchase(
         &mut self,
         nft_contract_id: AccountId,
         token_id: String,
@@ -223,7 +216,7 @@ impl Contract {
                         // TODO off by 1 e.g. payouts are fractions of 3333 + 3333 + 3333
                         let mut remainder = price.0;
                         for &value in payout.values() {
-                            remainder = remainder.checked_sub(value)?;
+                            remainder = remainder.checked_sub(value.0)?;
                         }
                         if remainder == 0 {
                             Some(payout)
@@ -255,7 +248,7 @@ impl Contract {
         // NEAR payouts
         if ft_token_id == "near" {
             for (receiver_id, amount) in payout {
-                Promise::new(receiver_id).transfer(amount);
+                Promise::new(receiver_id).transfer(amount.0);
             }
             // refund all FTs (won't be any)
             price
@@ -264,7 +257,7 @@ impl Contract {
             for (receiver_id, amount) in payout {
                 ext_contract::ft_transfer(
                     receiver_id,
-                    U128(amount),
+                    amount,
                     None,
                     &ft_token_id,
                     1,

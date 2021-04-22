@@ -20,6 +20,7 @@ const {
 export const near = new Near({
 	networkId,
 	nodeUrl,
+	walletUrl,
 	deps: {
 		keyStore: new keyStores.BrowserLocalStorageKeyStore()
 	},

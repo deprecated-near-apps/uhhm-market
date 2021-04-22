@@ -72,6 +72,41 @@ impl Contract {
         tmp
     }
 
+    pub fn get_sales_by_nft_token_type(
+        &self,
+        token_type: String,
+        from_index: U64,
+        limit: U64,
+    ) -> Vec<SaleJson> {
+        let mut tmp = vec![];
+        let by_nft_token_type = self.by_nft_token_type.get(&token_type);
+        let sales = if let Some(by_nft_token_type) = by_nft_token_type {
+            by_nft_token_type
+        } else {
+            return vec![];
+        };
+        let keys = sales.as_vector();
+        let start = u64::from(from_index);
+        let end = min(start + u64::from(limit), sales.len());
+        for i in start..end {
+            let contract_and_token_id = keys.get(i).unwrap();
+            let strings: Vec<&str> = contract_and_token_id.split(":").collect();
+            let nft_contract_id = strings[0].to_string();
+            let token_id = strings[1].to_string();
+            let Sale {
+                owner_id: _, approval_id: _, conditions, bids
+            } = self.sales.get(&contract_and_token_id).unwrap();
+            
+            tmp.push(SaleJson {
+                nft_contract_id: nft_contract_id.clone(),
+                token_id,
+                conditions,
+                bids
+            });
+        }
+        tmp
+    }
+
     pub fn get_sale(&self, nft_contract_token: ContractAndTokenId) -> Sale {
         self.sales.get(&nft_contract_token).expect("No sale")
     }

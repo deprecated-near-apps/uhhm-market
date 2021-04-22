@@ -32,17 +32,12 @@ describe('deploy contract ' + contractName, () => {
 	const metadata2 = {
 		media: 'https://media1.tenor.com/images/818161c07948bac34aa7c5f5712ec3d7/tenor.gif?itemid=15065455',
 	};
-	const t = Date.now();
-	const tokenIds = [
-		'token' + t,
-		'token' + (t + 1),
-		'token' + (t + 2)
-	];
 	const tokenTypes = [
-		'type' + t,
-		'type' + (t + 1),
-		'type' + (t + 2)
+		'typeA',
+		'typeB',
+		'typeC'
 	];
+	const tokenIds = tokenTypes.map((type, i) => `${type}:${i}`);
 	const contract_royalty = 500;
 
 	/// contractAccount.accountId is the NFT contract and contractAccount is the owner
@@ -218,6 +213,16 @@ describe('deploy contract ' + contractName, () => {
 		expect(sales_by_nft_contract_id.length > 0).toEqual(true);
 	});
 
+	test('get sales by nft token type', async () => {
+		const sales_by_nft_token_type = await contractAccount.viewFunction(marketId, 'get_sales_by_nft_token_type', {
+			token_type: tokenTypes[0],
+			from_index: '0',
+			limit: '50'
+		});
+		console.log('\n\n', sales_by_nft_token_type, '\n\n');
+		expect(sales_by_nft_token_type.length > 0).toEqual(true);
+	});
+
 	test('bob purchase nft with NEAR', async () => {
 		const token_id = tokenIds[0];
 		const contractBalanceBefore = await getAccountBalance(contractId);
@@ -241,7 +246,7 @@ describe('deploy contract ' + contractName, () => {
 	});
 
 	test('bob withdraws storage', async () => {
-		await bob.functionCall(marketId, 'storage_withdraw', {}, GAS)
+		await bob.functionCall(marketId, 'storage_withdraw', {}, GAS, 1)
 		const result = await contractAccount.viewFunction(marketId, 'storage_paid', { account_id: bobId });
 		expect(result).toEqual('0');
 	});
@@ -302,7 +307,7 @@ describe('deploy contract ' + contractName, () => {
 			token_id,
 			ft_token_id: stableId,
 			price: parseNearAmount('20')
-		}, GAS);
+		}, GAS, 1);
 		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + ':' + token_id });
 		console.log('\n\n', sale, '\n\n');
 		expect(sale.conditions[stableId]).toEqual(parseNearAmount('20'));

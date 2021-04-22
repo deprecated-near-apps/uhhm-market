@@ -247,11 +247,19 @@ impl NonFungibleTokenCore for Contract {
         refund_deposit(storage_used);
 
         if let Some(msg) = msg {
+            
+            // CUSTOM - add token_type to msg
+            let mut final_msg = msg;
+            let token_type = token.token_type;
+            if let Some(token_type) = token_type {
+                final_msg.insert_str(final_msg.len() - 1, &format!(",\"token_type\":\"{}\"", token_type));
+            }
+
             ext_non_fungible_approval_receiver::nft_on_approve(
                 token_id,
                 token.owner_id,
                 approval_id,
-                msg,
+                final_msg,
                 &account_id,
                 NO_DEPOSIT,
                 env::prepaid_gas() - GAS_FOR_NFT_APPROVE,

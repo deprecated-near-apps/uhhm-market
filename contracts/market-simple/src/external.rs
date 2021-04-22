@@ -8,7 +8,7 @@ trait ExtContract {
         &mut self,
         receiver_id: AccountId,
         token_id: TokenId,
-        enforce_owner_id: AccountId,
+        approval_id: U64,
         memo: Option<String>,
         balance: U128,
     );
