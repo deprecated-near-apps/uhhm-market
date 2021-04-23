@@ -7,7 +7,7 @@ use crate::*;
 #[serde(crate = "near_sdk::serde")]
 pub struct SaleArgs {
     pub sale_conditions: Vec<Price>,
-    pub token_type: Option<String>,
+    pub token_type: TokenType,
 }
 
 

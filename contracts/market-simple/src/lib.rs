@@ -29,6 +29,7 @@ const NO_DEPOSIT: Balance = 0;
 const STORAGE_PER_SALE: u128 = 1000 * STORAGE_PRICE_PER_BYTE;
 
 pub type TokenId = String;
+pub type TokenType = Option<String>;
 pub type FungibleTokenId = AccountId;
 pub type ContractAndTokenId = String;
 // TODO: Capital U128

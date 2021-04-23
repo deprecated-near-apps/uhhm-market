@@ -26,15 +26,6 @@ pub struct Sale {
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
-pub struct SaleJson {
-    pub nft_contract_id: AccountId,
-    pub token_id: TokenId,
-    pub conditions: HashMap<FungibleTokenId, U128>,
-    pub bids: HashMap<FungibleTokenId, Bid>,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(crate = "near_sdk::serde")]
 pub struct Price {
     pub ft_token_id: ValidAccountId,
     pub price: Option<U128>,

@@ -1,5 +1,16 @@
 use crate::*;
 
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct SaleJson {
+    pub nft_contract_id: AccountId,
+    pub token_id: TokenId,
+    pub token_type: TokenType,
+    pub owner_id: AccountId,
+    pub conditions: HashMap<FungibleTokenId, U128>,
+    pub bids: HashMap<FungibleTokenId, Bid>,
+}
+
 #[near_bindgen]
 impl Contract {
 
@@ -27,12 +38,14 @@ impl Contract {
             let nft_contract_id = strings[0].to_string();
             let token_id = strings[1].to_string();
             let Sale {
-                owner_id: _, approval_id: _, token_type: _, conditions, bids
+                approval_id: _, owner_id, token_type, conditions, bids
             } = self.sales.get(&contract_and_token_id).unwrap();
             
             tmp.push(SaleJson {
                 nft_contract_id: nft_contract_id.clone(),
                 token_id,
+                token_type,
+                owner_id,
                 conditions,
                 bids
             });
@@ -59,12 +72,14 @@ impl Contract {
         for i in start..end {
             let token_id = keys.get(i).unwrap();
             let Sale {
-                owner_id: _, approval_id: _, token_type: _, conditions, bids
+                approval_id: _, owner_id, token_type, conditions, bids
             } = self.sales.get(&format!("{}:{}", &nft_contract_id, &token_id)).unwrap();
             
             tmp.push(SaleJson {
                 nft_contract_id: nft_contract_id.clone(),
                 token_id,
+                token_type,
+                owner_id,
                 conditions,
                 bids
             });
@@ -94,12 +109,14 @@ impl Contract {
             let nft_contract_id = strings[0].to_string();
             let token_id = strings[1].to_string();
             let Sale {
-                owner_id: _, approval_id: _, token_type: _, conditions, bids
+                approval_id: _, owner_id, token_type, conditions, bids
             } = self.sales.get(&contract_and_token_id).unwrap();
             
             tmp.push(SaleJson {
                 nft_contract_id: nft_contract_id.clone(),
                 token_id,
+                token_type,
+                owner_id,
                 conditions,
                 bids
             });

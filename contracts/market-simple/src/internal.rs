@@ -1,15 +1,5 @@
 use crate::*;
 
-// pub(crate) fn hash_account_id(account_id: &AccountId, modifier: Option<String>) -> Vec<u8> {
-//     let str = account_id.clone();
-//     let mut prefix = Vec::with_capacity(33);
-//     if let Some(modifier) = modifier {
-//         prefix.extend(modifier.into_bytes());
-//     }
-//     prefix.extend(env::sha256(str.as_bytes()));
-//     prefix
-// }
-
 pub(crate) fn hash_account_id(account_id: &AccountId) -> CryptoHash {
     let mut hash = CryptoHash::default();
     hash.copy_from_slice(&env::sha256(account_id.as_bytes()));
