@@ -27,6 +27,7 @@ near_sdk::setup_alloc!();
 
 const NO_DEPOSIT: Balance = 0;
 const STORAGE_PER_SALE: u128 = 1000 * STORAGE_PRICE_PER_BYTE;
+static DELIMETER: &str = "||";
 
 pub type TokenId = String;
 pub type TokenType = Option<String>;

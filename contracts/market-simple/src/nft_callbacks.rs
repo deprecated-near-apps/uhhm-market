@@ -59,7 +59,7 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
 
         let bids = HashMap::new();
 
-        let contract_and_token_id = format!("{}:{}", nft_contract_id, token_id);
+        let contract_and_token_id = format!("{}{}{}", nft_contract_id, DELIMETER, token_id);
         self.sales.insert(
             &contract_and_token_id,
             &Sale {

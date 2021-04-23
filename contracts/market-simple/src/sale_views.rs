@@ -34,7 +34,7 @@ impl Contract {
         let end = min(start + u64::from(limit), sales.len());
         for i in start..end {
             let contract_and_token_id = keys.get(i).unwrap();
-            let strings: Vec<&str> = contract_and_token_id.split(":").collect();
+            let strings: Vec<&str> = contract_and_token_id.split(&DELIMETER).collect();
             let nft_contract_id = strings[0].to_string();
             let token_id = strings[1].to_string();
             let Sale {
@@ -73,7 +73,7 @@ impl Contract {
             let token_id = keys.get(i).unwrap();
             let Sale {
                 approval_id: _, owner_id, token_type, conditions, bids
-            } = self.sales.get(&format!("{}:{}", &nft_contract_id, &token_id)).unwrap();
+            } = self.sales.get(&format!("{}{}{}", &nft_contract_id, DELIMETER, &token_id)).unwrap();
             
             tmp.push(SaleJson {
                 nft_contract_id: nft_contract_id.clone(),
@@ -105,7 +105,7 @@ impl Contract {
         let end = min(start + u64::from(limit), sales.len());
         for i in start..end {
             let contract_and_token_id = keys.get(i).unwrap();
-            let strings: Vec<&str> = contract_and_token_id.split(":").collect();
+            let strings: Vec<&str> = contract_and_token_id.split(&DELIMETER).collect();
             let nft_contract_id = strings[0].to_string();
             let token_id = strings[1].to_string();
             let Sale {

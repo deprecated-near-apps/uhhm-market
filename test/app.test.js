@@ -22,6 +22,8 @@ const {
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
 
 describe('deploy contract ' + contractName, () => {
+
+	const DELIMETER = '||'
 	let alice, aliceId, bob, bobId,
 		stableAccount, marketAccount,
 		storageMinimum, storageMarket;
@@ -173,7 +175,7 @@ describe('deploy contract ' + contractName, () => {
 			msg: JSON.stringify({ sale_conditions })
 		}, GAS, parseNearAmount('0.01'));
 
-		const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + ':' + token_id });
+		const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
 		console.log('\n\n', sale, '\n\n');
 		expect(sale.conditions.near).toEqual(parseNearAmount('1'));
 	});
@@ -282,7 +284,7 @@ describe('deploy contract ' + contractName, () => {
 			account_id: marketId,
 			msg: JSON.stringify({ sale_conditions })
 		}, GAS, parseNearAmount('0.01'));
-		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + ':' + token_id });
+		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
 		console.log('\n\n', sale, '\n\n');
 		expect(sale.conditions[stableId]).toEqual(parseNearAmount('25'));
 	});
@@ -311,7 +313,7 @@ describe('deploy contract ' + contractName, () => {
 			ft_token_id: stableId,
 			price: parseNearAmount('20')
 		}, GAS, 1);
-		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + ':' + token_id });
+		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
 		console.log('\n\n', sale, '\n\n');
 		expect(sale.conditions[stableId]).toEqual(parseNearAmount('20'));
 	});
@@ -325,7 +327,7 @@ describe('deploy contract ' + contractName, () => {
 		}, GAS, parseNearAmount('1'));
 		
 		/// check sale should have 2 N bid for near from contract owner
-		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + ':' + token_id });
+		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
 		expect(sale.bids['near'].owner_id).toEqual(contractId);
 		expect(sale.bids['near'].price).toEqual(parseNearAmount('1'));
 	});
@@ -341,7 +343,7 @@ describe('deploy contract ' + contractName, () => {
 		}, GAS, parseNearAmount('1.1'));
 		
 		/// check sale should have 1.1 N bid for near from alice
-		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + ':' + token_id });
+		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
 		expect(sale.bids['near'].owner_id).toEqual(aliceId);
 		expect(sale.bids['near'].price).toEqual(parseNearAmount('1.1'));
 
@@ -451,7 +453,7 @@ describe('deploy contract ' + contractName, () => {
 				}]
 			})
 		}, GAS, parseNearAmount('0.01'));
-		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + ':' + token_id });
+		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
 		console.log('\n\n', sale, '\n\n');
 		expect(sale.conditions["near"]).toEqual(parseNearAmount('0'));
 	});
@@ -462,7 +464,7 @@ describe('deploy contract ' + contractName, () => {
 			nft_contract_id: contractName,
 			token_id,
 		}, GAS, parseNearAmount('0.2'));
-		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + ':' + token_id });
+		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
 		expect(sale.bids['near'].owner_id).toEqual(aliceId);
 		expect(sale.bids['near'].price).toEqual(parseNearAmount('0.2'));
 	});

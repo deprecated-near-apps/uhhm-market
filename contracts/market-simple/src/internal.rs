@@ -20,7 +20,7 @@ impl Contract {
         nft_contract_id: AccountId,
         token_id: TokenId,
     ) -> Sale {
-        let contract_and_token_id = format!("{}:{}", &nft_contract_id, token_id);
+        let contract_and_token_id = format!("{}{}{}", &nft_contract_id, DELIMETER, token_id);
         let sale = self.sales.remove(&contract_and_token_id).expect("No sale");
 
         let mut by_owner_id = self.by_owner_id.get(&sale.owner_id).expect("No sale by_owner_id");

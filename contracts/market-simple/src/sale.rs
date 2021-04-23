@@ -62,7 +62,7 @@ impl Contract {
     ) {
         assert_one_yocto();
         let contract_id: AccountId = nft_contract_id.into();
-        let contract_and_token_id = format!("{}:{}", contract_id, token_id);
+        let contract_and_token_id = format!("{}{}{}", contract_id, DELIMETER, token_id);
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
         assert_eq!(
             env::predecessor_account_id(),
@@ -79,7 +79,7 @@ impl Contract {
     #[payable]
     pub fn offer(&mut self, nft_contract_id: ValidAccountId, token_id: String) {
         let contract_id: AccountId = nft_contract_id.into();
-        let contract_and_token_id = format!("{}:{}", contract_id, token_id);
+        let contract_and_token_id = format!("{}{}{}", contract_id, DELIMETER, token_id);
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
         let buyer_id = env::predecessor_account_id();
         assert_ne!(sale.owner_id, buyer_id, "Cannot bid on your own sale.");
@@ -154,7 +154,7 @@ impl Contract {
         ft_token_id: ValidAccountId,
     ) {
         let contract_id: AccountId = nft_contract_id.into();
-        let contract_and_token_id = format!("{}:{}", contract_id.clone(), token_id.clone());
+        let contract_and_token_id = format!("{}{}{}", contract_id.clone(), DELIMETER, token_id.clone());
         // remove bid before proceeding to process purchase
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
         let bid = sale.bids.remove(ft_token_id.as_ref()).expect("No bid");
