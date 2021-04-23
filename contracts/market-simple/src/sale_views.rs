@@ -124,8 +124,8 @@ impl Contract {
         tmp
     }
 
-    pub fn get_sale(&self, nft_contract_token: ContractAndTokenId) -> Sale {
-        self.sales.get(&nft_contract_token).expect("No sale")
+    pub fn get_sale(&self, nft_contract_token: ContractAndTokenId) -> Option<Sale> {
+        self.sales.get(&nft_contract_token)
     }
     
 }
