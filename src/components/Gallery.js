@@ -65,7 +65,12 @@ export const Gallery = ({ app, update, contractAccount, account, loading }) => {
 
 	const loadItems = async () => {
 		if (accountId.length) {
-			setStorage(await contractAccount.viewFunction(marketId, 'storage_paid', { account_id: account.accountId }));
+			const storageResponse = await contractAccount.viewFunction(marketId, 'storage_paid', { account_id: account.accountId })
+			if (typeof storageResponse === 'string') {
+				setStorage(storageResponse !== '0');
+			} else {
+				setStorage(storageResponse);
+			}
 		}
 		/// users tokens
 		if (account) {
@@ -152,7 +157,9 @@ export const Gallery = ({ app, update, contractAccount, account, loading }) => {
 
 	const handleRegisterStorage = async () => {
 		const storageMarket = await account.viewFunction(marketId, 'storage_amount', {}, GAS);
-		await account.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket).catch(() => { });
+		// low amount 0.01 N means it's only for (1 sale 1kb storage) so multiply by 10
+		let deposit = storageMarket === '10000000000000000000000' ? '100000000000000000000000' : storageMarket;
+		await account.functionCall(marketId, 'storage_deposit', {}, GAS, deposit).catch(() => { });
 	};
 
 	const handleSaleUpdate = async (token_id, newSaleConditions) => {
