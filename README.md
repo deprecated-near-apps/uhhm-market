@@ -1,21 +1,24 @@
 # NFT Market Reference Implementation
 
-## 🚨🚨🚨 Unaudited Contracts 🚨🚨🚨
-
 A PoC backbone for NFT Marketplaces on NEAR Protocol.
 
-## TODO / DONE:
+[Reference](https://nomicon.io/Standards/NonFungibleToken/README.html)
+
+## Progress:
 - [x] basic purchase of NFT with FT
 - [x] demo pay out royalties (FTs and NEAR)
 - [x] test and determine standards for markets (best practice?) to buy/sell NFTs (finish standard) with FTs (already standard)
 - [x] demo some basic auction types, secondary markets and 
 - [x] frontend example
+- [x] first pass / internal audit
 - [ ] connect with bridged tokens e.g. buy and sell with wETH/nDAI (or whatever we call these)
 
 ## Notes:
 
 High level diagram of NFT sale on Market using Fungible Token:
 ![image](https://user-images.githubusercontent.com/321340/113903355-bea71e80-9785-11eb-8ab3-9c2f0d23466f.png)
+
+Remove the FT steps for NEAR transfers (but nft_transfer_payout and resolve_purchase still the same).
 
 Differences from `nft-simple` NFT standard reference implementation:
 - anyone can mint an NFT
@@ -34,8 +37,6 @@ Differences from `nft-simple` NFT standard reference implementation:
 - install, deploy, test `yarn && yarn test:deploy`
 - if you update contracts - `yarn test:deploy`
 - if you update tests only - `yarn test`
-
-## 🚨🚨🚨 End of Warning 🚨🚨🚨
 
 # NFT Specific Notes
 
