@@ -23,7 +23,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
 
 describe('deploy contract ' + contractName, () => {
 
-	const DELIMETER = '||'
+	const DELIMETER = '||';
 	let alice, aliceId, bob, bobId,
 		stableAccount, marketAccount,
 		storageMinimum, storageMarket;

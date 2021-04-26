@@ -65,7 +65,7 @@ export const Gallery = ({ app, update, contractAccount, account, loading }) => {
 
 	const loadItems = async () => {
 		if (accountId.length) {
-			const storageResponse = await contractAccount.viewFunction(marketId, 'storage_paid', { account_id: account.accountId })
+			const storageResponse = await contractAccount.viewFunction(marketId, 'storage_paid', { account_id: account.accountId });
 			if (typeof storageResponse === 'string') {
 				setStorage(storageResponse !== '0');
 			} else {
