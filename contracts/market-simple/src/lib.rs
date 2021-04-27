@@ -65,7 +65,7 @@ pub enum StorageKey {
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new(owner_id: ValidAccountId) -> Self {
+    pub fn new(owner_id: ValidAccountId, default_ft_token_ids:Option<Vec<ValidAccountId>>) -> Self {
         let mut this = Self {
             owner_id: owner_id.into(),
             sales: UnorderedMap::new(StorageKey::Sales.try_to_vec().unwrap()),
@@ -77,15 +77,23 @@ impl Contract {
         };
         // support NEAR by default
         this.ft_token_ids.insert(&"near".to_string());
+        
+        if let Some(default_ft_token_ids) = default_ft_token_ids {
+            for ft_token_id in default_ft_token_ids {
+                this.ft_token_ids.insert(ft_token_id.as_ref());
+            }
+        }
 
         this
     }
 
-    /// only owner
+    /// only owner 
     pub fn add_token(&mut self, ft_token_id: ValidAccountId) -> bool {
         self.assert_owner();
         self.ft_token_ids.insert(ft_token_id.as_ref())
     }
+
+    /// TODO remove token (should check if sales can complete even if owner stops supporting token type)
 
     #[payable]
     pub fn storage_deposit(&mut self, account_id: Option<ValidAccountId>) {

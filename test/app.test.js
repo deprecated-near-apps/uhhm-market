@@ -110,24 +110,36 @@ describe('deploy contract ' + contractName, () => {
 		const marketAccountState = await marketAccount.state();
 		console.log('\n\nstate:', marketAccountState, '\n\n');
 		if (marketAccountState.code_hash === '11111111111111111111111111111111') {
+			/// default option for markets, init with all FTs you want it to support
+			const default_ft_token_ids = [stableId]
+
 			const marketContractBytes = fs.readFileSync('./out/market.wasm');
 			console.log('\n\n deploying marketAccount contractBytes:', marketContractBytes.length, '\n\n');
 			const newMarketArgs = {
-				owner_id: contractId
+				owner_id: contractId,
+				default_ft_token_ids
 			};
 			const actions = [
 				deployContract(marketContractBytes),
 				functionCall('new', newMarketArgs, GAS)
 			];
 			await marketAccount.signAndSendTransaction(marketId, actions);
+
+			/// NOTE market must register for all ft_token_ids it wishes to use (e.g. use this loop for standard fts)
+			default_ft_token_ids.forEach(async (id) => {
+				const deposit = await contractAccount.viewFunction(id, 'storage_minimum_balance');
+				await marketAccount.functionCall(id, 'storage_deposit', {}, GAS, deposit);
+			})
 		}
 		const supported = await marketAccount.viewFunction(marketId, "supports_token", { ft_token_id: stableId });
 		console.log('\n\n market supports token:', stableId, supported, '\n\n');
-		if (!supported) {
-			await marketAccount.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum);
-			const added = await contractAccount.functionCall(marketId, "add_token", { ft_token_id: stableId }, GAS);
-			console.log('\n\n added token:', stableId, '\n\n');
-		}
+
+		/// shouldn't need to check since we pass stableId as default_ft_token_ids (option) 
+		// if (!supported) {
+		// 	await marketAccount.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum);
+		// 	const added = await contractAccount.functionCall(marketId, "add_token", { ft_token_id: stableId }, GAS);
+		// 	console.log('\n\n added token:', stableId, '\n\n');
+		// }
 
 		/// find out how much needed for market storage
 		storageMarket = await contractAccount.viewFunction(marketId, 'storage_amount');
