@@ -1,5 +1,5 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LookupMap, LookupSet, UnorderedMap, UnorderedSet};
+use near_sdk::collections::{LookupMap, UnorderedMap, UnorderedSet};
 use near_sdk::json_types::{ValidAccountId, U128, U64};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
@@ -44,7 +44,7 @@ pub struct Contract {
     pub by_owner_id: LookupMap<AccountId, UnorderedSet<ContractAndTokenId>>,
     pub by_nft_contract_id: LookupMap<AccountId, UnorderedSet<TokenId>>,
     pub by_nft_token_type: LookupMap<AccountId, UnorderedSet<TokenId>>,
-    pub ft_token_ids: LookupSet<AccountId>,
+    pub ft_token_ids: UnorderedSet<AccountId>,
     pub storage_deposits: LookupMap<AccountId, Balance>,
 }
 
@@ -65,21 +65,21 @@ pub enum StorageKey {
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new(owner_id: ValidAccountId, default_ft_token_ids:Option<Vec<ValidAccountId>>) -> Self {
+    pub fn new(owner_id: ValidAccountId, ft_token_ids:Option<Vec<ValidAccountId>>) -> Self {
         let mut this = Self {
             owner_id: owner_id.into(),
             sales: UnorderedMap::new(StorageKey::Sales.try_to_vec().unwrap()),
             by_owner_id: LookupMap::new(StorageKey::ByOwnerId.try_to_vec().unwrap()),
             by_nft_contract_id: LookupMap::new(StorageKey::ByNFTContractId.try_to_vec().unwrap()),
             by_nft_token_type: LookupMap::new(StorageKey::ByNFTTokenType.try_to_vec().unwrap()),
-            ft_token_ids: LookupSet::new(StorageKey::FTTokenIds.try_to_vec().unwrap()),
+            ft_token_ids: UnorderedSet::new(StorageKey::FTTokenIds.try_to_vec().unwrap()),
             storage_deposits: LookupMap::new(StorageKey::StorageDeposits.try_to_vec().unwrap()),
         };
         // support NEAR by default
         this.ft_token_ids.insert(&"near".to_string());
         
-        if let Some(default_ft_token_ids) = default_ft_token_ids {
-            for ft_token_id in default_ft_token_ids {
+        if let Some(ft_token_ids) = ft_token_ids {
+            for ft_token_id in ft_token_ids {
                 this.ft_token_ids.insert(ft_token_id.as_ref());
             }
         }
@@ -88,9 +88,13 @@ impl Contract {
     }
 
     /// only owner 
-    pub fn add_token(&mut self, ft_token_id: ValidAccountId) -> bool {
+    pub fn add_ft_token_ids(&mut self, ft_token_ids: Vec<ValidAccountId>) -> Vec<bool> {
         self.assert_owner();
-        self.ft_token_ids.insert(ft_token_id.as_ref())
+        let mut added = vec![];
+        for ft_token_id in ft_token_ids {
+            added.push(self.ft_token_ids.insert(ft_token_id.as_ref()));
+        }
+        added
     }
 
     /// TODO remove token (should check if sales can complete even if owner stops supporting token type)
@@ -130,8 +134,8 @@ impl Contract {
 
     /// views
 
-    pub fn supports_token(&self, ft_token_id: ValidAccountId) -> bool {
-        self.ft_token_ids.contains(ft_token_id.as_ref())
+    pub fn supported_ft_token_ids(&self) -> Vec<AccountId> {
+        self.ft_token_ids.to_vec()
     }
 
     pub fn storage_amount(&self) -> U128 {

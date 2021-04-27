@@ -64,7 +64,14 @@ describe('deploy contract ' + contractName, () => {
 		console.log('\n\n Bob accountId:', bobId, '\n\n');
 
 		await contractAccount.functionCall(contractName, 'set_contract_royalty', { contract_royalty }, GAS);
-		await contractAccount.functionCall(contractName, 'add_token_type', { token_type: tokenTypes[0], hard_cap: '1' }, GAS);
+		
+		// examples
+		const supply_cap_by_type = {
+			[tokenTypes[0]]: '1',
+			[tokenTypes[1]]: '500',
+			[tokenTypes[2]]: '1000000',
+		}
+		await contractAccount.functionCall(contractName, 'add_token_types', { supply_cap_by_type }, GAS);
 		
 		/// create or get stableAccount and deploy ft.wasm (if not already deployed)
 		stableAccount = await createOrInitAccount(stableId, GUESTS_ACCOUNT_SECRET);
@@ -86,7 +93,7 @@ describe('deploy contract ' + contractName, () => {
 				decimals: 24,
 			};
 			const actions = [
-				deployContract(fungibleContractByes),
+				deployContract(fungibleContractBytes),
 				functionCall('new', newFungibleArgs, GAS)
 			];
 			await stableAccount.signAndSendTransaction(stableId, actions);
@@ -105,19 +112,21 @@ describe('deploy contract ' + contractName, () => {
 			console.log('\n\n storageMinimum:', storageMinimum, '\n\n');
 		}
 
+
+		/// default option for markets, init with all FTs you want it to support
+		const ft_token_ids = [stableId]
+		
 		/// create or get market account and deploy market.wasm (if not already deployed)
 		marketAccount = await createOrInitAccount(marketId, GUESTS_ACCOUNT_SECRET);
 		const marketAccountState = await marketAccount.state();
 		console.log('\n\nstate:', marketAccountState, '\n\n');
 		if (marketAccountState.code_hash === '11111111111111111111111111111111') {
-			/// default option for markets, init with all FTs you want it to support
-			const default_ft_token_ids = [stableId]
 
 			const marketContractBytes = fs.readFileSync('./out/market.wasm');
 			console.log('\n\n deploying marketAccount contractBytes:', marketContractBytes.length, '\n\n');
 			const newMarketArgs = {
 				owner_id: contractId,
-				default_ft_token_ids
+				ft_token_ids
 			};
 			const actions = [
 				deployContract(marketContractBytes),
@@ -126,20 +135,18 @@ describe('deploy contract ' + contractName, () => {
 			await marketAccount.signAndSendTransaction(marketId, actions);
 
 			/// NOTE market must register for all ft_token_ids it wishes to use (e.g. use this loop for standard fts)
-			default_ft_token_ids.forEach(async (id) => {
+			ft_token_ids.forEach(async (id) => {
 				const deposit = await contractAccount.viewFunction(id, 'storage_minimum_balance');
 				await marketAccount.functionCall(id, 'storage_deposit', {}, GAS, deposit);
 			})
 		}
-		const supported = await marketAccount.viewFunction(marketId, "supports_token", { ft_token_id: stableId });
-		console.log('\n\n market supports token:', stableId, supported, '\n\n');
+		// get all supported tokens as array
+		const supportedTokens = await marketAccount.viewFunction(marketId, "supported_ft_token_ids");
+		console.log('\n\n market supports these fungible tokens:', supportedTokens, '\n\n');
 
-		/// shouldn't need to check since we pass stableId as default_ft_token_ids (option) 
-		// if (!supported) {
-		// 	await marketAccount.functionCall(stableId, 'storage_deposit', {}, GAS, storageMinimum);
-		// 	const added = await contractAccount.functionCall(marketId, "add_token", { ft_token_id: stableId }, GAS);
-		// 	console.log('\n\n added token:', stableId, '\n\n');
-		// }
+		// should be [false], just testing api
+		const added = await contractAccount.functionCall(marketId, "add_ft_token_ids", { ft_token_ids }, GAS);
+		console.log('\n\n added these tokens', supportedTokens, added, '\n\n');
 
 		/// find out how much needed for market storage
 		storageMarket = await contractAccount.viewFunction(marketId, 'storage_amount');
@@ -203,11 +210,21 @@ describe('deploy contract ' + contractName, () => {
 		} catch(e) {
 			expect(true);
 		}
-		await contractAccount.functionCall(contractName, 'unlock_token_type', { token_type: tokenTypes[0] }, GAS);
+
+		// unlock all token types
+		const token_types = [
+			tokenTypes[0],
+			tokenTypes[1],
+			tokenTypes[2],
+		]
+		await contractAccount.functionCall(contractName, 'unlock_token_types', { token_types }, GAS);
 		const tokenLocked = await contractAccount.viewFunction(contractName, 'is_token_locked', { token_id });
 		expect(tokenLocked).toEqual(false);
-		const tokenTypeLocked = await contractAccount.viewFunction(contractName, 'is_token_type_locked', { token_type: tokenTypes[0] });
-		expect(tokenTypeLocked).toEqual(false);
+
+		// should be none
+		const typesLocked = await contractAccount.viewFunction(contractName, 'get_token_types_locked');
+		console.log(typesLocked)
+		expect(typesLocked.length).toEqual(1);
 	});
 
 	test('get sales by owner id', async () => {

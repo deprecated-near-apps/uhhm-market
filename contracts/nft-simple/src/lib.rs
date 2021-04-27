@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::cmp::min;
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::{LazyOption, LookupMap, LookupSet, UnorderedMap, UnorderedSet};
+use near_sdk::collections::{LazyOption, LookupMap, UnorderedMap, UnorderedSet};
 use near_sdk::json_types::{Base64VecU8, ValidAccountId, U64, U128};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
@@ -50,7 +50,7 @@ pub struct Contract {
     /// CUSTOM fields
     pub supply_cap_by_type: TypeSupplyCaps,
     pub tokens_per_type: LookupMap<TokenType, UnorderedSet<TokenId>>,
-    pub token_types_locked: LookupSet<TokenType>,
+    pub token_types_locked: UnorderedSet<TokenType>,
     pub contract_royalty: u32,
 }
 
@@ -84,7 +84,7 @@ impl Contract {
             ),
             supply_cap_by_type,
             tokens_per_type: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
-            token_types_locked: LookupSet::new(StorageKey::TokenTypesLocked.try_to_vec().unwrap()),
+            token_types_locked: UnorderedSet::new(StorageKey::TokenTypesLocked.try_to_vec().unwrap()),
             contract_royalty: 0,
         };
 
@@ -127,14 +127,18 @@ impl Contract {
         self.contract_royalty = contract_royalty;
     }
 
-    pub fn add_token_type(&mut self, token_type: String, hard_cap: U64) {
+    pub fn add_token_types(&mut self, supply_cap_by_type: TypeSupplyCaps) {
         self.assert_owner();
-        self.token_types_locked.insert(&token_type);
-        self.supply_cap_by_type.insert(token_type, hard_cap);
+        for (token_type, hard_cap) in &supply_cap_by_type {
+            self.token_types_locked.insert(&token_type);
+            self.supply_cap_by_type.insert(token_type.to_string(), *hard_cap);
+        }
     }
 
-    pub fn unlock_token_type(&mut self, token_type: String) {
-        self.token_types_locked.remove(&token_type);
+    pub fn unlock_token_types(&mut self, token_types: Vec<String>) {
+        for token_type in &token_types {
+            self.token_types_locked.remove(&token_type);
+        }
     }
 
     /// CUSTOM - views
@@ -147,8 +151,8 @@ impl Contract {
         self.supply_cap_by_type.clone()
     }
 
-    pub fn is_token_type_locked(&self, token_type: TokenId) -> bool {
-        self.token_types_locked.contains(&token_type)
+    pub fn get_token_types_locked(&self) -> Vec<String> {
+        self.token_types_locked.to_vec()
     }
 
     pub fn is_token_locked(&self, token_id: TokenId) -> bool {
