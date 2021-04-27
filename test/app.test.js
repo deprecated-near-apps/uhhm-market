@@ -71,8 +71,8 @@ describe('deploy contract ' + contractName, () => {
 		const stableAccountState = await stableAccount.state();
 		console.log('\n\nstate:', stableAccountState, '\n\n');
 		if (stableAccountState.code_hash === '11111111111111111111111111111111') {
-			const fungibleContractByes = fs.readFileSync('./out/ft.wasm');
-			console.log('\n\n deploying stableAccount contractBytes:', fungibleContractByes.length, '\n\n');
+			const fungibleContractBytes = fs.readFileSync('./out/ft.wasm');
+			console.log('\n\n deploying stableAccount contractBytes:', fungibleContractBytes.length, '\n\n');
 			const newFungibleArgs = {
 				/// will have totalSupply minted to them
 				owner_id: contractName,
