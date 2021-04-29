@@ -1,9 +1,0 @@
-{
-    "watch": [
-      "./app.js",
-      "./utils/",
-      "./middleware",
-      "../src/config.js"
-    ],
-    "verbose": true
-  }
