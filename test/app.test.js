@@ -30,9 +30,11 @@ describe('deploy contract ' + contractName, () => {
 
 	const metadata = {
 		media: 'https://media1.tenor.com/images/4c1d96a989150e7019bfbabbebd2ff36/tenor.gif?itemid=20269144',
+		issued_at: Date.now().toString()
 	};
 	const metadata2 = {
 		media: 'https://media1.tenor.com/images/818161c07948bac34aa7c5f5712ec3d7/tenor.gif?itemid=15065455',
+		issued_at: Date.now().toString()
 	};
 	const now = Date.now();
 	const tokenTypes = [

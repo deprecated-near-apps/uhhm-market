@@ -45,7 +45,6 @@ export const Contract = ({ near, update, account }) => {
 			metadata,
 			perpetual_royalties
 		}, GAS, deposit);
-		checkFreebies();
 		update('loading', false);
 		setMetadata('');
 	};
