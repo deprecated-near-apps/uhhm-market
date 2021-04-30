@@ -114,8 +114,8 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
                 .get(&token_type)
                 .unwrap_or_else(|| {
                     UnorderedSet::new(
-                        StorageKey::ByNFTContractIdInner {
-                            account_id_hash: hash_account_id(&token_type),
+                        StorageKey::ByNFTTokenTypeInner {
+                            token_type_hash: hash_account_id(&token_type),
                         }
                         .try_to_vec()
                         .unwrap(),
