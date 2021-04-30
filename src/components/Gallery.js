@@ -6,8 +6,13 @@ import {
 	contractId,
 	formatAccountId,
 } from '../utils/near-utils';
+import { useHistory } from '../utils/history';
+import {Token} from './Token';
 
 const ADD_SALE = '__ADD_SALE';
+
+const PATH_SPLIT = '?t='
+const SUB_SPLIT = '&='
 
 const {
 	KeyPair,
@@ -38,7 +43,7 @@ const getTokenOptions = (value, setter, accepted = allTokens) => (
 		}
 	</select>);
 
-export const Gallery = ({ app, update, contractAccount, account, loading }) => {
+export const Gallery = ({ app, update, contractAccount, account, loading, dispatch }) => {
 	if (!contractAccount) return null;
 
 	const { tab, sort, filter } = app;
@@ -56,12 +61,24 @@ export const Gallery = ({ app, update, contractAccount, account, loading }) => {
 	const [tokens, setTokens] = useState([]);
 	const [storage, setStorage] = useState(false);
 	const [price, setPrice] = useState('');
-	const [token, setToken] = useState('near');
+	const [ft, setFT] = useState('near');
 	const [saleConditions, setSaleConditions] = useState([]);
 
 	useEffect(() => {
 		if (!loading) loadItems();
 	}, [loading]);
+
+	// path to token
+	const [path, setPath] = useState(window.location.href)
+	useHistory(() => {
+		setPath(window.location.href)
+	});
+	let tokenId
+	let pathSplit = path.split(PATH_SPLIT)[1]
+	if (allTokens.length && pathSplit?.length) {
+		console.log(pathSplit)
+		tokenId = pathSplit.split(SUB_SPLIT)[0]
+	}
 
 	const loadItems = async () => {
 		if (accountId.length) {
@@ -186,6 +203,11 @@ export const Gallery = ({ app, update, contractAccount, account, loading }) => {
 	}
 	market.sort(sortFunctions[sort]);
 	tokens.sort(sortFunctions[sort]);
+
+	const token = market.find(({ token_id }) => tokenId === token_id)
+	if (token) {
+		return <Token {...{dispatch, token}} />
+	}
 
 	return <>
 		{
@@ -314,17 +336,17 @@ export const Gallery = ({ app, update, contractAccount, account, loading }) => {
 											<h4>Add Sale Conditions</h4>
 											<input type="number" placeholder="Price" value={price} onChange={(e) => setPrice(e.target.value)} />
 											{
-												getTokenOptions(token, setToken)
+												getTokenOptions(ft, setFT)
 											}
 											<button onClick={() => {
 												if (!price.length) {
 													return alert('Enter a price');
 												}
 												const newSaleConditions = saleConditions
-													.filter(({ ft_token_id }) => ft_token_id !== token)
+													.filter(({ ft_token_id }) => ft_token_id !== ft)
 													.concat([{
 														price: parseNearAmount(price),
-														ft_token_id: token,
+														ft_token_id: ft,
 													}]);
 												setSaleConditions(newSaleConditions);
 												setPrice('');

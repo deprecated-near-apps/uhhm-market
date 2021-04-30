@@ -16,13 +16,13 @@ const App = () => {
 
 	const { app, app: {tab}, near, wallet, contractAccount, account, loading } = state;
 
-
 	const [profile, setProfile] = useState(false);
 
 	const onMount = () => {
 		dispatch(onAppMount());
 	};
 	useEffect(onMount, []);
+
 
 	const signedIn = ((wallet && wallet.signedIn));
 
@@ -76,7 +76,7 @@ const App = () => {
 			</div>
 		}
 		<div id="gallery">
-			<Gallery {...{ app, update, loading, contractAccount, account }} />
+			<Gallery {...{ app, update, loading, contractAccount, account, dispatch }} />
 		</div>
 	</>;
 };

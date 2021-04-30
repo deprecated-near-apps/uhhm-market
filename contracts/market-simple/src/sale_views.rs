@@ -37,18 +37,20 @@ impl Contract {
             let strings: Vec<&str> = contract_and_token_id.split(&DELIMETER).collect();
             let nft_contract_id = strings[0].to_string();
             let token_id = strings[1].to_string();
-            let Sale {
-                approval_id: _, owner_id, token_type, conditions, bids
-            } = self.sales.get(&contract_and_token_id).unwrap();
-            
-            tmp.push(SaleJson {
-                nft_contract_id: nft_contract_id.clone(),
-                token_id,
-                token_type,
-                owner_id,
-                conditions,
-                bids
-            });
+            let sale = self.sales.get(&contract_and_token_id);
+            if let Some(sale) = sale {
+                let Sale {
+                    approval_id: _, owner_id, token_type, conditions, bids
+                } = sale;
+                tmp.push(SaleJson {
+                    nft_contract_id: nft_contract_id.clone(),
+                    token_id,
+                    token_type,
+                    owner_id,
+                    conditions,
+                    bids
+                });
+            }
         }
         tmp
     }
@@ -71,18 +73,20 @@ impl Contract {
         let end = min(start + u64::from(limit), sales.len());
         for i in start..end {
             let token_id = keys.get(i).unwrap();
-            let Sale {
-                approval_id: _, owner_id, token_type, conditions, bids
-            } = self.sales.get(&format!("{}{}{}", &nft_contract_id, DELIMETER, &token_id)).unwrap();
-            
-            tmp.push(SaleJson {
-                nft_contract_id: nft_contract_id.clone(),
-                token_id,
-                token_type,
-                owner_id,
-                conditions,
-                bids
-            });
+            let sale = self.sales.get(&format!("{}{}{}", &nft_contract_id, DELIMETER, &token_id));
+            if let Some(sale) = sale {
+                let Sale {
+                    approval_id: _, owner_id, token_type, conditions, bids
+                } = sale;
+                tmp.push(SaleJson {
+                    nft_contract_id: nft_contract_id.clone(),
+                    token_id,
+                    token_type,
+                    owner_id,
+                    conditions,
+                    bids
+                });
+            }
         }
         tmp
     }
@@ -108,18 +112,22 @@ impl Contract {
             let strings: Vec<&str> = contract_and_token_id.split(&DELIMETER).collect();
             let nft_contract_id = strings[0].to_string();
             let token_id = strings[1].to_string();
-            let Sale {
-                approval_id: _, owner_id, token_type, conditions, bids
-            } = self.sales.get(&contract_and_token_id).unwrap();
             
-            tmp.push(SaleJson {
-                nft_contract_id: nft_contract_id.clone(),
-                token_id,
-                token_type,
-                owner_id,
-                conditions,
-                bids
-            });
+            let sale = self.sales.get(&contract_and_token_id);
+            if let Some(sale) = sale {
+                let Sale {
+                    approval_id: _, owner_id, token_type, conditions, bids
+                } = sale;
+                
+                tmp.push(SaleJson {
+                    nft_contract_id: nft_contract_id.clone(),
+                    token_id,
+                    token_type,
+                    owner_id,
+                    conditions,
+                    bids
+                });
+            }
         }
         tmp
     }
