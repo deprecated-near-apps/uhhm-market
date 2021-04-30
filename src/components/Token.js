@@ -44,14 +44,17 @@ export const Token = ({
         }
     }
 
-    return <div className="token" onClick={() => history.pushState({}, '', window.location.pathname + '?c=' + contractId)}>
+    return <div className="token" onClick={() => history.pushState({}, '', window.location.pathname)}>
 		<div>
             <h3>Click to Close</h3>
             <img src={metadata.media} />
             <div className="token-detail">
                 <div><a href={explorerUrl + '/accounts/' + nft_contract_id}>{token_id}</a></div>
-                <div>Owned by <a href={explorerUrl + '/accounts/' + owner_id}>{owner_id}</a></div>
+                <div>Owner</div>
+                <div><a href={explorerUrl + '/accounts/' + owner_id}>{owner_id}</a></div>
+                <br />
                 <div><a href="#" onClick={(e) => handleShare(e)}>SHARE NOW</a></div>
+                <br />
                 <div className="time">Minted ??? ago</div>
             </div>
         </div>

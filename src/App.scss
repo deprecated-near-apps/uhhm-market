@@ -54,23 +54,73 @@ body::-webkit-scrollbar {
     } 
   } 
 
-  @keyframes pulse { 
-    from 
-    { 
-      transform: scale(1, 1); 
-    } 
-    to { 
-        transform: scale(1.15, 1.15);
-    } 
-  } 
+@keyframes pulse { 
+from 
+{ 
+    transform: scale(1, 1); 
+} 
+to { 
+    transform: scale(1.15, 1.15);
+} 
+} 
 
-  .pulse-button {
-    animation-name: pulse; 
-        animation-timing-function: linear; 
-        animation-iteration-count: infinite; 
-        animation-direction: alternate;
-        animation-duration: 1s; 
-  }
+
+.token {
+    position: fixed;
+    top: 0; left: 0;
+    z-index: 2000;
+    width: 100vw;
+    height: 100vh;
+    overflow: scroll;
+    animation: fade-in cubic-bezier(0, 0.8, 0.08, 1) 0.8s;
+    animation-fill-mode: forwards;
+    backdrop-filter: brightness(4) blur(20px);
+    
+    > div {
+        > h3 {
+            text-align: center;
+            margin: 0;
+            padding: 8px;
+        }
+
+        background: white;
+        position: relative;
+        width: 100%;
+        img, iframe, video {
+            width: 100%;
+            margin-bottom: -2px;
+        }
+    }
+}
+.token-detail {
+    z-index: 1000;
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    height: 10.6rem;
+    bottom: -10.6rem;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: none;
+    > div {
+        font-size: 1.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    > .time {
+        font-size: 1rem;
+    }
+}
+
+
+.pulse-button {
+animation-name: pulse; 
+    animation-timing-function: linear; 
+    animation-iteration-count: infinite; 
+    animation-direction: alternate;
+    animation-duration: 1s; 
+}
 
 
 .loading {
