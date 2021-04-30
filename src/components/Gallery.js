@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as nearAPI from 'near-api-js';
-import { GAS, parseNearAmount } from '../state/near';
+import { GAS, parseNearAmount, token2symbol, getTokenOptions, handleOffer } from '../state/near';
 import {
 	marketId,
 	contractId,
@@ -15,16 +15,9 @@ const PATH_SPLIT = '?t='
 const SUB_SPLIT = '&='
 
 const {
-	KeyPair,
 	utils: { format: { formatNearAmount } }
 } = nearAPI;
 
-const token2symbol = {
-	"near": "NEAR",
-	// "dai": "DAI",
-	// "usdc": "USDC",
-	// "usdt": "USDT",
-};
 
 const n2f = (amount) => parseFloat(parseNearAmount(amount, 8));
 
@@ -34,14 +27,7 @@ const sortFunctions = {
 	3: (a, b) => n2f(a.conditions?.near || '0') - n2f(b.conditions?.near || '0'),
 	4: (b, a) => n2f(a.conditions?.near || '0') - n2f(b.conditions?.near || '0'),
 };
-const allTokens = Object.keys(token2symbol);
 
-const getTokenOptions = (value, setter, accepted = allTokens) => (
-	<select value={value} onChange={(e) => setter(e.target.value)}>
-		{
-			accepted.map((value) => <option key={value} value={value}>{token2symbol[value]}</option>)
-		}
-	</select>);
 
 export const Gallery = ({ app, update, contractAccount, account, loading, dispatch }) => {
 	if (!contractAccount) return null;
@@ -140,26 +126,11 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 			from_index: '0',
 			limit: '100'
 		});
-		console.log(allTokens);
 		setAllTokens(allTokens);
 	};
 
 	/// setters
 
-	const handleOffer = async (token_id) => {
-		if (offerToken !== 'near') {
-			return alert('currently only accepting NEAR offers');
-		}
-		if (offerToken === 'near') {
-			await account.functionCall(marketId, 'offer', {
-				nft_contract_id: contractId,
-				token_id,
-			}, GAS, parseNearAmount(offerPrice));
-		} else {
-			///todo ft_transfer_call
-
-		}
-	};
 
 	const handleAcceptOffer = async (token_id, ft_token_id) => {
 		if (ft_token_id !== 'near') {
@@ -206,7 +177,7 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 
 	const token = market.find(({ token_id }) => tokenId === token_id)
 	if (token) {
-		return <Token {...{dispatch, token}} />
+		return <Token {...{dispatch, account, token}} />
 	}
 
 	return <>
@@ -260,7 +231,7 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 									{
 										getTokenOptions(offerToken, setOfferToken, Object.keys(conditions))
 									}
-									<button onClick={() => handleOffer(token_id)}>Offer</button>
+									<button onClick={() => handleOffer(account, token_id, offerToken, offerPrice)}>Offer</button>
 								</>
 							}
 						</>
