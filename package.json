@@ -28,18 +28,20 @@
         "last 2 Chrome versions"
     ],
     "scripts": {
+        "test:deploy": "yarn dev:deploy && yarn test",
+        "dev:deploy": "yarn build:contracts && rm -rf neardev && (near dev-deploy || exit 0) && yarn patch:config",
+        "build:contracts": "cd contracts/nft-simple && ./build.sh && cd ../.. && cd contracts/market-simple && ./build.sh && cd ../.. && cd contracts/ft && ./build.sh && cd ../..",
+        "patch:config": "node ./utils/patch-config.js",
+
+        "test": "cross-env REACT_APP_ENV=dev jest app.test.js --useStderr",
+
         "prestart": "rm -rf ./parcel-cache",
         "start": "cross-env REACT_APP_ENV=dev parcel src/index.html --open",
         "start:deploy": "yarn patch:deploy-config && cross-env REACT_APP_ENV=dev parcel src/index.html --open",
-        "prebuild": "rm -rf ./dist",
         "fix": "eslint src/ test/ server/ --fix",
-        "build:contracts": "cd contracts/nft-simple && ./build.sh && cd ../.. && cd contracts/market-simple && ./build.sh && cd ../.. && cd contracts/ft && ./build.sh && cd ../..",
-        "patch:config": "node ./utils/patch-config.js",
-        "dev:deploy": "yarn build:contracts && rm -rf neardev && (near dev-deploy || exit 0) && yarn patch:config",
         "test:unit": "(cd contracts && cargo test -- --nocapture --color always)",
-        "test:deploy": "yarn dev:deploy && yarn test",
-        "test": "cross-env REACT_APP_ENV=dev jest app.test.js --useStderr",
-        "test:server": "cross-env REACT_APP_ENV=dev jest server.test.js --useStderr",
+        
+        "prebuild": "rm -rf ./dist",
         "patch:deploy-config": "node ./utils/patch-deploy-config.js",
         "build": "parcel build src/index.html --no-source-maps --public-url https://near-apps.github.io/nft-market/",
         "deploy": "yarn patch:deploy-config && cross-env REACT_APP_ENV=dev yarn build && gh-pages -d dist"

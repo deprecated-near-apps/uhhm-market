@@ -54,15 +54,18 @@ describe('deploy contract ' + contractName, () => {
 	/// the market contract
 	const marketId = 'market.' + contractId;
 
+	/// most of the following code in beforeAll can be used for deploying and initializing contracts
+	/// skip all tests if you want to deploy to production or testnet without any NFTs
 	beforeAll(async () => {
 	    await initContract();
 
-		alice = await getAccount();
-		aliceId = alice.accountId;
+		const t = Date.now() 
+		aliceId = 'alice-' + t + '.' + contractId;
+		alice = await getAccount(aliceId);
 		console.log('\n\n Alice accountId:', aliceId, '\n\n');
 
-		bob = await getAccount();
-		bobId = bob.accountId;
+		bobId = 'bob-' + t + '.' + contractId;
+		bob = await getAccount(bobId);
 		console.log('\n\n Bob accountId:', bobId, '\n\n');
 
 		await contractAccount.functionCall(contractName, 'set_contract_royalty', { contract_royalty }, GAS);
@@ -73,7 +76,7 @@ describe('deploy contract ' + contractName, () => {
 			[tokenTypes[1]]: '500',
 			[tokenTypes[2]]: '1000000',
 		}
-		await contractAccount.functionCall(contractName, 'add_token_types', { supply_cap_by_type }, GAS);
+		await contractAccount.functionCall(contractId, 'add_token_types', { supply_cap_by_type }, GAS);
 		
 		/// create or get stableAccount and deploy ft.wasm (if not already deployed)
 		stableAccount = await createOrInitAccount(stableId, GUESTS_ACCOUNT_SECRET);
@@ -84,7 +87,7 @@ describe('deploy contract ' + contractName, () => {
 			console.log('\n\n deploying stableAccount contractBytes:', fungibleContractBytes.length, '\n\n');
 			const newFungibleArgs = {
 				/// will have totalSupply minted to them
-				owner_id: contractName,
+				owner_id: contractId,
 				total_supply: parseNearAmount('1000000'),
 				name: 'Test Stable Coin',
 				symbol: 'TSC',
@@ -114,6 +117,10 @@ describe('deploy contract ' + contractName, () => {
 			console.log('\n\n storageMinimum:', storageMinimum, '\n\n');
 		}
 
+		/** 
+		 * Deploy the Market Contract and connect it to the NFT contract (contractId)
+		 * and the FT contract (stable.[contractId])
+		 */ 
 
 		/// default option for markets, init with all FTs you want it to support
 		const ft_token_ids = [stableId]
@@ -137,9 +144,9 @@ describe('deploy contract ' + contractName, () => {
 			await marketAccount.signAndSendTransaction(marketId, actions);
 
 			/// NOTE market must register for all ft_token_ids it wishes to use (e.g. use this loop for standard fts)
-			ft_token_ids.forEach(async (id) => {
-				const deposit = await contractAccount.viewFunction(id, 'storage_minimum_balance');
-				await marketAccount.functionCall(id, 'storage_deposit', {}, GAS, deposit);
+			ft_token_ids.forEach(async (ft_token_id) => {
+				const deposit = await marketAccount.viewFunction(ft_token_id, 'storage_minimum_balance');
+				await marketAccount.functionCall(ft_token_id, 'storage_deposit', {}, GAS, deposit);
 			})
 		}
 		// get all supported tokens as array
@@ -155,7 +162,7 @@ describe('deploy contract ' + contractName, () => {
 		console.log('\n\n storageMarket:', storageMarket, '\n\n');
 	});
 
-	test('enumerable tests (no tokens)', async () => {
+	test('NFT enumerable tests (no tokens)', async () => {
 		const nft_supply_for_owner = await bob.viewFunction(contractName, 'nft_supply_for_owner', { account_id: bobId });
 		console.log('\n\n nft_supply_for_owner', nft_supply_for_owner, '\n\n');
 		expect(nft_supply_for_owner).toEqual('0');
@@ -165,7 +172,7 @@ describe('deploy contract ' + contractName, () => {
 		expect(bobTokens.length).toEqual(0);
 	});
 
-	test('NFT contract owner mints nft and approves fixed price near sale', async () => {
+	test('NFT contract owner mints nft and approves a sale for a fixed amount of NEAR', async () => {
 		const token_id = tokenIds[0];
 		await contractAccount.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket);
 		await contractAccount.functionCall(contractId, 'nft_mint', {
@@ -183,10 +190,11 @@ describe('deploy contract ' + contractName, () => {
 			},
 		}, GAS, parseNearAmount('1'));
 
+		const price = parseNearAmount('1')
 		let sale_conditions = [
 			{
 				ft_token_id: 'near',
-				price: parseNearAmount('1')
+				price 
 			}
 		];
 
@@ -198,7 +206,7 @@ describe('deploy contract ' + contractName, () => {
 
 		const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
 		console.log('\n\n', sale, '\n\n');
-		expect(sale.conditions.near).toEqual(parseNearAmount('1'));
+		expect(sale.conditions.near).toEqual(price);
 	});
 
 	test('token transfer locked - owner unlocks token transfer token type', async () => {
