@@ -203,7 +203,7 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 				royalty = {}
 			}) =>
 				<div key={token_id} className="item">
-					<img src={media} />
+					<img src={media} onClick={() => history.pushState({}, '', window.location.pathname + '?t=' + token_id)} />
 					<p>{accountId !== owner_id ? `Owned by ${formatAccountId(owner_id)}` : `You own this!`}</p>
 					{ Object.keys(conditions).length > 0 && <>
 						<h4>Royalties</h4>
@@ -267,7 +267,7 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 						bids = {},
 						royalty = {}
 					}) => <div key={token_id} className="item">
-						<img src={media} />
+						<img src={media} onClick={() => history.pushState({}, '', window.location.pathname + '?t=' + token_id)} />
 						{
 							storage ? <>
 								<h4>Royalties</h4>

@@ -5,6 +5,7 @@ import { getWallet, postSignedJson } from '../utils/near-utils';
 
 export const {
 	GAS,
+	explorerUrl,
 	networkId, nodeUrl, walletUrl, nameSuffix,
 	contractName: contractId,
 } = getConfig();

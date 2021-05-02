@@ -1,4 +1,4 @@
-const contractName = 'dev-1619807711455-4435126';
+const contractName = 'dev-1618440176640-7650905';
 
 module.exports = function getConfig() {
 	let config = {
@@ -12,6 +12,7 @@ module.exports = function getConfig() {
     
 	if (process.env.REACT_APP_ENV !== undefined) {
 		config = {
+			explorerUrl: 'https://explorer.testnet.near.org',
 			...config,
 			GAS: '200000000000000',
 			DEFAULT_NEW_ACCOUNT_AMOUNT: '5',
