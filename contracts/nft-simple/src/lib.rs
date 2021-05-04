@@ -83,7 +83,7 @@ impl Contract {
                 Some(&metadata),
             ),
             supply_cap_by_type,
-            tokens_per_type: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
+            tokens_per_type: LookupMap::new(StorageKey::TokensPerType.try_to_vec().unwrap()),
             token_types_locked: UnorderedSet::new(StorageKey::TokenTypesLocked.try_to_vec().unwrap()),
             contract_royalty: 0,
         };
