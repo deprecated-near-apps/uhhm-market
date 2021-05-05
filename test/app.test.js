@@ -19,7 +19,7 @@ const {
 	networkId, GAS, GUESTS_ACCOUNT_SECRET
 } = getConfig();
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
 describe('deploy contract ' + contractName, () => {
 
@@ -38,9 +38,11 @@ describe('deploy contract ' + contractName, () => {
 	};
 	const now = Date.now();
 	const tokenTypes = [
+		// one unique type
 		`typeA:${now}`,
+		 // 2 tokens of same type
 		`typeB:${now}`,
-		`typeC:${now}`
+		`typeB:${now}`,
 	];
 	const tokenIds = tokenTypes.map((type, i) => `${type}:${i}`);
 	const contract_royalty = 500;
@@ -468,8 +470,8 @@ describe('deploy contract ' + contractName, () => {
 		expect(hardCap).toEqual('1');
 	});
 
-	test('bob: nft mint (no type), approve sale with NEAR open for bids', async () => {
-		const token_id = tokenIds[1];
+	test('bob: nft mints (different token_type) 2 new tokens, approve sale with NEAR open for bids', async () => {
+		let token_id = tokenIds[1];
 		await bob.functionCall(marketId, 'storage_deposit', {}, GAS, storageMarket);
 
 		/// bob just double paid for storage (check this)
@@ -482,6 +484,7 @@ describe('deploy contract ' + contractName, () => {
 			perpetual_royalties: {
 				[bobId]: 500,
 			},
+			token_type: tokenTypes[1]
 		}, GAS, parseNearAmount('1'));
 		await bob.functionCall(contractId, 'nft_approve', {
 			token_id,
@@ -495,6 +498,28 @@ describe('deploy contract ' + contractName, () => {
 		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
 		console.log('\n\n', sale, '\n\n');
 		expect(sale.conditions["near"]).toEqual(parseNearAmount('0'));
+
+		token_id = tokenIds[2];
+		await bob.functionCall(contractId, 'nft_mint', {
+			token_id,
+			metadata: metadata2,
+			perpetual_royalties: {
+				[bobId]: 500,
+			},
+			token_type: tokenTypes[1]
+		}, GAS, parseNearAmount('1'));
+		await bob.functionCall(contractId, 'nft_approve', {
+			token_id,
+			account_id: marketId,
+			msg: JSON.stringify({
+				sale_conditions: [{
+					ft_token_id: 'near',
+				}]
+			})
+		}, GAS, parseNearAmount('0.01'));
+		const sale2 = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
+		console.log('\n\n', sale2, '\n\n');
+		expect(sale2.conditions["near"]).toEqual(parseNearAmount('0'));
 	});
 
 	test('alice bid with NEAR', async () => {
@@ -523,6 +548,16 @@ describe('deploy contract ' + contractName, () => {
 		const bobBalanceAfter = await getAccountBalance(bobId);
 		/// bob got close to 0.18 N (95% - gas) from this sale
 		expect(new BN(bobBalanceAfter.total).sub(new BN(bobBalanceBefore.total)).gt(new BN(parseNearAmount('0.17')))).toEqual(true);
+	});
+
+	test('get_sales_by_nft_token_type', async () => {
+		const tokenTypeSales = await bob.viewFunction(marketId, 'get_sales_by_nft_token_type', {
+			token_type: tokenTypes[1],
+			from_index: '0',
+			limit: '1000'
+		});
+		console.log('\n\n tokenTypeSales', tokenTypeSales, '\n\n');
+		expect(tokenTypeSales.length).toEqual(1);
 	});
 
 	/// for testing frontend
