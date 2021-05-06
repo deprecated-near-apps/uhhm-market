@@ -19,6 +19,8 @@ pub struct Bid {
 pub struct Sale {
     pub owner_id: AccountId,
     pub approval_id: U64,
+    pub nft_contract_id: String,
+    pub token_id: String,
     pub token_type: Option<String>,
     pub conditions: HashMap<FungibleTokenId, U128>,
     pub bids: HashMap<FungibleTokenId, Bid>,
