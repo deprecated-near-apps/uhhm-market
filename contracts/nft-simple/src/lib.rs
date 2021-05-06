@@ -69,7 +69,7 @@ pub enum StorageKey {
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new(owner_id: ValidAccountId, metadata: NFTMetadata, supply_cap_by_type: TypeSupplyCaps) -> Self {
+    pub fn new(owner_id: ValidAccountId, metadata: NFTMetadata, supply_cap_by_type: TypeSupplyCaps, unlocked: Option<bool>) -> Self {
         let mut this = Self {
             tokens_per_owner: LookupMap::new(StorageKey::TokensPerOwner.try_to_vec().unwrap()),
             tokens_by_id: LookupMap::new(StorageKey::TokensById.try_to_vec().unwrap()),
@@ -88,9 +88,11 @@ impl Contract {
             contract_royalty: 0,
         };
 
-        // CUSTOM - tokens are locked by default
-        for (token_type, _) in &this.supply_cap_by_type {
-            this.token_types_locked.insert(&token_type);
+        if unlocked.is_none() {
+            // CUSTOM - tokens are locked by default
+            for token_type in this.supply_cap_by_type.keys() {
+                this.token_types_locked.insert(&token_type);
+            }
         }
 
         this.measure_min_token_storage_cost();
@@ -127,10 +129,12 @@ impl Contract {
         self.contract_royalty = contract_royalty;
     }
 
-    pub fn add_token_types(&mut self, supply_cap_by_type: TypeSupplyCaps) {
+    pub fn add_token_types(&mut self, supply_cap_by_type: TypeSupplyCaps, unlocked: Option<bool>) {
         self.assert_owner();
         for (token_type, hard_cap) in &supply_cap_by_type {
-            self.token_types_locked.insert(&token_type);
+            if unlocked.is_none() {
+                self.token_types_locked.insert(&token_type);
+            }
             self.supply_cap_by_type.insert(token_type.to_string(), *hard_cap);
         }
     }

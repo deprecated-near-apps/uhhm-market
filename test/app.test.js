@@ -76,7 +76,6 @@ describe('deploy contract ' + contractName, () => {
 		const supply_cap_by_type = {
 			[tokenTypes[0]]: '1',
 			[tokenTypes[1]]: '500',
-			[tokenTypes[2]]: '1000000',
 		}
 		await contractAccount.functionCall(contractId, 'add_token_types', { supply_cap_by_type }, GAS);
 		
@@ -233,10 +232,10 @@ describe('deploy contract ' + contractName, () => {
 		const tokenLocked = await contractAccount.viewFunction(contractName, 'is_token_locked', { token_id });
 		expect(tokenLocked).toEqual(false);
 
-		// should be none
+		// should be none (we default unlocked token_type in constructor -> test-utils.js)
 		const typesLocked = await contractAccount.viewFunction(contractName, 'get_token_types_locked');
 		console.log(typesLocked)
-		expect(typesLocked.length).toEqual(1);
+		expect(typesLocked.length).toEqual(0);
 	});
 
 	test('get sales by owner id', async () => {

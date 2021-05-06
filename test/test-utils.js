@@ -24,7 +24,8 @@ async function initContract() {
 			},
 			supply_cap_by_type: {
 				test: '1000000',
-			}
+			},
+			unlocked: true
 		};
 		await contract.new(newArgs);
 	} catch (e) {
