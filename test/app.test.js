@@ -238,7 +238,13 @@ describe('deploy contract ' + contractName, () => {
 		expect(typesLocked.length).toEqual(0);
 	});
 
-	test('get sales by owner id', async () => {
+	test('get sales supply', async () => {
+		const supply = await contractAccount.viewFunction(marketId, 'get_supply_sales', {});
+		console.log('\n\n', supply, '\n\n');
+		expect(parseInt(supply, 10) > 0).toEqual(true);
+	});
+
+	test('get sales & supply by owner id', async () => {
 		const sales_by_owner_id = await contractAccount.viewFunction(marketId, 'get_sales_by_owner_id', {
 			account_id: contractId,
 			from_index: '0',
@@ -246,9 +252,15 @@ describe('deploy contract ' + contractName, () => {
 		});
 		console.log('\n\n', sales_by_owner_id, '\n\n');
 		expect(sales_by_owner_id.length).toEqual(1);
+
+		const supply = await contractAccount.viewFunction(marketId, 'get_supply_by_owner_id', {
+			account_id: contractId,
+		});
+		console.log('\n\n', supply, '\n\n');
+		expect(parseInt(supply, 10) > 0).toEqual(true);
 	});
 
-	test('get sales by nft contract id', async () => {
+	test('get sales & supply by nft contract id', async () => {
 		const sales_by_nft_contract_id = await contractAccount.viewFunction(marketId, 'get_sales_by_nft_contract_id', {
 			nft_contract_id: contractId,
 			from_index: '0',
@@ -256,9 +268,15 @@ describe('deploy contract ' + contractName, () => {
 		});
 		console.log('\n\n', sales_by_nft_contract_id, '\n\n');
 		expect(sales_by_nft_contract_id.length > 0).toEqual(true);
+
+		const supply = await contractAccount.viewFunction(marketId, 'get_supply_by_nft_contract_id', {
+			nft_contract_id: contractId,
+		});
+		console.log('\n\n', supply, '\n\n');
+		expect(parseInt(supply, 10) > 0).toEqual(true);
 	});
 
-	test('get sales by nft token type', async () => {
+	test('get sales & supply by nft token type', async () => {
 		const sales_by_nft_token_type = await contractAccount.viewFunction(marketId, 'get_sales_by_nft_token_type', {
 			token_type: tokenTypes[0],
 			from_index: '0',
@@ -266,6 +284,12 @@ describe('deploy contract ' + contractName, () => {
 		});
 		console.log('\n\n', sales_by_nft_token_type, '\n\n');
 		expect(sales_by_nft_token_type.length > 0).toEqual(true);
+
+		const supply = await contractAccount.viewFunction(marketId, 'get_supply_by_nft_token_type', {
+			token_type: tokenTypes[0],
+		});
+		console.log('\n\n', supply, '\n\n');
+		expect(parseInt(supply, 10) > 0).toEqual(true);
 	});
 
 	test('bob purchase nft with NEAR', async () => {
