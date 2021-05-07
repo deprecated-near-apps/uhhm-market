@@ -553,10 +553,17 @@ describe('deploy contract ' + contractName, () => {
 		const tokenTypeSales = await bob.viewFunction(marketId, 'get_sales_by_nft_token_type', {
 			token_type: tokenTypes[1],
 			from_index: '0',
-			limit: '1000'
+			limit: '10'
 		});
 		console.log('\n\n tokenTypeSales', tokenTypeSales, '\n\n');
 		expect(tokenTypeSales.length).toEqual(1);
+		const tokenTypeSales2 = await bob.viewFunction(marketId, 'get_sales_by_nft_token_type', {
+			token_type: tokenTypes[1],
+			from_index: '0',
+			limit: new BN('10').toString()
+		});
+		console.log('\n\n tokenTypeSales', tokenTypeSales2, '\n\n');
+		expect(tokenTypeSales2.length).toEqual(1);
 	});
 
 	/// for testing frontend
