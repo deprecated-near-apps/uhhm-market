@@ -70,6 +70,7 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
                 token_type: token_type.clone(),
                 conditions,
                 bids,
+                created_at: U64(env::block_timestamp()/1000000),
             },
         );
 

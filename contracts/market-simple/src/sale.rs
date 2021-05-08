@@ -24,6 +24,7 @@ pub struct Sale {
     pub token_type: Option<String>,
     pub conditions: HashMap<FungibleTokenId, U128>,
     pub bids: HashMap<FungibleTokenId, Bid>,
+    pub created_at: U64,
 }
 
 #[derive(Serialize, Deserialize)]
