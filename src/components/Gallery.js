@@ -9,6 +9,15 @@ import {
 import { useHistory } from '../utils/history';
 import {Token} from './Token';
 
+
+// api-helper config
+const domain = 'https://helper.nearapi.org'
+const batchPath = domain + '/v1/batch/';
+const headers = new Headers({
+    'max-age': '300'
+})
+
+
 const ADD_SALE = '__ADD_SALE';
 
 const PATH_SPLIT = '?t='
@@ -101,11 +110,30 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 		}
 
 		/// all sales
-		const sales = await contractAccount.viewFunction(marketId, 'get_sales_by_nft_contract_id', {
-			nft_contract_id: contractId,
-			from_index: '0',
-			limit: '100'
-		});
+		// need to use NFT helper
+		const salesUrl = batchPath + JSON.stringify([{
+			contract: marketId,
+			method: 'get_sales_by_nft_contract_id',
+			args: {
+				nft_contract_id: contractId,
+			},
+			batch: {
+				from_index: '0', // must be name of contract arg (above)
+				limit: '1000', // must be name of contract arg (above)
+				step: '50', // divides contract arg 'limit'
+				flatten: [], // how to combine results
+			},
+			sort: {
+				path: 'metadata.issued_at',
+			}
+		}]);
+		const sales = (await fetch(salesUrl, { headers }).then((res) => res.json()))[0];
+
+		// const sales = await contractAccount.viewFunction(marketId, 'get_sales_by_nft_contract_id', {
+		// 	nft_contract_id: contractId,
+		// 	from_index: '0',
+		// 	limit: '50'
+		// });
 		const tokens = await contractAccount.viewFunction(contractId, 'nft_tokens_batch', {
 			token_ids: sales.filter(({ nft_contract_id }) => nft_contract_id === contractId).map(({ token_id }) => token_id)
 		});
@@ -122,10 +150,28 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 		setSales(sales);
 
 		// all tokens
-		const allTokens = await contractAccount.viewFunction(contractId, 'nft_tokens', {
-			from_index: '0',
-			limit: '100'
-		});
+		// need to use NFT helper
+		const nft_total_supply = await contractAccount.viewFunction(contractId, 'nft_total_supply');
+		const allTokensUrl = batchPath + JSON.stringify([{
+			contract: contractId,
+			method: 'nft_tokens',
+			args: {},
+			batch: {
+				from_index: '0', // must be name of contract arg (above)
+				limit: nft_total_supply, // must be name of contract arg (above)
+				step: '50', // divides contract arg 'limit'
+				flatten: [], // how to combine results
+			},
+			sort: {
+				path: 'metadata.issued_at',
+			}
+		}]);
+		const allTokens = (await fetch(allTokensUrl, { headers }).then((res) => res.json()))[0];
+		console.log(allTokens)
+		// const allTokens = await contractAccount.viewFunction(contractId, 'nft_tokens', {
+		// 	from_index: '0',
+		// 	limit: '50'
+		// });
 		setAllTokens(allTokens);
 	};
 
