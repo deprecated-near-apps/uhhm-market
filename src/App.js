@@ -14,7 +14,7 @@ import './App.scss';
 const App = () => {
 	const { state, dispatch, update } = useContext(appStore);
 
-	const { app, app: {tab}, near, wallet, contractAccount, account, loading } = state;
+	const { app, app: {tab, snack}, near, wallet, contractAccount, account, loading } = state;
 
 	const [profile, setProfile] = useState(false);
 
@@ -34,6 +34,12 @@ const App = () => {
 		{ loading && <div className="loading">
 			<img src={NearLogo} />
 		</div>
+		}
+		{
+			snack &&
+			<div className="snack">
+				{snack}
+			</div>
 		}
 
 		<div className="background"></div>

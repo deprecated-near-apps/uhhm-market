@@ -41,6 +41,26 @@ body {
     z-index: -1;
 }
 
+
+.snack {
+    z-index: 10000;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    font-size: 1.2rem;
+    box-shadow: 0 0 64px white, 0 0 32px white, 0 0 16px white;
+    background: black !important;
+    color: white;
+    width: 100%;
+    padding: 8px;
+    padding-bottom: 16px;
+    text-align: center;
+    animation: slide-in cubic-bezier(0, 0.8, 0.08, 1) 0.8s;
+    animation-fill-mode: forwards;
+}
+
+
+
 body::-webkit-scrollbar {
     width: 0;
 }
