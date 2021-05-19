@@ -6,10 +6,10 @@
     "license": "ISC",
     "dependencies": {
         "bn": "^1.0.5",
-        "near-api-js": "^0.36.2",
+        "copy-to-clipboard": "^3.3.1",
+        "near-api-js": "^0.41.0",
         "near-seed-phrase": "^0.1.0",
         "react": "^17.0.1",
-        "copy-to-clipboard": "^3.3.1",
         "react-dom": "^17.0.1"
     },
     "devDependencies": {
@@ -33,15 +33,12 @@
         "dev:deploy": "yarn build:contracts && rm -rf neardev && (near dev-deploy || exit 0) && yarn patch:config",
         "build:contracts": "cd contracts/nft-simple && ./build.sh && cd ../.. && cd contracts/market-simple && ./build.sh && cd ../.. && cd contracts/ft && ./build.sh && cd ../..",
         "patch:config": "node ./utils/patch-config.js",
-
         "test": "cross-env REACT_APP_ENV=dev jest app.test.js --useStderr",
-
         "prestart": "rm -rf ./parcel-cache",
         "start": "cross-env REACT_APP_ENV=dev parcel src/index.html --open",
         "start:deploy": "yarn patch:deploy-config && cross-env REACT_APP_ENV=dev REACT_APP_API_HELPER=true parcel src/index.html --open",
         "fix": "eslint src/ test/ server/ --fix",
         "test:unit": "(cd contracts && cargo test -- --nocapture --color always)",
-        
         "prebuild": "rm -rf ./dist",
         "patch:deploy-config": "node ./utils/patch-deploy-config.js",
         "build": "parcel build src/index.html --no-source-maps --public-url https://near-apps.github.io/nft-market/",

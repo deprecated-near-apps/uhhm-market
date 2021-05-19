@@ -70,14 +70,24 @@ describe('deploy contract ' + contractName, () => {
 		bob = await getAccount(bobId);
 		console.log('\n\n Bob accountId:', bobId, '\n\n');
 
-		await contractAccount.functionCall(contractName, 'set_contract_royalty', { contract_royalty }, GAS);
+		await contractAccount.functionCall({
+			contractId: contractName,
+			methodName: 'set_contract_royalty',
+			args: { contract_royalty },
+			gas: GAS
+		});
 		
 		// examples
 		const supply_cap_by_type = {
 			[tokenTypes[0]]: '1',
 			[tokenTypes[1]]: '500',
 		}
-		await contractAccount.functionCall(contractId, 'add_token_types', { supply_cap_by_type }, GAS);
+		await contractAccount.functionCall({
+			contractId,
+			methodName: 'add_token_types',
+			args: { supply_cap_by_type },
+			gas: GAS
+		});
 		
 		/// create or get stableAccount and deploy ft.wasm (if not already deployed)
 		stableAccount = await createOrInitAccount(stableId, GUESTS_ACCOUNT_SECRET);
