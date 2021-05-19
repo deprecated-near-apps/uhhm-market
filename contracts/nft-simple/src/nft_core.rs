@@ -23,6 +23,7 @@ pub trait NonFungibleTokenCore {
         approval_id: Option<U64>,
         memo: Option<String>,
         balance: Option<U128>,
+        max_len_payout: Option<u32>,
     ) -> Option<Payout>;
 
     /// Returns `true` if the token was transferred from the sender's account.
@@ -127,6 +128,7 @@ impl NonFungibleTokenCore for Contract {
         approval_id: Option<U64>,
         memo: Option<String>,
         balance: Option<U128>,
+        max_len_payout: Option<u32>,
     ) -> Option<Payout> {
         assert_one_yocto();
         let sender_id = env::predecessor_account_id();
@@ -145,11 +147,16 @@ impl NonFungibleTokenCore for Contract {
         // compute payouts based on balance option
         // adds in contract_royalty and computes previous owner royalty from remainder
         let owner_id = previous_token.owner_id;
-        let royalty = self.tokens_by_id.get(&token_id).expect("No token").royalty;
         let mut total_perpetual = 0;
         let payout = if let Some(balance) = balance {
             let balance_u128 = u128::from(balance);
             let mut payout: Payout = HashMap::new();
+            let royalty = self.tokens_by_id.get(&token_id).expect("No token").royalty;
+
+            if let Some(max_len_payout) = max_len_payout {
+                assert!(royalty.len() as u32 <= max_len_payout, "Market cannot payout to that many receivers");
+            }
+
             for (k, v) in royalty.iter() {
                 let key = k.clone();
                 if key != owner_id {
@@ -157,7 +164,8 @@ impl NonFungibleTokenCore for Contract {
                     total_perpetual += *v;
                 }
             }
-            // payout to contract owner - may be previous token owner -> then they get remainder of balance
+            
+            // payout to contract owner - may be previous token owner, they get remainder of balance
             if self.contract_royalty > 0 && self.owner_id != owner_id {
                 payout.insert(self.owner_id.clone(), royalty_to_payout(self.contract_royalty, balance_u128));
                 total_perpetual += self.contract_royalty;
@@ -165,9 +173,6 @@ impl NonFungibleTokenCore for Contract {
             assert!(total_perpetual <= MINTER_ROYALTY_CAP + CONTRACT_ROYALTY_CAP, "Royalties should not be more than caps");
             // payout to previous owner
             payout.insert(owner_id, royalty_to_payout(10000 - total_perpetual, balance_u128));
-
-            env::log(format!("total_perpetual {:?}", total_perpetual).as_bytes());
-            env::log(format!("Payouts {:?}", payout).as_bytes());
 
             Some(payout)
         } else {
@@ -341,7 +346,7 @@ impl NonFungibleTokenResolver for Contract {
         }
 
         let mut token = if let Some(token) = self.tokens_by_id.get(&token_id) {
-            if &token.owner_id != &receiver_id {
+            if token.owner_id != receiver_id {
                 // The token is not owner by the receiver anymore. Can't return it.
                 refund_approved_account_ids(owner_id, &approved_account_ids);
                 return true;

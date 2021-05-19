@@ -43,9 +43,18 @@ impl Contract {
             let cap = u64::from(*self.supply_cap_by_type.get(&token_type).expect("Token type must have supply cap."));
             let supply = u64::from(self.nft_supply_for_type(&token_type));
             assert!(supply < cap, "Cannot mint anymore of token type.");
-            let mut tokens_per_type = self.tokens_per_type.get(&token_type).unwrap_or_else(|| {
-                UnorderedSet::new(hash_account_id(&token_type).try_to_vec().unwrap())
-            });
+            let mut tokens_per_type = self
+                .tokens_per_type
+                .get(&token_type)
+                .unwrap_or_else(|| {
+                    UnorderedSet::new(
+                        StorageKey::TokensPerTypeInner {
+                            token_type_hash: hash_account_id(&token_type),
+                        }
+                        .try_to_vec()
+                        .unwrap(),
+                    )
+                });
             tokens_per_type.insert(&final_token_id);
             self.tokens_per_type.insert(&token_type, &tokens_per_type);
         }

@@ -63,6 +63,7 @@ pub enum StorageKey {
     TokenMetadataById,
     NftMetadata,
     TokensPerType,
+    TokensPerTypeInner { token_type_hash: CryptoHash },
     TokenTypesLocked,
 }
 
