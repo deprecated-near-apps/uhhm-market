@@ -134,9 +134,9 @@ impl Contract {
         self.assert_owner();
         for (token_type, hard_cap) in &supply_cap_by_type {
             if unlocked.is_none() {
-                self.token_types_locked.insert(&token_type);
+                assert!(self.token_types_locked.insert(&token_type), "Token type should not be locked");
             }
-            self.supply_cap_by_type.insert(token_type.to_string(), *hard_cap);
+            assert!(self.supply_cap_by_type.insert(token_type.to_string(), *hard_cap).is_none(), "Token type exists");
         }
     }
 

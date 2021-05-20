@@ -70,6 +70,8 @@ describe('deploy contract ' + contractName, () => {
 		bob = await getAccount(bobId);
 		console.log('\n\n Bob accountId:', bobId, '\n\n');
 
+		/// TODO update all these viewFunction and functionCalls to new format for near-api-js so it stops complaining about deprecated
+
 		await contractAccount.functionCall({
 			contractId: contractName,
 			methodName: 'set_contract_royalty',
