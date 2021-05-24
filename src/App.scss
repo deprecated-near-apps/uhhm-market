@@ -27,7 +27,7 @@ body {
     z-index: 1000;
     margin: 0 auto;
     max-width: $width;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     padding: 16px 0;
     background: white;
@@ -40,8 +40,8 @@ body {
         left: calc(50% - 400px);
         top: 0;
         max-width: $width;
-        width: 100vh;
-        height: 100vh;
+        width: 100%;
+        height: 100%;
         box-shadow:
             0 0 4px rgba(0, 0, 0, 0.25),
             0 0 16px rgba(0, 0, 0, 0.1),
