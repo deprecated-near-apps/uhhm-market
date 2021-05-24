@@ -1,6 +1,6 @@
 
 $width: 800px;
-$half-width: 400px;
+$halfw: 400px;
 $margin-fix: -16px;
 
 ::-webkit-scrollbar {
@@ -37,7 +37,7 @@ body {
     &:before {
         content: '';
         position: fixed;
-        left: calc(50% - $half-width);
+        left: calc(50% - 400px);
         top: 0;
         max-width: $width;
         width: 100vh;
