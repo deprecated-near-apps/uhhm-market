@@ -148,3 +148,21 @@ module.exports = {
 	createAccessKeyAccount,
 	initContract, getAccount, postSignedJson, postJson,
 };
+
+
+/// functionCallV2 console.warn upgrade helper
+
+// [contractAccount, alice, bob].forEach((account) => {
+// 	const temp = account.functionCall;
+// 	const keys = ['contractId', 'methodName', 'args', 'gas', 'attachedDeposit'];
+// 	account.functionCall = async (...args) => {
+// 		if (typeof args[0] === 'string') {
+// 			const functionCallOptions = {};
+// 			args.forEach((arg, i) => {
+// 				functionCallOptions[keys[i]] = arg;
+// 			});
+// 			console.warn(functionCallOptions);
+// 		}
+// 		return await temp.call(account, ...args);
+// 	};
+// });

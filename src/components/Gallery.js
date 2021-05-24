@@ -10,16 +10,16 @@ import { useHistory } from '../utils/history';
 import {Token} from './Token';
 
 // api-helper config
-const domain = 'https://helper.nearapi.org'
+const domain = 'https://helper.nearapi.org';
 const batchPath = domain + '/v1/batch/';
 const headers = new Headers({
-    'max-age': '300'
-})
+	'max-age': '300'
+});
 
 const ADD_SALE = '__ADD_SALE';
 
-const PATH_SPLIT = '?t='
-const SUB_SPLIT = '&='
+const PATH_SPLIT = '?t=';
+const SUB_SPLIT = '&=';
 
 const {
 	utils: { format: { formatNearAmount } }
@@ -62,15 +62,15 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 	}, [loading]);
 
 	// path to token
-	const [path, setPath] = useState(window.location.href)
+	const [path, setPath] = useState(window.location.href);
 	useHistory(() => {
-		setPath(window.location.href)
+		setPath(window.location.href);
 	});
-	let tokenId
-	let pathSplit = path.split(PATH_SPLIT)[1]
+	let tokenId;
+	let pathSplit = path.split(PATH_SPLIT)[1];
 	if (allTokens.length && pathSplit?.length) {
-		console.log(pathSplit)
-		tokenId = pathSplit.split(SUB_SPLIT)[0]
+		console.log(pathSplit);
+		tokenId = pathSplit.split(SUB_SPLIT)[0];
 	}
 
 	const loadItems = async () => {
@@ -109,7 +109,7 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 
 		/// all sales
 		// need to use NFT helper for deployed contract
-		let sales = []
+		let sales = [];
 		if (process.env.REACT_APP_API_HELPER === "true") {
 			const salesUrl = batchPath + JSON.stringify([{
 				contract: marketId,
@@ -153,7 +153,7 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 
 		// all tokens
 		// need to use NFT helper for deployed
-		let allTokens = []
+		let allTokens = [];
 		if (process.env.REACT_APP_API_HELPER === "true") {
 			const nft_total_supply = await contractAccount.viewFunction(contractId, 'nft_total_supply');
 			const allTokensUrl = batchPath + JSON.stringify([{
@@ -226,9 +226,9 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 	market.sort(sortFunctions[sort]);
 	tokens.sort(sortFunctions[sort]);
 
-	const token = market.find(({ token_id }) => tokenId === token_id)
+	const token = market.find(({ token_id }) => tokenId === token_id);
 	if (token) {
-		return <Token {...{dispatch, account, token}} />
+		return <Token {...{dispatch, account, token}} />;
 	}
 
 	return <>
