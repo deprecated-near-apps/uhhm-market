@@ -372,7 +372,7 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 													}]);
 												setSaleConditions(newSaleConditions);
 												setPrice('');
-												setToken('near');
+												setFT('near');
 												handleSaleUpdate(token_id, newSaleConditions);
 											}}>Add</button>
 										</div>
