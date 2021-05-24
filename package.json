@@ -13,8 +13,8 @@
         "react-dom": "^17.0.1"
     },
     "devDependencies": {
-        "@parcel/transformer-image": "2.0.0-nightly.2267",
-        "@parcel/transformer-sass": "2.0.0-nightly.645",
+        "@parcel/transformer-image": "2.0.0-nightly.2303",
+        "@parcel/transformer-sass": "2.0.0-nightly.681",
         "cross-env": "^7.0.3",
         "eslint": "^7.14.0",
         "gh-pages": "^3.1.0",

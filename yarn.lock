@@ -1032,13 +1032,6 @@
   dependencies:
     "@parcel/plugin" "2.0.0-nightly.681+edf7813b"
 
-"@parcel/plugin@2.0.0-nightly.645+3baf990a":
-  version "2.0.0-nightly.645"
-  resolved "https://registry.yarnpkg.com/@parcel/plugin/-/plugin-2.0.0-nightly.645.tgz#406876453922d6ae1b39fcf048d6e71de6406912"
-  integrity sha512-0LrozW18xlmh9MntZl8OUU2oYG7p/asmF6loDlbWjeMdbbGc8FZ7y1BXBmVD3eAMQRv05gxS6UG281FRlxdbzA==
-  dependencies:
-    "@parcel/types" "2.0.0-nightly.645+3baf990a"
-
 "@parcel/plugin@2.0.0-nightly.681+edf7813b":
   version "2.0.0-nightly.681"
   resolved "https://registry.yarnpkg.com/@parcel/plugin/-/plugin-2.0.0-nightly.681.tgz#ba9802ce811e0ecf46bbde824754830e4f9ca7ec"
@@ -1109,14 +1102,6 @@
     "@parcel/plugin" "2.0.0-nightly.681+edf7813b"
     react-refresh "^0.9.0"
 
-"@parcel/source-map@2.0.0-alpha.4.21":
-  version "2.0.0-alpha.4.21"
-  resolved "https://registry.yarnpkg.com/@parcel/source-map/-/source-map-2.0.0-alpha.4.21.tgz#608f37fefe05ba1d8a8527ca0f3a8487560d4695"
-  integrity sha512-rKuySz3wRrAhmFriWGmAoAiVF+8VmA+Bzc19y9ITopk4Ax8a8+gmM5AJcXLZCmeVfr6gqdCwr+NsDwmT2Fk7QA==
-  dependencies:
-    node-addon-api "^3.0.0"
-    node-gyp-build "^4.2.3"
-
 "@parcel/source-map@2.0.0-rc.1.0":
   version "2.0.0-rc.1.0"
   resolved "https://registry.yarnpkg.com/@parcel/source-map/-/source-map-2.0.0-rc.1.0.tgz#f36132dbb5758f540674e9c910f6db1c1d40fdc7"
@@ -1170,12 +1155,12 @@
     posthtml-render "^1.4.0"
     semver "^5.4.1"
 
-"@parcel/transformer-image@2.0.0-nightly.2267":
-  version "2.0.0-nightly.2267"
-  resolved "https://registry.yarnpkg.com/@parcel/transformer-image/-/transformer-image-2.0.0-nightly.2267.tgz#c3e7dc90975f1af468565bf1edbe5103db65ffc9"
-  integrity sha512-VkTlEa/2TpwzDcIbTMzWqGvTX8MdZx1ZxBSkd8ZErUbZ7S2OugFL8tlyh8O3t9tsRjhN1ft6DClc2xtPUReqBA==
+"@parcel/transformer-image@2.0.0-nightly.2303":
+  version "2.0.0-nightly.2303"
+  resolved "https://registry.yarnpkg.com/@parcel/transformer-image/-/transformer-image-2.0.0-nightly.2303.tgz#12485c8ae19c44bb48767f264c64932f8311d38d"
+  integrity sha512-+VdyupqeKjLbP302VdtNPHPhdUu82zudXHg3oUv946jAJNzyxdyhepyaOA7VogX3S1nzc7AbEyc2z7MSumSuOg==
   dependencies:
-    "@parcel/plugin" "2.0.0-nightly.645+3baf990a"
+    "@parcel/plugin" "2.0.0-nightly.681+edf7813b"
     sharp "^0.27.1"
 
 "@parcel/transformer-js@2.0.0-nightly.681+edf7813b":
@@ -1245,19 +1230,14 @@
     "@parcel/utils" "2.0.0-nightly.681+edf7813b"
     react-refresh "^0.9.0"
 
-"@parcel/transformer-sass@2.0.0-nightly.645":
-  version "2.0.0-nightly.645"
-  resolved "https://registry.yarnpkg.com/@parcel/transformer-sass/-/transformer-sass-2.0.0-nightly.645.tgz#77289ce89aed611f9afb0b8dc2a0ad591a569320"
-  integrity sha512-yihJuyjMLU74oR1WpcJIQgm85RNjOltKLn4FM7F2GgA6CUPW0HORZRqzG7Z1RTnCseXMlhVXQAE9Y46s4MKcDA==
+"@parcel/transformer-sass@2.0.0-nightly.681":
+  version "2.0.0-nightly.681"
+  resolved "https://registry.yarnpkg.com/@parcel/transformer-sass/-/transformer-sass-2.0.0-nightly.681.tgz#4560839f7d0b469cea2fb70eb44b5668b0c18a6a"
+  integrity sha512-58jPg/HXSXIZ66yWUCulfEwVbavEsltSzvsuUz6M/9nTIGssguyLGC2EyKU4u24K2FeacCQdLRE4MZRUzJGZlg==
   dependencies:
-    "@parcel/plugin" "2.0.0-nightly.645+3baf990a"
-    "@parcel/source-map" "2.0.0-alpha.4.21"
+    "@parcel/plugin" "2.0.0-nightly.681+edf7813b"
+    "@parcel/source-map" "2.0.0-rc.1.0"
     sass "^1.32.4"
-
-"@parcel/types@2.0.0-nightly.645+3baf990a":
-  version "2.0.0-nightly.645"
-  resolved "https://registry.yarnpkg.com/@parcel/types/-/types-2.0.0-nightly.645.tgz#c693d4314f37f70c93c74286303a1f9de0489340"
-  integrity sha512-EE4LSaBLPhlLtopqUvlk6WlsJGH1Lw1huSY8OAoIFXEQVsJ5DamorJsoBsH1qo6vRDrOX2uK8YYAoIZc7shsCw==
 
 "@parcel/types@2.0.0-nightly.681+edf7813b":
   version "2.0.0-nightly.681"
@@ -5764,11 +5744,6 @@ node-abi@^2.21.0:
   dependencies:
     semver "^5.4.1"
 
-node-addon-api@^3.0.0:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-3.0.2.tgz#04bc7b83fd845ba785bb6eae25bc857e1ef75681"
-  integrity sha512-+D4s2HCnxPd5PjjI0STKwncjXTUKKqm74MDMz9OPXavjsGmjkvwgLtA5yoxJUdmpj52+2u+RrXgPipahKczMKg==
-
 node-addon-api@^3.0.2, node-addon-api@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-3.1.0.tgz#98b21931557466c6729e51cb77cd39c965f42239"
@@ -7277,9 +7252,9 @@ sane@^4.0.3:
     walker "~1.0.5"
 
 sass@^1.32.4:
-  version "1.32.11"
-  resolved "https://registry.yarnpkg.com/sass/-/sass-1.32.11.tgz#b236b3ea55c76602c2ef2bd0445f0db581baa218"
-  integrity sha512-O9tRcob/fegUVSIV1ihLLZcftIOh0AF1VpKgusUfLqnb2jQ0GLDwI5ivv1FYWivGv8eZ/AwntTyTzjcHu0c/qw==
+  version "1.34.0"
+  resolved "https://registry.yarnpkg.com/sass/-/sass-1.34.0.tgz#e46d5932d8b0ecc4feb846d861f26a578f7f7172"
+  integrity sha512-rHEN0BscqjUYuomUEaqq3BMgsXqQfkcMVR7UhscsAVub0/spUrZGBMxQXFS2kfiDsPLZw5yuU9iJEFNC2x38Qw==
   dependencies:
     chokidar ">=3.0.0 <4.0.0"
 

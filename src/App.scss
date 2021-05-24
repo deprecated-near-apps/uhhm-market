@@ -1,6 +1,11 @@
 
-$width: 500px;
+$width: 800px;
+$half-width: 400px;
 $margin-fix: -16px;
+
+::-webkit-scrollbar {
+    width: 0;
+}
 
 * {
     box-sizing: border-box;
@@ -11,25 +16,39 @@ html {
     overflow: hidden;
 }
 body {
-    margin: 0 auto;
+    margin: 0;
     width: 100vw;
-    max-width: $width;
-    height: 100vh;
+    height: auto;
     overflow-y: scroll;
     font-family: 'Inter', sans-serif !important;
-    box-shadow: 0 0 16px rgba(0, 0, 0, 0.1),
-        0 0 64px rgba(0, 0, 0, 0.1);
 }
 
-@media only screen and (min-width: $width) {
-    body {
-        border-left: 2px solid #ddd;
-        border-right: 2px solid #ddd;
+#root {
+    z-index: 1000;
+    margin: 0 auto;
+    max-width: $width;
+    width: 100vw;
+    height: 100vh;
+    padding: 16px 0;
+    background: white;
+    > div {
+        background: white;
     }
-    #root > div {
-        margin-left: -18px;
+    &:before {
+        content: '';
+        position: fixed;
+        left: calc(50% - $half-width);
+        top: 0;
+        max-width: $width;
+        width: 100vh;
+        height: 100vh;
+        box-shadow:
+            0 0 4px rgba(0, 0, 0, 0.25),
+            0 0 16px rgba(0, 0, 0, 0.1),
+            0 0 64px rgba(0, 0, 0, 0.1);
     }
 }
+
 .background {
     position: fixed;
     opacity: 0.05;
@@ -61,9 +80,6 @@ body {
 
 
 
-body::-webkit-scrollbar {
-    width: 0;
-}
 @keyframes spinner { 
     from 
     { 
@@ -155,17 +171,6 @@ animation-name: pulse;
     }
 }
 
-#root {
-    padding: 16px;
-    width: 100%;
-    height: 100%;
-    background: white;
-    > div {
-
-        background: white;
-    }
-}
-
 #guest {
     margin-top: 96px;
     height: 232px;
@@ -182,7 +187,7 @@ animation-name: pulse;
     width: 100vw;
     max-width: $width;
     margin-top: -16px;
-    margin-left: $margin-fix;
+    
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -207,10 +212,9 @@ animation-name: pulse;
         position: absolute;
         padding: 16px;
         border-bottom: 2px solid #ddd;
-        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
         background: white;
         z-index: 9999;
-        top: 80px;
+        top: 128px;
         left: 0;
         width: 100vw;
         max-width: $width;
@@ -225,13 +229,15 @@ animation-name: pulse;
 }
 
 #tabs {
+    position: relative;
+    background: white;
     display: flex;
     justify-content: space-around;
     align-items: center;
     height: 48px;
     width: 100vw;
     max-width: $width;
-    margin-left: $margin-fix;
+    z-index: 10000;
     margin-bottom: 24px;
     cursor: pointer;
     border-bottom: 2px solid #ddd;
@@ -250,9 +256,11 @@ animation-name: pulse;
 #gallery {
     width: 100vw;
     max-width: $width;
-    margin-left: $margin-fix;
+    
     padding-bottom: 16px;
     .item {
+        position: relative;
+        background: white;
         border-bottom: 2px solid #ddd;
         padding: 16px;
         padding-top: 0;
@@ -280,7 +288,10 @@ animation-name: pulse;
 #contract {
     width: 100vw;
     max-width: $width;
-    margin-left: $margin-fix;
+
+    position: relative;
+    background: white;
+    
     padding: 16px;
     display: flex;
     flex-direction: column;
@@ -369,6 +380,9 @@ input {
         img, iframe, video {
             max-width: 50vw;
             margin: auto;
+        }
+        button {
+            margin: 8px auto;
         }
     }
 }
