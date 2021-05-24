@@ -21,7 +21,7 @@
         "jest": "^26.6.3",
         "jest-environment-uint8array": "^1.0.0",
         "node-fetch": "^2.6.1",
-        "parcel": "^2.0.0-nightly.389",
+        "parcel": "^2.0.0-nightly.679",
         "rimraf": "^3.0.2",
         "sass": "^1.32.8"
     },
