@@ -204,16 +204,16 @@ describe('deploy contract ' + contractName, () => {
 		expect(bobTokens.length).toEqual(0);
 	});
 
-	test('NFT contract owner mints nft and approves a sale for a fixed amount of NEAR', async () => {
+	test('Alice mints nft and approves a sale for a fixed amount of NEAR', async () => {
 		const token_id = tokenIds[0];
-		await contractAccount.functionCall({
+		await alice.functionCall({
 			contractId: marketId,
 			methodName: 'storage_deposit',
 			args: {},
 			gas: GAS,
 			attachedDeposit: storageMarket
 		});
-		await contractAccount.functionCall({
+		await alice.functionCall({
 			contractId: contractId,
 			methodName: 'nft_mint',
 			args: {
@@ -242,7 +242,7 @@ describe('deploy contract ' + contractName, () => {
 			}
 		];
 
-		await contractAccount.functionCall({
+		await alice.functionCall({
 			contractId: contractId,
 			methodName: 'nft_approve',
 			args: {
@@ -254,7 +254,7 @@ describe('deploy contract ' + contractName, () => {
 			attachedDeposit: parseNearAmount('0.01')
 		});
 
-		const sale = await contractAccount.viewFunction(marketId, 'get_sale', {
+		const sale = await alice.viewFunction(marketId, 'get_sale', {
 			nft_contract_token: contractId + DELIMETER + token_id
 		});
 		console.log('\n\n', sale, '\n\n');
@@ -305,7 +305,7 @@ describe('deploy contract ' + contractName, () => {
 
 	test('get sales & supply by owner id', async () => {
 		const sales_by_owner_id = await contractAccount.viewFunction(marketId, 'get_sales_by_owner_id', {
-			account_id: contractId,
+			account_id: aliceId,
 			from_index: '0',
 			limit: '50'
 		});
@@ -313,7 +313,7 @@ describe('deploy contract ' + contractName, () => {
 		expect(sales_by_owner_id.length).toEqual(1);
 
 		const supply = await contractAccount.viewFunction(marketId, 'get_supply_by_owner_id', {
-			account_id: contractId,
+			account_id: aliceId,
 		});
 		console.log('\n\n', supply, '\n\n');
 		expect(parseInt(supply, 10) > 0).toEqual(true);
@@ -353,7 +353,7 @@ describe('deploy contract ' + contractName, () => {
 
 	test('bob purchase nft with NEAR', async () => {
 		const token_id = tokenIds[0];
-		const contractBalanceBefore = await getAccountBalance(contractId);
+		const aliceBalanceBefore = await getAccountBalance(aliceId);
 		/// purchase = near deposit = sale.price -> nft_transfer -> royalties transfer near
 		await bob.functionCall({
 			contractId: marketId,
@@ -368,9 +368,9 @@ describe('deploy contract ' + contractName, () => {
 		/// check owner
 		const token = await contract.nft_token({ token_id });
 		expect(token.owner_id).toEqual(bobId);
-		// check contract balance went up by over 80% of 1 N
-		const contractBalanceAfter = await getAccountBalance(contractId);
-		expect(new BN(contractBalanceAfter.total).sub(new BN(contractBalanceBefore.total)).gt(new BN(parseNearAmount('0.79')))).toEqual(true);
+		// check alice balance went up by over 80% of 1 N
+		const aliceBalanceAfter = await getAccountBalance(aliceId);
+		expect(new BN(aliceBalanceAfter.total).sub(new BN(aliceBalanceBefore.total)).gt(new BN(parseNearAmount('0.79')))).toEqual(true);
 	});
 
 	test('contract account registers bob with market contract', async () => {

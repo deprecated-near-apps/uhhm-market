@@ -4,7 +4,7 @@ use near_sdk::json_types::{ValidAccountId, U128, U64};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     assert_one_yocto, env, ext_contract, near_bindgen, AccountId, Balance, Gas, PanicOnDefault,
-    Promise, PromiseOrValue, CryptoHash,
+    Promise, PromiseOrValue, CryptoHash, BorshStorageKey,
 };
 use std::cmp::min;
 use std::collections::HashMap;
@@ -49,7 +49,7 @@ pub struct Contract {
 }
 
 /// Helper structure to for keys of the persistent collections.
-#[derive(BorshSerialize)]
+#[derive(BorshStorageKey, BorshSerialize)]
 pub enum StorageKey {
     Sales,
     ByOwnerId,
@@ -68,12 +68,12 @@ impl Contract {
     pub fn new(owner_id: ValidAccountId, ft_token_ids:Option<Vec<ValidAccountId>>) -> Self {
         let mut this = Self {
             owner_id: owner_id.into(),
-            sales: UnorderedMap::new(StorageKey::Sales.try_to_vec().unwrap()),
-            by_owner_id: LookupMap::new(StorageKey::ByOwnerId.try_to_vec().unwrap()),
-            by_nft_contract_id: LookupMap::new(StorageKey::ByNFTContractId.try_to_vec().unwrap()),
-            by_nft_token_type: LookupMap::new(StorageKey::ByNFTTokenType.try_to_vec().unwrap()),
-            ft_token_ids: UnorderedSet::new(StorageKey::FTTokenIds.try_to_vec().unwrap()),
-            storage_deposits: LookupMap::new(StorageKey::StorageDeposits.try_to_vec().unwrap()),
+            sales: UnorderedMap::new(StorageKey::Sales),
+            by_owner_id: LookupMap::new(StorageKey::ByOwnerId),
+            by_nft_contract_id: LookupMap::new(StorageKey::ByNFTContractId),
+            by_nft_token_type: LookupMap::new(StorageKey::ByNFTTokenType),
+            ft_token_ids: UnorderedSet::new(StorageKey::FTTokenIds),
+            storage_deposits: LookupMap::new(StorageKey::StorageDeposits),
         };
         // support NEAR by default
         this.ft_token_ids.insert(&"near".to_string());

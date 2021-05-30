@@ -3,8 +3,8 @@ use near_sdk::promise_result_as_success;
 
 /// measuring how many royalties can be paid
 const GAS_FOR_FT_TRANSFER: Gas = 5_000_000_000_000;
-/// seems to be max Tgas can attach to resolve_purchase
-const GAS_FOR_ROYALTIES: Gas = 120_000_000_000_000;
+/// max Tgas can attach to resolve_purchase
+const GAS_FOR_ROYALTIES: Gas = 115_000_000_000_000;
 const GAS_FOR_NFT_TRANSFER: Gas = 15_000_000_000_000;
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]

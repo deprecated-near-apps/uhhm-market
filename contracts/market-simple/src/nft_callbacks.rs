@@ -32,14 +32,27 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
         approval_id: U64,
         msg: String,
     ) {
-        let owner_paid_storage = self.storage_deposits.get(owner_id.as_ref()).unwrap_or(0);
-        assert!(
-            owner_paid_storage >= STORAGE_PER_SALE,
-            "Required minimum storage to sell on market: {}",
-            STORAGE_PER_SALE
-        );
+        // enforce cross contract calls only from NFT contracts
 
         let nft_contract_id = env::predecessor_account_id();
+        let signer_id = env::signer_account_id();
+        assert_ne!(
+            nft_contract_id,
+            signer_id,
+            "nft_on_approve should only be called via cross-contract call"
+        );
+
+        // enforce signer's storage is enough to cover + 1 more sale 
+
+        let storage_amount = self.storage_amount().0;
+        let owner_paid_storage = self.storage_deposits.get(&signer_id).unwrap_or(0);
+        let signer_storage_required = (self.get_supply_by_owner_id(signer_id).0 + 1) as u128 * storage_amount;
+        assert!(
+            owner_paid_storage >= signer_storage_required,
+            "Insufficient storage paid: {}, for {} sales at {} rate of per sale",
+            owner_paid_storage, signer_storage_required / STORAGE_PER_SALE, STORAGE_PER_SALE
+        );
+
         let SaleArgs { sale_conditions, token_type } =
             near_sdk::serde_json::from_str(&msg).expect("Not valid SaleArgs");
 
