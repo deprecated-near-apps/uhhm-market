@@ -32,7 +32,7 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
         approval_id: U64,
         msg: String,
     ) {
-        // enforce cross contract calls only from NFT contracts
+        // enforce cross contract call and owner_id is signer
 
         let nft_contract_id = env::predecessor_account_id();
         let signer_id = env::signer_account_id();
@@ -40,6 +40,11 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
             nft_contract_id,
             signer_id,
             "nft_on_approve should only be called via cross-contract call"
+        );
+        assert_eq!(
+            owner_id.as_ref(),
+            &signer_id,
+            "owner_id should be signer_id"
         );
 
         // enforce signer's storage is enough to cover + 1 more sale 
