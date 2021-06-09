@@ -25,10 +25,16 @@ near_sdk::setup_alloc!();
 
 // TODO check seller supports storage_deposit at ft_token_id they want to post sale in
 
+const GAS_FOR_FT_TRANSFER: Gas = 5_000_000_000_000;
+/// greedy max Tgas for resolve_purchase
+const GAS_FOR_ROYALTIES: Gas = 115_000_000_000_000;
+const GAS_FOR_NFT_TRANSFER: Gas = 15_000_000_000_000;
+const BID_HISTORY_LENGTH_DEFAULT: u8 = 1;
 const NO_DEPOSIT: Balance = 0;
 const STORAGE_PER_SALE: u128 = 1000 * STORAGE_PRICE_PER_BYTE;
 static DELIMETER: &str = "||";
 
+pub type Bids = HashMap<FungibleTokenId, Vec<Bid>>;
 pub type TokenId = String;
 pub type TokenType = Option<String>;
 pub type FungibleTokenId = AccountId;
@@ -46,6 +52,7 @@ pub struct Contract {
     pub by_nft_token_type: LookupMap<AccountId, UnorderedSet<ContractAndTokenId>>,
     pub ft_token_ids: UnorderedSet<AccountId>,
     pub storage_deposits: LookupMap<AccountId, Balance>,
+    pub bid_history_length: u8,
 }
 
 /// Helper structure to for keys of the persistent collections.
@@ -65,7 +72,7 @@ pub enum StorageKey {
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new(owner_id: ValidAccountId, ft_token_ids:Option<Vec<ValidAccountId>>) -> Self {
+    pub fn new(owner_id: ValidAccountId, ft_token_ids:Option<Vec<ValidAccountId>>, bid_history_length:Option<u8>) -> Self {
         let mut this = Self {
             owner_id: owner_id.into(),
             sales: UnorderedMap::new(StorageKey::Sales),
@@ -74,6 +81,7 @@ impl Contract {
             by_nft_token_type: LookupMap::new(StorageKey::ByNFTTokenType),
             ft_token_ids: UnorderedSet::new(StorageKey::FTTokenIds),
             storage_deposits: LookupMap::new(StorageKey::StorageDeposits),
+            bid_history_length: bid_history_length.unwrap_or(BID_HISTORY_LENGTH_DEFAULT),
         };
         // support NEAR by default
         this.ft_token_ids.insert(&"near".to_string());
@@ -121,11 +129,7 @@ impl Contract {
         let owner_id = env::predecessor_account_id();
         let mut amount = self.storage_deposits.remove(&owner_id).unwrap_or(0);
         let sales = self.by_owner_id.get(&owner_id);
-        let len = if sales.is_some() {
-            sales.unwrap().len()
-        } else {
-            0
-        };
+        let len = sales.map(|s| s.len()).unwrap_or_default();
         amount -= u128::from(len) * STORAGE_PER_SALE;
         if amount > 0 {
             Promise::new(owner_id).transfer(amount);

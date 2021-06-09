@@ -42,6 +42,14 @@ Differences from `nft-simple` NFT standard reference implementation:
 
 Associated Video Demos (most recent at top)
 
+[![Live App Review 25 - NFT Market Test and Deploy](https://img.youtube.com/vi/VWyQqj3Yw6E/0.jpg)](https://www.youtube.com/watch?v=VWyQqj3Yw6E)
+
+[![Live App Review 29 - Consensus 2021 NEAR Protocol Eco-Friendly NFTs](https://img.youtube.com/vi/HYhFShQUKNk/0.jpg)](https://www.youtube.com/watch?v=HYhFShQUKNk)
+
+[![Live App Review 31 - NFT Market Reduction to NFT Simple](https://img.youtube.com/vi/JRnWE9w-6pY/0.jpg)](https://www.youtube.com/watch?v=JRnWE9w-6pY)
+
+Older Walkthrough Videos:
+
 [![NEAR Protocol - Demo NFT Marketplace Walkthough](https://img.youtube.com/vi/AevmMAtkIr4/0.jpg)](https://www.youtube.com/watch?v=AevmMAtkIr4)
 
 [![Live App Review 19 - NFT Marketplace with Fungible Token Transfers and Royalty Distribution](https://img.youtube.com/vi/sGTC3rs8OJQ/0.jpg)](https://youtu.be/sGTC3rs8OJQ)

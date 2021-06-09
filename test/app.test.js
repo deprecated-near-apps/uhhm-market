@@ -21,7 +21,8 @@ const {
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
-/// setup consts
+// this is used in creating the marketplace, tracks bids up to 3 most recent, default is 1
+const BID_HISTORY_LENGTH = 3;
 const DELIMETER = '||';
 
 const now = Date.now();
@@ -89,7 +90,10 @@ describe('deploy contract ' + contractName, () => {
 		await contractAccount.functionCall({
 			contractId,
 			methodName: 'add_token_types',
-			args: { supply_cap_by_type },
+			args: { 
+				supply_cap_by_type,
+				locked: true,
+			},
 			gas: GAS
 		});
 		
@@ -156,7 +160,8 @@ describe('deploy contract ' + contractName, () => {
 			console.log('\n\n deploying marketAccount contractBytes:', marketContractBytes.length, '\n\n');
 			const newMarketArgs = {
 				owner_id: contractId,
-				ft_token_ids
+				ft_token_ids,
+				bid_history_length: BID_HISTORY_LENGTH,
 			};
 			const actions = [
 				deployContract(marketContractBytes),
@@ -293,7 +298,7 @@ describe('deploy contract ' + contractName, () => {
 		const tokenLocked = await contractAccount.viewFunction(contractName, 'is_token_locked', { token_id });
 		expect(tokenLocked).toEqual(false);
 
-		// should be none (we default unlocked token_type in constructor -> test-utils.js)
+		// should be none default unlocked token_type in constructor unless locked: true is passed
 		const typesLocked = await contractAccount.viewFunction(contractName, 'get_token_types_locked');
 		console.log(typesLocked);
 		expect(typesLocked.length).toEqual(0);
@@ -499,17 +504,16 @@ describe('deploy contract ' + contractName, () => {
 			attachedDeposit: parseNearAmount('1')
 		});
 		
-		/// check sale should have 2 N bid for near from contract owner
+		/// check sale should have 1 N bid for near from contract owner
 		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
-		expect(sale.bids['near'].owner_id).toEqual(contractId);
-		expect(sale.bids['near'].price).toEqual(parseNearAmount('1'));
+		const bid = sale.bids['near'].pop()
+		expect(bid.owner_id).toEqual(contractId);
+		expect(bid.price).toEqual(parseNearAmount('1'));
 	});
 
 	test('alice outbids contract owner', async () => {
 		const token_id = tokenIds[0];
 
-		const contractBalanceBefore = await getAccountBalance(contractId);
-		/// purchase = ft_transfer_call -> market: ft_on_transfer -> nft_transfer
 		await alice.functionCall({
 			contractId: marketId,
 			methodName: 'offer',
@@ -521,15 +525,80 @@ describe('deploy contract ' + contractName, () => {
 			attachedDeposit: parseNearAmount('1.1')
 		});
 		
+		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
+		let bid = sale.bids['near'].pop()
+		expect(bid.owner_id).toEqual(aliceId);
+		expect(bid.price).toEqual(parseNearAmount('1.1'));
+		// check previous bid
+		bid = sale.bids['near'].pop()
+		expect(bid.owner_id).toEqual(contractId);
+		expect(bid.price).toEqual(parseNearAmount('1'));
+	});
+
+	test('contract owner outbids alice', async () => {
+		const token_id = tokenIds[0];
+		await contractAccount.functionCall({
+			contractId: marketId,
+			methodName: 'offer',
+			args: {
+			  nft_contract_id: contractId,
+			  token_id,
+			},
+			gas: GAS,
+			attachedDeposit: parseNearAmount('1.2')
+		});
+		
+		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
+		let bid = sale.bids['near'].pop()
+		expect(bid.owner_id).toEqual(contractId);
+		expect(bid.price).toEqual(parseNearAmount('1.2'));
+		// check previous bid
+		bid = sale.bids['near'].pop()
+		expect(bid.owner_id).toEqual(aliceId);
+		expect(bid.price).toEqual(parseNearAmount('1.1'));
+		// check previous bid
+		bid = sale.bids['near'].pop()
+		expect(bid.owner_id).toEqual(contractId);
+		expect(bid.price).toEqual(parseNearAmount('1'));
+	});
+
+	test('alice outbids contract owner (again)', async () => {
+		const token_id = tokenIds[0];
+
+		const contractBalanceBefore = await getAccountBalance(contractId);
+
+		await alice.functionCall({
+			contractId: marketId,
+			methodName: 'offer',
+			args: {
+			  nft_contract_id: contractId,
+			  token_id
+			},
+			gas: GAS,
+			attachedDeposit: parseNearAmount('1.3')
+		});
+		
 		/// check sale should have 1.1 N bid for near from alice
 		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
-		expect(sale.bids['near'].owner_id).toEqual(aliceId);
-		expect(sale.bids['near'].price).toEqual(parseNearAmount('1.1'));
 
-		// contract owner gets back 1 N - gas > 0.9
+		// should not have exceeded 3
+		expect(sale.bids['near'].length).toEqual(3);
+
+		let bid = sale.bids['near'].pop()
+		expect(bid.owner_id).toEqual(aliceId);
+		expect(bid.price).toEqual(parseNearAmount('1.3'));
+		// check previous bid
+		bid = sale.bids['near'].pop()
+		expect(bid.owner_id).toEqual(contractId);
+		expect(bid.price).toEqual(parseNearAmount('1.2'));
+		// check previous bid
+		bid = sale.bids['near'].pop()
+		expect(bid.owner_id).toEqual(aliceId);
+		expect(bid.price).toEqual(parseNearAmount('1.1'));
+
+		// contract owner gets back about 1.1 N (1.2 N - GAS)
 		const contractBalanceAfter = await getAccountBalance(contractId);
-
-		expect(new BN(contractBalanceAfter.total).sub(new BN(contractBalanceBefore.total)).gt(new BN(parseNearAmount('0.9')))).toEqual(true);
+		expect(new BN(contractBalanceAfter.total).sub(new BN(contractBalanceBefore.total)).gt(new BN(parseNearAmount('1.1')))).toEqual(true);
 	});
 
 	test('alice gets 100 FTs', async () => {
@@ -719,8 +788,9 @@ describe('deploy contract ' + contractName, () => {
 			attachedDeposit: parseNearAmount('0.2')
 		});
 		const sale = await bob.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
-		expect(sale.bids['near'].owner_id).toEqual(aliceId);
-		expect(sale.bids['near'].price).toEqual(parseNearAmount('0.2'));
+		const bid = sale.bids['near'].pop()
+		expect(bid.owner_id).toEqual(aliceId);
+		expect(bid.price).toEqual(parseNearAmount('0.2'));
 	});
 
 	test('bob accept bid', async () => {

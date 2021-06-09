@@ -1,12 +1,6 @@
 use crate::*;
 use near_sdk::promise_result_as_success;
 
-/// measuring how many royalties can be paid
-const GAS_FOR_FT_TRANSFER: Gas = 5_000_000_000_000;
-/// max Tgas can attach to resolve_purchase
-const GAS_FOR_ROYALTIES: Gas = 115_000_000_000_000;
-const GAS_FOR_NFT_TRANSFER: Gas = 15_000_000_000_000;
-
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Bid {
@@ -23,7 +17,7 @@ pub struct Sale {
     pub token_id: String,
     pub token_type: Option<String>,
     pub conditions: HashMap<FungibleTokenId, U128>,
-    pub bids: HashMap<FungibleTokenId, Bid>,
+    pub bids: Bids,
     pub created_at: U64,
 }
 
@@ -52,7 +46,7 @@ impl Contract {
         let sale = self.internal_remove_sale(nft_contract_id.into(), token_id);
         let owner_id = env::predecessor_account_id();
         assert_eq!(owner_id, sale.owner_id, "Must be sale owner");
-        self.refund_bids(&sale.bids);
+        self.refund_all_bids(&sale.bids);
     }
 
     #[payable]
@@ -133,20 +127,23 @@ impl Contract {
             owner_id: buyer_id,
             price: U128(amount),
         };
-        let current_bid = sale.bids.get(&ft_token_id);
-        if let Some(current_bid) = current_bid {
-            // refund current bid holder
-            let current_price: u128 = current_bid.price.into();
+        
+        let bids_for_token_id = sale.bids.entry(ft_token_id).or_insert_with(Vec::new);
+        if !bids_for_token_id.is_empty() {
+            let current_bid = &bids_for_token_id[bids_for_token_id.len()-1];
             assert!(
-                amount > current_price,
+                amount > current_bid.price.0,
                 "Can't pay less than or equal to current bid price: {}",
-                current_price
+                current_bid.price.0
             );
             Promise::new(current_bid.owner_id.clone()).transfer(current_bid.price.into());
-            sale.bids.insert(ft_token_id, new_bid);
-        } else {
-            sale.bids.insert(ft_token_id, new_bid);
         }
+        
+        bids_for_token_id.push(new_bid);
+        if bids_for_token_id.len() > self.bid_history_length as usize {
+            bids_for_token_id.remove(0);
+        }
+        
         self.sales.insert(&contract_and_token_id, &sale);
     }
 
@@ -160,14 +157,15 @@ impl Contract {
         let contract_and_token_id = format!("{}{}{}", contract_id.clone(), DELIMETER, token_id.clone());
         // remove bid before proceeding to process purchase
         let mut sale = self.sales.get(&contract_and_token_id).expect("No sale");
-        let bid = sale.bids.remove(ft_token_id.as_ref()).expect("No bid");
+        let bids_for_token_id = sale.bids.remove(ft_token_id.as_ref()).expect("No bids");
+        let bid = &bids_for_token_id[bids_for_token_id.len()-1];
         self.sales.insert(&contract_and_token_id, &sale);
         // panics at `self.internal_remove_sale` and reverts above if predecessor is not sale.owner_id
         self.process_purchase(
             contract_id,
             token_id,
             ft_token_id.into(),
-            bid.price.clone(),
+            bid.price,
             bid.owner_id.clone(),
         );
     }
@@ -250,7 +248,7 @@ impl Contract {
             return price;
         };
         // Goint to payout everyone, first return all outstanding bids (accepted offer bid was already removed)
-        self.refund_bids(&sale.bids);
+        self.refund_all_bids(&sale.bids);
 
         // NEAR payouts
         if ft_token_id == "near" {
@@ -273,26 +271,6 @@ impl Contract {
             }
             // keep all FTs (already transferred for payouts)
             U128(0)
-        }
-    }
-
-    fn refund_bids(
-        &mut self,
-        bids: &HashMap<FungibleTokenId, Bid>,
-    ) {
-        for (bid_ft, bid) in bids {
-            if bid_ft == "near" {
-                Promise::new(bid.owner_id.clone()).transfer(u128::from(bid.price));
-            } else {
-                ext_contract::ft_transfer(
-                    bid.owner_id.clone(),
-                    bid.price,
-                    None,
-                    bid_ft,
-                    1,
-                    GAS_FOR_FT_TRANSFER,
-                );
-            }
         }
     }
 }

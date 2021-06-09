@@ -2,14 +2,12 @@ use crate::*;
 
 /// approval callbacks from NFT Contracts
 
-
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct SaleArgs {
     pub sale_conditions: Vec<Price>,
     pub token_type: TokenType,
 }
-
 
 trait NonFungibleTokenApprovalsReceiver {
     fn nft_on_approve(

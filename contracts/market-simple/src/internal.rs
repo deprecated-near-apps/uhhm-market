@@ -15,6 +15,29 @@ impl Contract {
         );
     }
 
+    /// refund the last bid of each token type, don't update sale because it's already been removed
+
+    pub(crate) fn refund_all_bids(
+        &mut self,
+        bids: &Bids,
+    ) {
+        for (bid_ft, bid_vec) in bids {
+            let bid = &bid_vec[bid_vec.len()-1];
+            if bid_ft == "near" {
+                    Promise::new(bid.owner_id.clone()).transfer(u128::from(bid.price));
+            } else {
+                ext_contract::ft_transfer(
+                    bid.owner_id.clone(),
+                    bid.price,
+                    None,
+                    bid_ft,
+                    1,
+                    GAS_FOR_FT_TRANSFER,
+                );
+            }
+        }
+    }
+
     pub(crate) fn internal_remove_sale(
         &mut self,
         nft_contract_id: AccountId,
