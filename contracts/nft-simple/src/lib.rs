@@ -89,7 +89,7 @@ impl Contract {
             contract_royalty: 0,
         };
 
-        if locked.is_some() {
+        if locked.unwrap_or(false) {
             // CUSTOM - tokens are locked by default
             for token_type in this.supply_cap_by_type.keys() {
                 this.token_types_locked.insert(&token_type);
@@ -133,7 +133,7 @@ impl Contract {
     pub fn add_token_types(&mut self, supply_cap_by_type: TypeSupplyCaps, locked: Option<bool>) {
         self.assert_owner();
         for (token_type, hard_cap) in &supply_cap_by_type {
-            if locked.is_some() {
+            if locked.unwrap_or(false) {
                 assert!(self.token_types_locked.insert(&token_type), "Token type should not be locked");
             }
             assert!(self.supply_cap_by_type.insert(token_type.to_string(), *hard_cap).is_none(), "Token type exists");
