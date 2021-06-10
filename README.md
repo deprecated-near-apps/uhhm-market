@@ -4,6 +4,10 @@ A PoC backbone for NFT Marketplaces on NEAR Protocol.
 
 [Reference](https://nomicon.io/Standards/NonFungibleToken/README.html)
 
+# Changelog
+
+[Changelog](changelog.md)
+
 ## Progress:
 - [x] basic purchase of NFT with FT
 - [x] demo pay out royalties (FTs and NEAR)
