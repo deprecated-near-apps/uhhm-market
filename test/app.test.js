@@ -244,7 +244,7 @@ describe('deploy contract ' + contractName, () => {
 		const price = parseNearAmount('1');
 		let sale_conditions = {
 			near: price
-		}
+		};
 
 		await alice.functionCall({
 			contractId: contractId,
@@ -437,7 +437,7 @@ describe('deploy contract ' + contractName, () => {
 		let sale_conditions = {
 			[fungibleId]: parseNearAmount('5'),
 			near: parseNearAmount('1'),
-		}
+		};
 
 		console.log('\n\n sale_conditions', sale_conditions, '\n\n');
 		console.log('\n\n token.royalty', token.royalty, '\n\n');
