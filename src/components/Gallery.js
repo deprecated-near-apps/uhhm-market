@@ -18,7 +18,7 @@ const headers = new Headers({
 
 const ADD_SALE = '__ADD_SALE';
 
-const BAD_OWNER_ID = ['mikedigitalegg.testnet', 'web_dev.testnet']
+const BAD_OWNER_ID = ['mikedigitalegg.testnet', 'web_dev.testnet'];
 
 const PATH_SPLIT = '?t=';
 const SUB_SPLIT = '&=';
@@ -151,7 +151,7 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 			}
 			sales[i] = Object.assign(sales[i], token);
 		}
-		sales = sales.filter(({ owner_id }) => !BAD_OWNER_ID.includes(owner_id))
+		sales = sales.filter(({ owner_id }) => !BAD_OWNER_ID.includes(owner_id));
 		setSales(sales);
 
 		// all tokens
@@ -181,7 +181,7 @@ export const Gallery = ({ app, update, contractAccount, account, loading, dispat
 			});
 		}
 
-		allTokens = allTokens.filter(({ owner_id }) => !BAD_OWNER_ID.includes(owner_id))
+		allTokens = allTokens.filter(({ owner_id }) => !BAD_OWNER_ID.includes(owner_id));
 
 		setAllTokens(allTokens);
 	};

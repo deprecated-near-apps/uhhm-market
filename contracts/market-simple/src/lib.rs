@@ -34,6 +34,7 @@ const NO_DEPOSIT: Balance = 0;
 const STORAGE_PER_SALE: u128 = 1000 * STORAGE_PRICE_PER_BYTE;
 static DELIMETER: &str = "||";
 
+pub type SaleConditions = HashMap<FungibleTokenId, U128>;
 pub type Bids = HashMap<FungibleTokenId, Vec<Bid>>;
 pub type TokenId = String;
 pub type TokenType = Option<String>;

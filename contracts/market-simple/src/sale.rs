@@ -15,17 +15,11 @@ pub struct Sale {
     pub approval_id: U64,
     pub nft_contract_id: String,
     pub token_id: String,
-    pub token_type: Option<String>,
-    pub conditions: HashMap<FungibleTokenId, U128>,
+    pub sale_conditions: SaleConditions,
     pub bids: Bids,
     pub created_at: U64,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(crate = "near_sdk::serde")]
-pub struct Price {
-    pub ft_token_id: ValidAccountId,
-    pub price: Option<U128>,
+    pub is_auction: bool,
+    pub token_type: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -69,7 +63,7 @@ impl Contract {
         if !self.ft_token_ids.contains(ft_token_id.as_ref()) {
             env::panic(format!("Token {} not supported by this market", ft_token_id).as_bytes());
         }
-        sale.conditions.insert(ft_token_id.into(), price);
+        sale.sale_conditions.insert(ft_token_id.into(), price);
         self.sales.insert(&contract_and_token_id, &sale);
     }
 
@@ -82,7 +76,7 @@ impl Contract {
         assert_ne!(sale.owner_id, buyer_id, "Cannot bid on your own sale.");
         let ft_token_id = "near".to_string();
         let price = sale
-            .conditions
+            .sale_conditions
             .get(&ft_token_id)
             .expect("Not for sale in NEAR")
             .0;
@@ -90,8 +84,7 @@ impl Contract {
         let deposit = env::attached_deposit();
         assert!(deposit > 0, "Attached deposit must be greater than 0");
 
-        // there's a fixed price user can buy for
-        if deposit == price {
+        if !sale.is_auction && deposit == price {
             self.process_purchase(
                 contract_id,
                 token_id,
@@ -100,14 +93,16 @@ impl Contract {
                 buyer_id,
             );
         } else {
+            if sale.is_auction && price > 0 {
+                assert!(deposit >= price, "Attached deposit must be greater than reserve price");
+            }
             self.add_bid(
                 contract_and_token_id,
-                price,
                 deposit,
                 ft_token_id,
                 buyer_id,
                 &mut sale,
-            )
+            );
         }
     }
 
@@ -115,20 +110,19 @@ impl Contract {
     pub fn add_bid(
         &mut self,
         contract_and_token_id: ContractAndTokenId,
-        price: Balance,
         amount: Balance,
         ft_token_id: AccountId,
         buyer_id: AccountId,
         sale: &mut Sale,
     ) {
-        assert!(price == 0 || amount < price, "Paid more {} than price {}", amount, price);
         // store a bid and refund any current bid lower
         let new_bid = Bid {
             owner_id: buyer_id,
             price: U128(amount),
         };
         
-        let bids_for_token_id = sale.bids.entry(ft_token_id).or_insert_with(Vec::new);
+        let bids_for_token_id = sale.bids.entry(ft_token_id.clone()).or_insert_with(Vec::new);
+        
         if !bids_for_token_id.is_empty() {
             let current_bid = &bids_for_token_id[bids_for_token_id.len()-1];
             assert!(
@@ -136,7 +130,18 @@ impl Contract {
                 "Can't pay less than or equal to current bid price: {}",
                 current_bid.price.0
             );
-            Promise::new(current_bid.owner_id.clone()).transfer(current_bid.price.into());
+            if ft_token_id == "near" {
+                Promise::new(current_bid.owner_id.clone()).transfer(u128::from(current_bid.price));
+            } else {
+                ext_contract::ft_transfer(
+                    current_bid.owner_id.clone(),
+                    current_bid.price,
+                    None,
+                    &ft_token_id,
+                    1,
+                    GAS_FOR_FT_TRANSFER,
+                );
+            }
         }
         
         bids_for_token_id.push(new_bid);
@@ -247,7 +252,7 @@ impl Contract {
             // leave function and return all FTs in ft_resolve_transfer
             return price;
         };
-        // Goint to payout everyone, first return all outstanding bids (accepted offer bid was already removed)
+        // Going to payout everyone, first return all outstanding bids (accepted offer bid was already removed)
         self.refund_all_bids(&sale.bids);
 
         // NEAR payouts

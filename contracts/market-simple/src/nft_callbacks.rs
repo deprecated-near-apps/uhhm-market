@@ -5,8 +5,10 @@ use crate::*;
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct SaleArgs {
-    pub sale_conditions: Vec<Price>,
+    pub sale_conditions: SaleConditions,
     pub token_type: TokenType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_auction: Option<bool>,
 }
 
 trait NonFungibleTokenApprovalsReceiver {
@@ -56,19 +58,16 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
             owner_paid_storage, signer_storage_required / STORAGE_PER_SALE, STORAGE_PER_SALE
         );
 
-        let SaleArgs { sale_conditions, token_type } =
+        let SaleArgs { sale_conditions, token_type, is_auction } =
             near_sdk::serde_json::from_str(&msg).expect("Not valid SaleArgs");
 
-        let mut conditions = HashMap::new();
-
-        for Price { price, ft_token_id } in sale_conditions {
-            if !self.ft_token_ids.contains(ft_token_id.as_ref()) {
+        
+        for (ft_token_id, _price) in sale_conditions.clone() {
+            if !self.ft_token_ids.contains(&ft_token_id) {
                 env::panic(
                     format!("Token {} not supported by this market", ft_token_id).as_bytes(),
                 );
             }
-            // sale is denominated in FT or 0 if accepting bids
-            conditions.insert(ft_token_id.into(), price.unwrap_or(U128(0)));
         }
 
         // env::log(format!("add_sale for owner: {}", &owner_id).as_bytes());
@@ -83,10 +82,11 @@ impl NonFungibleTokenApprovalsReceiver for Contract {
                 approval_id,
                 nft_contract_id: nft_contract_id.clone(),
                 token_id: token_id.clone(),
-                token_type: token_type.clone(),
-                conditions,
+                sale_conditions,
                 bids,
                 created_at: U64(env::block_timestamp()/1000000),
+                token_type: token_type.clone(),
+                is_auction: is_auction.unwrap_or(false),
             },
         );
 

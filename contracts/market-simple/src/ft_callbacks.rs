@@ -24,13 +24,13 @@ impl FungibleTokenReceiver for Contract {
 
         let ft_token_id = env::predecessor_account_id();
         let price = *sale
-            .conditions
+            .sale_conditions
             .get(&ft_token_id)
             .expect("Not for sale in that token type");
 
         assert!(amount.0 > 0, "Amount must be greater than 0");
 
-        if amount == price {
+        if !sale.is_auction && amount == price {
             self.process_purchase(
                 nft_contract_id.into(),
                 token_id,
@@ -39,9 +39,11 @@ impl FungibleTokenReceiver for Contract {
                 sender_id,
             ).into()
         } else {
+            if sale.is_auction && price.0 > 0 {
+                assert!(amount.0 >= price.0, "Amount must be greater than reserve price");
+            }
             self.add_bid(
                 contract_and_token_id,
-                price.0,
                 amount.0,
                 ft_token_id,
                 sender_id,
