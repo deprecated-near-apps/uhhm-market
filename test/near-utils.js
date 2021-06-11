@@ -1,7 +1,7 @@
 const fs = require("fs");
 const nearAPI = require("near-api-js");
 const getConfig = require("../src/config");
-const { nodeUrl, networkId, contractName, contractMethods } = getConfig(true);
+const { nodeUrl, networkId, contractName, contractMethods } = getConfig();
 const {
 	keyStores: { InMemoryKeyStore },
 	Near,
@@ -13,15 +13,28 @@ const {
 	},
 } = nearAPI;
 
+const credPath = `./neardev/${networkId}/${contractName}.json`
 console.log(
 	"Loading Credentials:\n",
-	`${process.env.HOME}/.near-credentials/${networkId}/${contractName}.json`
+	credPath
 );
-const credentials = JSON.parse(
-	fs.readFileSync(
-		`${process.env.HOME}/.near-credentials/${networkId}/${contractName}.json`
-	)
-);
+
+let credentials
+try {
+	credentials = JSON.parse(
+		fs.readFileSync(
+			credPath
+		)
+	);
+} catch(e) {
+	console.warn(e)
+	/// attempt to load backup creds from local machine
+	credentials = JSON.parse(
+		fs.readFileSync(
+			`${process.env.HOME}/.near-credentials/${networkId}/${contractName}.json`
+		)
+	);
+}
 const keyStore = new InMemoryKeyStore();
 keyStore.setKey(
 	networkId,

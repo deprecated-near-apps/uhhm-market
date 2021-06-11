@@ -27,8 +27,8 @@
         "last 2 Chrome versions"
     ],
     "scripts": {
-        "release": "release-it",
-        "test:deploy": "yarn dev:deploy && yarn test",
+        "hoist-credentials": "mkdir ./neardev/testnet && mkdir ./neardev/mainnet && node ./utils/hoist-credentials.js",
+        "test:deploy": "yarn dev:deploy && yarn hoist-credentials && yarn test",
         "dev:deploy": "yarn build:contracts && rm -rf neardev && (near dev-deploy || exit 0) && yarn patch:config",
         "build:contracts": "cd contracts/nft-simple && ./build.sh && cd ../.. && cd contracts/market-simple && ./build.sh && cd ../.. && cd contracts/ft && ./build.sh && cd ../..",
         "patch:config": "node ./utils/patch-config.js",
