@@ -6,9 +6,6 @@
 .pnp.js
 /out
 
-#keys
-/neardev
-
 #cache
 .cache
 .parcel-cache
