@@ -37,11 +37,11 @@ const tokenIds = tokenTypes.map((type, i) => `${type}:${i}`);
 const contract_royalty = 500;
 
 const metadata = {
-	media: 'https://media1.tenor.com/images/4c1d96a989150e7019bfbabbebd2ff36/tenor.gif?itemid=20269144',
+	media: 'https://media.giphy.com/media/h2ZVjT3kt193cxnwm1/giphy.gif',
 	issued_at: now.toString()
 };
 const metadata2 = {
-	media: 'https://media1.tenor.com/images/818161c07948bac34aa7c5f5712ec3d7/tenor.gif?itemid=15065455',
+	media: 'https://media.giphy.com/media/laUY2MuoktHPy/giphy.gif',
 	issued_at: now.toString()
 };
 
