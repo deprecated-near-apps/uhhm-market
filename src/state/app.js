@@ -12,6 +12,12 @@ const initialState = {
 	near: {
 		initialized: false,
 	},
+	views: {
+		marketStoragePaid: '0',
+		tokens: [],
+		sales: [],
+		allTokens: [],
+	}
 };
 let snackTimeout;
 

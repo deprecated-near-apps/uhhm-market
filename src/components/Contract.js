@@ -1,8 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import * as nearAPI from 'near-api-js';
-import { GAS, parseNearAmount } from '../state/near';
+import { handleMint } from '../state/actions';
 import { 
-	contractId,
 	isAccountTaken,
 	networkId,
 } from '../utils/near-utils';
@@ -19,35 +18,6 @@ export const Contract = ({ near, update, account }) => {
 	const [royalties, setRoyalties] = useState({});
 	const [royalty, setRoyalty] = useState([]);
 	const [receiver, setReceiver] = useState([]);
-
-	const handleMint = async () => {
-		if (!media.length || !validMedia) {
-			alert('Please enter a valid Image Link. You should see a preview below!');
-			return;
-		}
-
-		// shape royalties data for minting and check max is < 20%
-		let perpetual_royalties = Object.entries(royalties).map(([receiver, royalty]) => ({
-			[receiver]: royalty * 100
-		})).reduce((acc, cur) => Object.assign(acc, cur), {});
-		if (Object.values(perpetual_royalties).reduce((a, c) => a + c, 0) > 2000) {
-			return alert('Cannot add more than 20% in perpetual NFT royalties when minting');
-		}
-		
-		update('loading', true);
-		const metadata = { 
-			media,
-			issued_at: Date.now().toString()
-		};
-		const deposit = parseNearAmount('0.1');
-		await account.functionCall(contractId, 'nft_mint', {
-			token_id: 'token-' + Date.now(),
-			metadata,
-			perpetual_royalties
-		}, GAS, deposit);
-		update('loading', false);
-		setMetadata('');
-	};
 
 	return <>
 		<h4>Mint Something</h4>
@@ -80,7 +50,7 @@ export const Contract = ({ near, update, account }) => {
 
 		<div className="line"></div>
 
-		<button onClick={() => handleMint()}>Mint</button>
+		<button onClick={() => handleMint(account, royalties, media, validMedia)}>Mint</button>
 	</>;
 };
 

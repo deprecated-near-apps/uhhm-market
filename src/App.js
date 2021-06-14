@@ -14,7 +14,7 @@ import './App.scss';
 const App = () => {
 	const { state, dispatch, update } = useContext(appStore);
 
-	const { app, app: {tab, snack}, near, wallet, contractAccount, account, loading } = state;
+	const { app, views, app: {tab, snack}, near, wallet, contractAccount, account, loading } = state;
 
 	const [profile, setProfile] = useState(false);
 
@@ -82,7 +82,7 @@ const App = () => {
 			</div>
 		}
 		<div id="gallery">
-			<Gallery {...{ app, update, loading, contractAccount, account, dispatch }} />
+			<Gallery {...{ app, views, update, loading, contractAccount, account, dispatch }} />
 		</div>
 	</>;
 };

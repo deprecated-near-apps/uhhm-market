@@ -10,7 +10,7 @@ export const {
 	contractName: contractId,
 } = getConfig();
 
-const marketId = 'market.' + contractId;
+export const marketId = 'market.' + contractId;
 
 export const {
 	utils: {
