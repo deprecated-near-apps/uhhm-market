@@ -4,6 +4,7 @@ import { marketId, contractId } from '../state/near';
 const BAD_OWNER_ID = ['mikedigitalegg.testnet', 'web_dev.testnet'];
 
 export const getMarketStoragePaid = (account) => async ({ update, getState }) => {
+    if (!account) return
     const { contractAccount } = getState()
 
     update('views', {
@@ -13,13 +14,12 @@ export const getMarketStoragePaid = (account) => async ({ update, getState }) =>
 
 export const loadItems = (account) => async ({ update, getState }) => {
 
-    const { accountId } = account
     const { contractAccount } = getState()
 	
-    
-    /// users tokens
+    /// user tokens
     let tokens = []
     if (account) {
+        const { accountId } = account
         tokens = await contractAccount.viewFunction(contractId, 'nft_tokens_for_owner', {
             account_id: account.accountId,
             from_index: '0',
