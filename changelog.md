@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 bug fix
+
+- Wallet not connected
+
 ## 1.0.2 refactor and bug fix
 
 - Refactor views and actions
