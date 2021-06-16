@@ -1,6 +1,6 @@
 module.exports = {
     testEnvironment: "node",
-	testTimeout: 60000,
+	testTimeout: 100000000,
 	globals: {
 		Uint8Array: Uint8Array,
 	},

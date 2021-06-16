@@ -59,6 +59,7 @@ const contract = new Contract(contractAccount, contractName, contractMethods);
 
 module.exports = {
 	near,
+	credentials,
 	keyStore,
 	connection,
 	contract,

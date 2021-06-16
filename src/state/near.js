@@ -10,8 +10,6 @@ export const {
 	contractName: contractId,
 } = getConfig();
 
-export const marketId = 'market.' + contractId;
-
 export const {
 	utils: {
 		format: {
@@ -44,6 +42,8 @@ export const initNear = () => async ({ update, getState, dispatch }) => {
 	}
 
 	await update('', { near, wallet, contractAccount, account });
+
+	return { near, wallet, contractAccount, account }
 };
 
 export const updateWallet = () => async ({ update, getState }) => {

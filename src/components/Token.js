@@ -1,111 +1,84 @@
 import React, { useEffect, useState } from 'react';
 import * as nearAPI from 'near-api-js';
-import { snackAttack } from '../state/app';
-import { share } from '../utils/mobile';
-import { explorerUrl, token2symbol, getTokenOptions, handleOffer } from '../state/near';
+import { Footer } from './Footer';
+import { TokenSeries } from './TokenSeries';
+import { TokenSale } from './TokenSale';
+import { loadItems } from '../state/views';
 
 const {
 	utils: { format: { formatNearAmount } }
 } = nearAPI;
 
-export const Token = ({
-	dispatch, account, token, token: { token_id, nft_contract_id, metadata, owner_id, conditions, bids }
-}) => {
+export const Token = (props) => {
 
-	console.log(token);
+	const { app, update, dispatch, views, pathArgs } = props
 
-	const [offerPrice, setOfferPrice] = useState('');
-	const [offerToken, setOfferToken] = useState('near');
+	const { isMobile } = app
+	const { tokens } = views
+	const isToken = /token/.test(pathArgs[0])
+	const isSale = /sale/.test(pathArgs[0])
+
+	const [mounted, setMounted] = useState(false)
 
 	useEffect(() => {
-		document.body.style.overflow = 'hidden';
-		return () => document.body.style.overflow = 'scroll';
+		setMounted(true)
 	}, []);
 
-	const handleShare = async (e) => {
-		e.stopPropagation();
-		e.preventDefault();
-		const headers = new Headers({
-			'max-age': '3600'
-		});
-		const path = `https://helper.nearapi.org/v1/contract/${nft_contract_id}/nft_token/`;
-		const args = JSON.stringify({
-			token_id
-		});
-		const actions = JSON.stringify({
-			botMap: {
-				'og:title': 'NFTs on NEAR',
-				'og:description': 'Check out this NFT on NEAR!',
-				'og:image': { field: 'metadata.media' }
-			},
-			redirect: encodeURIComponent(`${window.location.origin}${window.location.pathname}?t=${token_id}`),
-			encodeUrl: true,
-		});
-		const url = path + args + '/' + actions;
-		const response = await fetch(url, { headers }).then((res) => res.json());
-		if (!response || !response.encodedUrl) {
-			console.warn(response);
-			return alert('Something went wrong trying to share this url, please try sharing from the address bar or use your browsers share feature');
+	const token = tokens.find((t) => t.token_id === pathArgs[1])
+
+	if (!token || !mounted) return null
+
+	const {
+		displayType,
+		displayHowLongAgo,
+		imageSrc,
+		videoSrc,
+		videoSrc2,
+		videoSrc3,
+	} = token
+
+	props = { ...props, token }
+
+	return <section className="token">
+		{
+			isMobile &&
+			<div className="content">
+				<div className="heading">
+					<h2>HipHopHead</h2>
+					<h2>{displayType}</h2>
+					<time>Minted: {displayHowLongAgo}</time>
+				</div>
+			</div>
 		}
-		const result = share(response.encodedUrl);
-		if (!result.mobile) {
-			dispatch(snackAttack('Link Copied!'));
+		<div className="media">
+			{
+				/localhost/.test(window.location.href) ?
+					<img crossOrigin="true" src={imageSrc} />
+					:
+					<video
+						onPlay={() => document.querySelector('.lds-loader').style.display = 'none'}
+						autoPlay={true} loop={true} preload="auto"
+					>
+						<source crossOrigin="anonymous" src={videoSrc} />
+						<source crossOrigin="anonymous" src={videoSrc2} />
+						<source crossOrigin="anonymous" src={videoSrc3} />
+					</video>
+			}
+		</div>
+		{
+			!isMobile && <div className="content">
+				<div className="heading">
+					<h2>HipHopHead</h2>
+					<h2>{displayType}</h2>
+					<time>Minted: {displayHowLongAgo}</time>
+				</div>
+			</div>
 		}
-	};
 
-	const { accountId } = account;
+		{isToken && <TokenSeries {...props} />}
+		{isSale && <TokenSale {...props} />}
 
-	return <div className="token">
-		<div onClick={() => history.pushState({}, '', window.location.pathname)}>
-
-			<h3>Click to Close</h3>
-			<img src={metadata.media} />
-		</div>
-		<div className="token-detail">
-			<div><a href={explorerUrl + '/accounts/' + owner_id}>{owner_id}</a></div>
-			<br />
-			<div><a href="#" onClick={(e) => handleShare(e)}>SHARE NOW</a></div>
-
-
-			{
-				conditions?.near.length && <>
-					<h4>Sale Conditions</h4>
-					{
-						Object.entries(conditions).map(([ft_token_id, price]) => <div className="margin-bottom" key={ft_token_id}>
-							{price === '0' ? 'open' : formatNearAmount(price, 4)} - {token2symbol[ft_token_id]}
-						</div>)
-					}
-					{
-						accountId.length > 0 && accountId !== owner_id && <>
-							<input type="number" placeholder="Price" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
-							{
-								getTokenOptions(offerToken, setOfferToken, Object.keys(conditions))
-							}
-							<button onClick={() => handleOffer(account, token_id, offerToken, offerPrice)}>Offer</button>
-						</>
-					}
-				</>
-			}
-
-			{
-				bids?.near && <>
-					<h4>Offers</h4>
-					{
-						Object.entries(bids).map(([ft_token_id, { owner_id: bid_owner_id, price }]) => <div className="offers" key={ft_token_id}>
-							<div>
-								{price === '0' ? 'open' : formatNearAmount(price, 4)} - {token2symbol[ft_token_id]} by {bid_owner_id}
-							</div>
-							{
-								accountId === owner_id &&
-                                <button onClick={() => handleAcceptOffer(token_id, ft_token_id)}>Accept</button>
-							}
-						</div>)
-					}
-				</>
-			}
-
-		</div>
-
-	</div>;
+		<Footer />
+	</section>
 };
 

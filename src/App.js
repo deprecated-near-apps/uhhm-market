@@ -1,28 +1,46 @@
 import React, { useContext, useEffect, useState } from 'react';
 
 import { appStore, onAppMount } from './state/app';
+import { useHistory, pathAndArgs } from './utils/history';
 
 import { Wallet } from './components/Wallet';
 import { Contract } from './components/Contract';
-import { Gallery } from './components/Gallery';
 
-import Avatar from 'url:./img/avatar.jpg';
-import NearLogo from 'url:./img/near_icon.svg';
+
+import { Header } from './components/Header';
+import { Items } from './components/Items';
+import { Token } from './components/Token';
+import { Edition } from './components/Edition';
+import { Connect } from './components/Connect';
+import { Dialog } from './components/Dialog';
+import { Credits } from './components/Credits';
 
 import './App.scss';
 
 const App = () => {
 	const { state, dispatch, update } = useContext(appStore);
 
-	const { app, views, app: {tab, snack}, near, wallet, contractAccount, account, loading } = state;
+	const {
+		app,
+		app: {
+			loading, tab, snack, isConnectOpen, dialog,
+		},
+		views, near, wallet, contractAccount, account
+	} = state;
 
 	const [profile, setProfile] = useState(false);
 
-	const onMount = () => {
+	useEffect(() => {
 		dispatch(onAppMount());
-	};
-	useEffect(onMount, []);
-
+	}, []);
+	useHistory(() => {
+		document.body.scrollTo(0,0);
+		update('app', {
+			href: window.location.href,
+			isMenuOpen: false
+		});
+	}, true);
+	const { path, args, pathArgs } = pathAndArgs();
 
 	const signedIn = ((wallet && wallet.signedIn));
 
@@ -30,11 +48,11 @@ const App = () => {
 		setProfile(false);
 	}
 
+	if (!contractAccount) return null
+
+	const pathParams = { app, views, update, dispatch, account, wallet, pathArgs }
+
 	return <>
-		{ loading && <div className="loading">
-			<img src={NearLogo} />
-		</div>
-		}
 		{
 			snack &&
 			<div className="snack">
@@ -42,37 +60,15 @@ const App = () => {
 			</div>
 		}
 
-		<div className="background"></div>
+		{loading && <div className="credits-loading">
+            <div className="lds-loader"><div></div><div></div><div></div></div>
+        </div>}
 
-		<div id="menu">
-			<div>
-				<img style={{ opacity: signedIn ? 1 : 0.25 }} src={Avatar}
-					onClick={() => setProfile(!profile)}
-				/>
-			</div>
-			<div>
-				{!signedIn ? <Wallet {...{ wallet }} /> : account.accountId}
-			</div>
-			{
-				profile && signedIn && <div id="profile">
-					<div>
-						{
-							wallet && wallet.signedIn && <Wallet {...{ wallet, account, update, dispatch, handleClose: () => setProfile(false) }} />
-						}
-					</div>
-				</div>
-			}
-		</div>
+		{ isConnectOpen && <Connect {...{update, wallet}} /> }
+		{ dialog && <Dialog {...dialog} /> }
 
-
-		{
-			signedIn && <div id="tabs">
-				<div onClick={() => update('app.tab', 1)} style={{ background: tab === 1 ? '#fed' : '' }}>Market</div>
-				<div onClick={() => update('app.tab', 2)} style={{ background: tab === 2 ? '#fed' : '' }}>My NFTs</div>
-				<div onClick={() => update('app.tab', 3)} style={{ background: tab === 3 ? '#fed' : '' }}>Mint</div>
-			</div>
-		}
-
+		<Header {...pathParams} />
+		
 		{ signedIn && tab === 3 &&
 			<div id="contract">
 				{
@@ -81,8 +77,13 @@ const App = () => {
 				}
 			</div>
 		}
-		<div id="gallery">
-			<Gallery {...{ app, views, update, loading, contractAccount, account, dispatch }} />
+
+		<div>
+			{ path === '/' && <Items {...pathParams} /> }
+			{ path.substr(0, 6) === '/token' && <Token {...pathParams} /> }
+			{ path.substr(0, 8) === '/edition' && <Edition {...pathParams} /> }
+			{ path.substr(0, 5) === '/sale' && <Token {...pathParams} /> }
+			{ path.substr(0, 8) === '/credits' && <Credits {...pathParams} /> }
 		</div>
 	</>;
 };

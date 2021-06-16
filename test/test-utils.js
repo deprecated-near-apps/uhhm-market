@@ -2,7 +2,7 @@ const BN = require('bn.js');
 const fetch = require('node-fetch');
 const nearAPI = require('near-api-js');
 const { KeyPair, Account, Contract, utils: { format: { parseNearAmount } } } = nearAPI;
-const { near, connection, keyStore, contract, contractAccount } = require('./near-utils');
+const { near, credentials, connection, keyStore, contract, contractAccount } = require('./near-utils');
 const getConfig = require('../src/config');
 const {
 	networkId, contractName, contractMethods,
@@ -54,7 +54,7 @@ const createOrInitAccount = async(accountId, secret) => {
 	return account;
 };
 
-async function getAccount(accountId, fundingAmount = DEFAULT_NEW_ACCOUNT_AMOUNT) {
+async function getAccount(accountId, fundingAmount = DEFAULT_NEW_ACCOUNT_AMOUNT, secret) {
 	accountId = accountId || generateUniqueSubAccount();
 	const account = new nearAPI.Account(connection, accountId);
 	try {
@@ -65,7 +65,7 @@ async function getAccount(accountId, fundingAmount = DEFAULT_NEW_ACCOUNT_AMOUNT)
 			throw e;
 		}
 	}
-	return await createAccount(accountId, fundingAmount);
+	return await createAccount(accountId, fundingAmount, secret);
 };
 
 
@@ -136,6 +136,7 @@ module.exports = {
 	TEST_HOST,
 	near,
 	connection,
+	credentials,
 	keyStore,
 	getContract,
 	getAccountBalance,
