@@ -76,10 +76,14 @@ export const TokenSale = (props) => {
                         <div>You have the winning bid!</div>
                     </div>
                     :
-                    <div className="button" onClick={() => dispatch(handlePlaceBid(account, token, minBid))}>
-                        <div>Place a Bid</div>
-                        <img src={Arrow} />
-                    </div>
+                    account ?
+                        <div className="button" onClick={() => dispatch(handlePlaceBid(account, token, minBid))}>
+                            <div>Place a Bid</div>
+                            <img src={Arrow} />
+                        </div>
+                        :
+                        <button onClick={() => wallet.signIn()}>Connect Wallet</button>
+
             }
 
             <div className="bids">
