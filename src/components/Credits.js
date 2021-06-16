@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { CardElement, Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import { Footer } from './Footer';
+import { loadCredits } from '../state/views';
 import Approved from 'url:../img/approved.svg';
 import ErrorIcon from 'url:../img/error.svg';
 import { parseAmount } from '../utils/format';
@@ -62,6 +63,7 @@ function CreditsInner(props) {
             if (res.status !== 200) throw json;
 
             if (json?.outcome?.status?.SuccessValue === "") {
+                dispatch(loadCredits(account))
                 dispatch(setDialog({
                     msg: <div>
                         <img src={Approved} />

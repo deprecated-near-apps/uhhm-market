@@ -439,6 +439,7 @@ section.modal {
         justify-content: space-between;
         align-items: center;
         .wrap {
+            box-shadow: $shadow;
             text-align: center;
             margin: 16px;
             background: #222;

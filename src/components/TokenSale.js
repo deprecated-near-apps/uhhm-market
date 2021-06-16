@@ -10,7 +10,7 @@ import Arrow from 'url:../img/arrow.svg';
 
 export const TokenSale = (props) => {
 
-    const { app, token, account, dispatch, views, update } = props
+    const { app, wallet, token, account, dispatch, views, update } = props
 	const { isMobile, timeLeft } = app
     const { credits } = views
     const { token_id, token_type, minBid, displayType, displayHowLongAgo } = token
@@ -72,7 +72,10 @@ export const TokenSale = (props) => {
 
             {
                 hasWinningBid ?
-                    <div className="button green center text-white">
+                    <div className="button green center text-white"  onClick={() => {
+                        if (!/localhost/.test(window.location.href)) return
+                        dispatch(handlePlaceBid(account, token, minBid))
+                    }}>
                         <div>You have the winning bid!</div>
                     </div>
                     :

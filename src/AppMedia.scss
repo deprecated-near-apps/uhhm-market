@@ -36,6 +36,12 @@
             padding: 32px calc(25vw + 32px);
         }
     }
+    section.modal {
+        .content {
+            left: 25vw;
+            width: 50vw;
+        }
+    }
 }
 @media (min-width: 1200px) {
    

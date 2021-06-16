@@ -1,9 +1,10 @@
 import { contractId, fungibleId, marketId } from '../utils/near-utils'
+import { get, set, del } from '../utils/storage';
 // api-helper config
 const domain = 'https://helper.nearapi.org';
 const batchPath = domain + '/v1/batch/';
 const headers = new Headers({
-	'max-age': '60'
+	'max-age': '3600'
 });
 
 import { howLongAgo } from '../utils/date';
@@ -14,8 +15,12 @@ const IPFS_BASE = 'https://ipfs.io/ipfs/';
 const NEAR_BASE = 'https://near.mypinata.cloud/ipfs/';
 const LOW_RES_GIF = '/low-res.gif';
 const VIDEO = '/1.m4v';
+const UHHM_TOKEN_KEYS = {
+    v1: '__TOKENS_V1'
+}
+const uhhmTokenVersion = 'v1'
 
-const sortBids = (a, b) => parseInt(b.price, 10) - parseInt(a.price, 10)
+const sortBids = (a, b) => parseInt(b.price) - parseInt(a.price)
 
 export const loadCredits = (account) => async({ update, getState }) => {
     if (!account) return
@@ -32,26 +37,55 @@ export const loadItems = (account) => async ({ update, getState }) => {
     const { contractAccount } = getState()
 
     /// uhhm tokens
-    const tokens = (await fetch(batchPath + '{}', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify([{
-            contract: contractId,
-            method: 'nft_tokens_batch',
-            args: {
-                token_ids: uhhmTokenIds
-            },
-            batch: {
-                from_index: '0',
-                limit: uhhmTokenIds.length,
-                step: '50', // divides batch above
-                flatten: [],
-            },
-        }])
-    }).then((res) => res.json()))[0];
+    let tokens = get(UHHM_TOKEN_KEYS[uhhmTokenVersion], null)
+    if (!tokens) {
+        console.log('fetching tokens from remote')
+        tokens = (await fetch(batchPath + '{}', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify([{
+                contract: contractId,
+                method: 'nft_tokens_batch',
+                args: {
+                    token_ids: uhhmTokenIds
+                },
+                batch: {
+                    from_index: '0',
+                    limit: uhhmTokenIds.length,
+                    step: '50', // divides batch above
+                    flatten: [],
+                },
+            }])
+        }).then((res) => res.json()))[0];
+    
+        tokens.forEach((token) => {
+            token.displayType = token.token_type.split('HipHopHead')[1].slice(1)
+            token.displayHowLongAgo = howLongAgo({
+                ts: token.metadata.issued_at, detail: 'hour'
+            });
+            token.imageSrc = `${DWEB_BASE}${token.metadata.media}${LOW_RES_GIF}`
+            token.videoSrc = `${DWEB_BASE}${token.metadata.media}${VIDEO}`
+            token.videoSrc2 = `${IPFS_BASE}${token.metadata.media}${VIDEO}`
+            token.videoSrc3 = `${NEAR_BASE}${token.metadata.media}${VIDEO}`
+            token.imageSrc = `https://files.uhhmnft.org/webp/${token.metadata.media}`
+            token.imageSrc = `https://uhhm-heads.s3.us-west-2.amazonaws.com/${token.metadata.media}.webp`
+            token.imageSrc = `https://sweet-paper-723d.near.workers.dev/?uhhm-heads-cid=${token.metadata.media}`
+        })
+        // migrate
+        set(UHHM_TOKEN_KEYS[uhhmTokenVersion], tokens)
+        Object.entries(UHHM_TOKEN_KEYS).forEach(([k, v]) => {
+            if (k === uhhmTokenVersion) return
+            del(v)
+        })
+    } else {
+        console.log('loading tokens from cache')
+    }
 
     /// all sales
 
+    const salesNum = await contractAccount.viewFunction(marketId, 'get_supply_by_nft_contract_id', { nft_contract_id: contractId })
+    console.log(salesNum)
+    const urlCacheMod = /transactionHashes/.test(window.location.href) ? '?skipcache=true' : ''
     const sales = (await fetch(batchPath + JSON.stringify([{
         contract: marketId,
         method: 'get_sales_by_nft_contract_id',
@@ -60,30 +94,16 @@ export const loadItems = (account) => async ({ update, getState }) => {
         },
         batch: {
             from_index: '0',
-            limit: '103',
+            limit: salesNum,
             step: '55',
             flatten: [],
         },
         sort: {
             path: 'metadata.issued_at',
         }
-    }]), { headers }).then((res) => res.json()))[0];
+    }]) + urlCacheMod, { headers }).then((res) => res.json()))[0];
 
     /// formatting
-
-    tokens.forEach((token) => {
-        token.displayType = token.token_type.split('HipHopHead')[1].slice(1)
-        token.displayHowLongAgo = howLongAgo({
-            ts: token.metadata.issued_at, detail: 'hour'
-        });
-        token.imageSrc = `${DWEB_BASE}${token.metadata.media}${LOW_RES_GIF}`
-        token.videoSrc = `${DWEB_BASE}${token.metadata.media}${VIDEO}`
-        token.videoSrc2 = `${IPFS_BASE}${token.metadata.media}${VIDEO}`
-        token.videoSrc3 = `${NEAR_BASE}${token.metadata.media}${VIDEO}`
-        token.imageSrc = `https://files.uhhmnft.org/webp/${token.metadata.media}`
-        token.imageSrc = `https://uhhm-heads.s3.us-west-2.amazonaws.com/${token.metadata.media}.webp`
-        token.imageSrc = `https://sweet-paper-723d.near.workers.dev/?uhhm-heads-cid=${token.metadata.media}`
-    })
 
     // merge sale listing with nft token data
     const allBidsByType = {}
@@ -91,18 +111,19 @@ export const loadItems = (account) => async ({ update, getState }) => {
         let token = tokens.find(({ token_type: tt }) => tt === token_type);
         if (!token) return
         const sale = sales[i] = Object.assign(token, sales[i], {
-            edition_id: parseInt(token_id.split(':')[1],10)
+            edition_id: parseInt(token_id.split(':')[1])
         });
         (sale.bids[fungibleId] || []).sort(sortBids)
         sale.minBid = Math.max(
-            parseInt(Object.values(sale.sale_conditions)[0], 10), // reserve
-            parseInt((sale.bids[fungibleId] || [])[0]?.price || '0', 10));
+            parseInt(Object.values(sale.sale_conditions)[0]), // reserve
+            parseInt((sale.bids[fungibleId] || [])[0]?.price || '0'));
 
         if (!allBidsByType[token_type]) allBidsByType[token_type] = [{ owner_id: 'reserve', price: Object.values(sale.sale_conditions)[0] }]
         allBidsByType[token_type].push(...(sale.bids[fungibleId] || []))
     })
 
     Object.values(allBidsByType).forEach((arr) => arr.sort(sortBids))
+    console.log(allBidsByType)
 
     update('views', { tokens, sales, allBidsByType })
     return { tokens, sales, allBidsByType }
