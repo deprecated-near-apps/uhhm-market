@@ -40,7 +40,7 @@ const uhhmTokens = data.map(({ token_type, metadata }) => ({
 		issued_at: Date.now().toString(),
 	},
 	perpetual_royalties: {
-		'escrow-42.uhhm.near': 1000,
+		['escrow-' + i + '.uhhm.near']: 1000,
 		'uhhm.near': 100,
 		'andreleroydavis.near': 200,
 		'edyoung.near': 200,
@@ -57,7 +57,7 @@ const saleTokens = data.map(({ token_type, metadata }) => ({
 		issued_at: Date.now().toString(),
 	},
 	perpetual_royalties: {
-		'escrow-42.uhhm.near': 1000,
+		['escrow-' + i + '.uhhm.near']: 1000,
 		'uhhm.near': 100,
 		'andreleroydavis.near': 200,
 		'edyoung.near': 200,
