@@ -5,11 +5,15 @@ import { FAV_KEY } from './favs';
 import { initNear } from './near';
 import { loadItems, loadCredits } from './views';
 import { isMobile } from '../utils/mobile';
+import { howLongAgo } from '../utils/date';
+
+const endTime = Date.now() + 2629800000
 
 const initialState = {
 	app: {
 		loading: true,
 		mounted: false,
+		isEditionOpen: false,
 		isMenuOpen: false,
 		isFavOn: false,
 		isMobile,
@@ -53,7 +57,12 @@ export const onAppMount = () => async ({ update, dispatch }) => {
 	await dispatch(loadCredits(account));
 	await dispatch(loadItems());
 	update('app.loading', false)
-	update('views.favs', get(FAV_KEY))
+	update('views.favs', get(FAV_KEY, []))
+	update('app.timeLeft', howLongAgo({ ts: endTime, left: true }))
+	setInterval(() => {
+		update('app.timeLeft', howLongAgo({ ts: endTime, left: true }))
+		// update('app.timeLeft', howLongAgo({ ts: endTime, left: true, detail: 'minutes' }))
+	}, 60000)
 };
 
 export const snackAttack = (msg) => async ({ update, dispatch }) => {

@@ -25,11 +25,11 @@ export const Token = (props) => {
 		setMounted(true)
 	}, []);
 
-	const handleClick = (token_id) => {
+	const handleClick = (token_type) => {
 		if (clickTimeout) {
 			clearTimeout(clickTimeout)
 			clickTimeout = null
-			dispatch(handleFav(token_id))
+			dispatch(handleFav(token_type))
 			return
 		}
 		clickTimeout = setTimeout(() => {
@@ -38,12 +38,17 @@ export const Token = (props) => {
 		}, DBL_CLICK_WAIT)
 	}
 
-	const token = tokens.find((t) => t.token_id === pathArgs[1])
+	let token
+	if (isSale) {
+		token = tokens.find((t) => t.token_id === pathArgs[1])
+	} else {
+		token = tokens.find((t) => t.token_type === pathArgs[1])
+	}
 
 	if (!token || !mounted) return null
 
 	const {
-		token_id,
+		token_type,
 		displayType,
 		displayHowLongAgo,
 		imageSrc,
@@ -65,9 +70,13 @@ export const Token = (props) => {
 				</div>
 			</div>
 		}
-		<div className="media" onClick={() => handleClick(token_id)}>
-			<div className="heart">
-				<img src={favs.includes(token_id) ? Heart : HeartOutline} />
+		<div className="media" onClick={() => handleClick(token_type)}>
+			<div className="heart" onClick={(e) => {
+				e.stopPropagation();
+				dispatch(handleFav(token_type))
+				return false;
+			}}>
+				<img src={favs.includes(token_type) ? Heart : HeartOutline} />
 			</div>
 			<div className="video-wrap">
 				<img crossOrigin="true" src={imageSrc} />

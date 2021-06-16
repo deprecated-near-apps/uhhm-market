@@ -73,7 +73,9 @@ export const loadItems = (account) => async ({ update, getState }) => {
 
     tokens.forEach((token) => {
         token.displayType = token.token_type.split('HipHopHead')[1].slice(1)
-        token.displayHowLongAgo = howLongAgo(token.metadata.issued_at, 'hour');
+        token.displayHowLongAgo = howLongAgo({
+            ts: token.metadata.issued_at, detail: 'hour'
+        });
         token.imageSrc = `${DWEB_BASE}${token.metadata.media}${LOW_RES_GIF}`
         token.videoSrc = `${DWEB_BASE}${token.metadata.media}${VIDEO}`
         token.videoSrc2 = `${IPFS_BASE}${token.metadata.media}${VIDEO}`

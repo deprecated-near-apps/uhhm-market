@@ -10,8 +10,8 @@ import Arrow from 'url:../img/arrow.svg';
 
 export const TokenSale = (props) => {
 
-    const { app, token, account, dispatch, views } = props
-	const { isMobile } = app
+    const { app, token, account, dispatch, views, update } = props
+	const { isMobile, timeLeft } = app
     const { credits } = views
     const { token_id, token_type, minBid, displayType, displayHowLongAgo } = token
 
@@ -46,12 +46,12 @@ export const TokenSale = (props) => {
                 </div>
                 <div className="ending">
                     <p>Auction ends in:</p>
-                    <h2>42 : 13 : 05</h2>
+                    <h2>{ timeLeft }</h2>
                 </div>
             </div>
 
             <div className="select edition"
-                onClick={() => history.push('/edition/' + token_type)}
+                onClick={() => update('app.isEditionOpen', true)}
             >
                 <div># {edition}</div>
                 <div>{years(edition)}</div>

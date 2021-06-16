@@ -4,14 +4,12 @@ import Menu from 'url:../img/menu-small.svg';
 
 export const TokenSeries = (props) => {
 
-    const { app, token, account, views } = props
-	const { isMobile } = app
+    const { app, token, update, views } = props
+	const { isMobile, timeLeft } = app
     const { sales, allBidsByType } = views
     const { token_type, displayType, displayHowLongAgo } = token
 
     const allBids = allBidsByType[token_type]
-
-    console.log(allBids)
 
     return <>
         <div className="content">
@@ -40,10 +38,10 @@ export const TokenSeries = (props) => {
             </div>
             <div className="ending">
                 <p>Auction ends in:</p>
-                <h2>42 : 13 : 05</h2>
+                <h2>{ timeLeft }</h2>
             </div>
             <div className="select"
-                onClick={() => history.push('/edition/' + token_type)}
+                onClick={() => update('app.isEditionOpen', true)}
             >
                 <div>Select Edition</div>
                 <img src={Menu} />

@@ -5,6 +5,12 @@
     
 }
 @media (min-width: 992px) {
+    nav, nav header {
+        width: 55vw;
+        &.active {
+            transform: translateX(45vw)
+        }
+    }
     section.token {
         padding: 64px;
         align-items: flex-start;
@@ -19,6 +25,16 @@
     }
     section.items > div {
         grid-template-columns: 25% 25% 25% 25%;
+    }
+    section.edition {
+        background: #888;
+        > div {
+            padding: 0 25vw;
+        }
+        header {
+            padding: black;
+            padding: 32px calc(25vw + 32px);
+        }
     }
 }
 @media (min-width: 1200px) {

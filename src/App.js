@@ -3,9 +3,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { appStore, onAppMount } from './state/app';
 import { useHistory, pathAndArgs } from './utils/history';
 
-import { Wallet } from './components/Wallet';
-import { Contract } from './components/Contract';
-
 
 import { Header } from './components/Header';
 import { Items } from './components/Items';
@@ -24,7 +21,7 @@ const App = () => {
 	const {
 		app,
 		app: {
-			loading, tab, isConnectOpen, dialog,
+			loading, tab, isConnectOpen, dialog, isEditionOpen,
 		},
 		views, near, wallet, contractAccount, account
 	} = state;
@@ -61,6 +58,7 @@ const App = () => {
 
 		{ isConnectOpen && <Connect {...{update, wallet}} /> }
 		{ dialog && <Dialog {...dialog} /> }
+		{ isEditionOpen && <Edition {...pathParams} /> }
 
 		<Header {...pathParams} />
 		
@@ -76,7 +74,6 @@ const App = () => {
 		<div>
 			{ path === '/' && <Items {...pathParams} /> }
 			{ path.substr(0, 6) === '/token' && <Token {...pathParams} /> }
-			{ path.substr(0, 8) === '/edition' && <Edition {...pathParams} /> }
 			{ path.substr(0, 5) === '/sale' && <Token {...pathParams} /> }
 			{ path.substr(0, 8) === '/credits' && <Credits {...pathParams} /> }
 		</div>

@@ -16,19 +16,19 @@ export const Items = ({ app, views, account, dispatch }) => {
 		clickTimeout = null
 	}, []);
 
-	const handleClick = (token_id) => {
+	const handleClick = (token_type) => {
 		if (clickTimeout) {
 			clearTimeout(clickTimeout)
 			clickTimeout = null
-			dispatch(handleFav(token_id))
+			dispatch(handleFav(token_type))
 			return
 		}
-		clickTimeout = setTimeout(() => history.push('/token/' + token_id + '/'), DBL_CLICK_WAIT)
+		clickTimeout = setTimeout(() => history.push('/token/' + token_type + '/'), DBL_CLICK_WAIT)
 	}
 
 	let items = tokens
 	if (isFavOn && favs.length > 0) {
-		items = tokens.filter(({ token_id }) => favs.includes(token_id))
+		items = tokens.filter(({ token_type }) => favs.includes(token_type))
 	}
 
 	return <>
@@ -37,13 +37,17 @@ export const Items = ({ app, views, account, dispatch }) => {
 				{
 					items.map(({
 						imageSrc,
-						token_id,
+						token_type,
 					}) => (
-						<div key={token_id} className="item" onClick={() => handleClick(token_id)}>
+						<div key={token_type} className="item" onClick={() => handleClick(token_type)}>
 							<img crossOrigin="true" src={imageSrc} />
 							{
-								favs.includes(token_id) &&
-								<div className="heart">
+								favs.includes(token_type) &&
+								<div className="heart" onClick={(e) => {
+									e.stopPropagation();
+									dispatch(handleFav(token_type))
+									return false;
+								}}>
 									<img src={Heart} />
 								</div>
 							}

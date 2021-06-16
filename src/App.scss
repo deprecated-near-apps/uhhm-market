@@ -4,6 +4,7 @@ $halfw: 400px;
 $margin-fix: -16px;
 $red: #ED1C25;
 $gray-border: 2px solid rgba(255, 255, 255, 0.5);
+$shadow: 0 0 8px black, 0 0 32px rgba(0, 0, 0, 0.5);
 
 @mixin small-text {
     font-weight: 400;
@@ -60,7 +61,7 @@ body {
 }
 
 header {
-    box-shadow: 0 0 8px black, 0 0 32px rgba(0, 0, 0, 0.5);
+    box-shadow: $shadow;
     background: black;
     position: fixed;
     top: 0;
@@ -95,7 +96,7 @@ nav {
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 2000;
+    z-index: 5000;
     width: 100vw;
     height: 100vh;
     overflow: scroll;
@@ -103,6 +104,7 @@ nav {
     transform: translateX(100vw);
     transition: transform 0.2s cubic-bezier(0, 0, 0.58, 1);
     &.active {
+        box-shadow: $shadow;
         transform: translateX(0)
     }
     display: flex;
@@ -221,10 +223,11 @@ section.token {
             }
         }
         > .heart {
+            z-index: 2000;
             position: absolute;
             top: 8px;
             right: 8px;
-            width: 16px;
+            width: 24px;
             > img {
                 width: 100%;
             }
@@ -248,6 +251,7 @@ section.token {
         margin-top: 16px;
         > h2 {
             font-weight: 800;
+            font-size: 1rem;
             margin: 0;
         }
         > p {
@@ -365,31 +369,42 @@ section.credits {
 /// special sections e.g. modals or overlays
 
 section.edition {
+    margin-top: 0;
+    header {
+        margin-top: 0;
+        z-index: 3001;
+        padding: 0 32px;
+    }
     > div {
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 3000;
         position: fixed;
         top: 0;
         left: 0;
         margin-top: 32px;
-        padding: 32px;
-        background: black;
         height: 100%;
         width: 100%;
         overflow: scroll;
         > div {
-            margin-top: 32px;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            > div:nth-of-type(1) {
-                flex: 0 0 3rem;
-                color: $red;
-            }
-            > div:nth-of-type(2) {
-                flex: 1;
-            }
-            > div:nth-of-type(3) {
-                text-align: right;
+            box-shadow: $shadow;
+            padding: 32px;
+            background: black;
+            > div {
+                margin-top: 32px;
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                > div:nth-of-type(1) {
+                    flex: 0 0 3rem;
+                    color: $red;
+                }
+                > div:nth-of-type(2) {
+                    flex: 1;
+                }
+                > div:nth-of-type(3) {
+                    text-align: right;
+                }
             }
         }
     }
