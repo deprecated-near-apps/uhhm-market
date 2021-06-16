@@ -10,15 +10,20 @@ import Arrow from 'url:../img/arrow.svg';
 
 export const TokenSale = (props) => {
 
-    const { views, token, account, update, dispatch } = props
-    const { credits, sales } = views
-    const { token_id, token_type, sale_conditions } = token
-
-    const minBid = Math.max(parseInt(Object.values(sale_conditions)[0], 10), parseInt((token.bids[fungibleId] || [])[0]?.price || '0', 10))
-
+    const { token, account, dispatch, views } = props
+    const { credits } = views
+    const { token_id, token_type, minBid } = token
 
     const edition = token_id.split(':')[1]
     const bids = token.bids[fungibleId] || []
+
+    const hasWinningBid = bids[0].owner_id === account?.accountId
+    let topBidOwner = bids[0].owner_id
+    if (hasWinningBid) {
+        topBidOwner = 'Your bid'
+    }
+
+    const hasOutbid = !hasWinningBid && bids.some(({ owner_id }) => owner_id === account?.accountId)
 
     /// TODO sort bids descending
 
@@ -43,14 +48,29 @@ export const TokenSale = (props) => {
                 <img src={Menu} />
             </div>
 
-            <div className="button"
-                onClick={() => dispatch(handlePlaceBid(account, token, minBid))}
-            >
-                <div>Place a Bid</div>
-                <img src={Arrow} />
-            </div>
+            { credits &&
+                <p>Credits: {formatAmount(credits)}</p>
+            }
 
             <BuyCredits />
+
+            {
+                hasOutbid && <div className="button red center text-white">
+                    <div>You were outbid!</div>
+                </div>
+            }
+
+            {
+                hasWinningBid ?
+                    <div className="button green center text-white">
+                        <div>You have the winning bid!</div>
+                    </div>
+                    :
+                    <div className="button" onClick={() => dispatch(handlePlaceBid(account, token, minBid))}>
+                        <div>Place a Bid</div>
+                        <img src={Arrow} />
+                    </div>
+            }
 
             <div className="bids">
                 {
@@ -60,8 +80,8 @@ export const TokenSale = (props) => {
                             <h4>Latest Bids</h4>
                             <div>
                                 {
-                                    bids.map(({ owner_id, price }) => <div>
-                                        <div>{owner_id}</div>
+                                    bids.map(({ owner_id, price }, i) => <div key={i}>
+                                        <div>{i === 0 ? topBidOwner : owner_id}</div>
                                         <div>{formatAmount(price)}</div>
                                     </div>)
                                 }

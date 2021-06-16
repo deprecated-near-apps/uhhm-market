@@ -23,7 +23,7 @@ const App = () => {
 	const {
 		app,
 		app: {
-			loading, tab, snack, isConnectOpen, dialog,
+			loading, tab, isConnectOpen, dialog,
 		},
 		views, near, wallet, contractAccount, account
 	} = state;
@@ -53,12 +53,6 @@ const App = () => {
 	const pathParams = { app, views, update, dispatch, account, wallet, pathArgs }
 
 	return <>
-		{
-			snack &&
-			<div className="snack">
-				{snack}
-			</div>
-		}
 
 		{loading && <div className="credits-loading">
             <div className="lds-loader"><div></div><div></div><div></div></div>

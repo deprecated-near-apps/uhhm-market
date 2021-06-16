@@ -1,22 +1,27 @@
 import React, { useEffect, useState } from 'react';
+import { formatAmount } from '../utils/format';
 import Menu from 'url:../img/menu-small.svg';
 
 export const TokenSeries = (props) => {
 
     const { token, account, views } = props
-    const { sales } = views
+    const { sales, allBidsByType } = views
     const { token_type } = token
+
+    const allBids = allBidsByType[token_type]
+
+    console.log(allBids)
 
     return <>
         <div className="content">
             <div className="bids-type">
                 <div>
                     <div className="label">Low</div>
-                    <div className="amount">$200</div>
+                    <div className="amount">${formatAmount(allBids[allBids.length-1].price)}</div>
                 </div>
                 <div>
                     <div className="label">High</div>
-                    <div className="amount">$1,890</div>
+                    <div className="amount">${formatAmount(allBids[0].price)}</div>
                 </div>
             </div>
             <div className="description">

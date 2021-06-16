@@ -1,4 +1,6 @@
 import { State } from '../utils/state';
+import { get } from '../utils/storage';
+import { FAV_KEY } from './favs';
 
 import { initNear } from './near';
 import { loadItems, loadCredits } from './views';
@@ -9,6 +11,7 @@ const initialState = {
 		loading: true,
 		mounted: false,
 		isMenuOpen: false,
+		isFavOn: false,
 		isMobile,
 		isConnectOpen: false,
 		dialog: null,
@@ -17,9 +20,11 @@ const initialState = {
 		initialized: false,
 	},
 	views: {
+		favs: [],
 		marketStoragePaid: '0',
 		tokens: [],
 		sales: [],
+		allBidsByType: [],
 		allTokens: [],
 		credits: '0',
 	}
@@ -47,7 +52,8 @@ export const onAppMount = () => async ({ update, dispatch }) => {
 	const { account } = await dispatch(initNear());
 	await dispatch(loadCredits(account));
 	await dispatch(loadItems());
-	update('app.loading', false);
+	update('app.loading', false)
+	update('views.favs', get(FAV_KEY))
 };
 
 export const snackAttack = (msg) => async ({ update, dispatch }) => {

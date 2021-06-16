@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { CardElement, Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import { Footer } from './Footer';
+import Approved from 'url:../img/approved.svg';
+import ErrorIcon from 'url:../img/error.svg';
 import { parseAmount } from '../utils/format';
 import { setDialog } from '../state/app';
 
@@ -61,9 +63,16 @@ function CreditsInner(props) {
 
             if (json?.outcome?.status?.SuccessValue === "") {
                 dispatch(setDialog({
-                    msg: `You have received ${amount} credits. Happy Bidding!`,
+                    msg: <div>
+                        <img src={Approved} />
+                        <h1>Credits successfully purchased!</h1>
+                        <p>{amount}</p>
+                        <p>Go place your bid!</p>
+                    </div>,
                     info: true,
-                    onClose: () => history.back()
+                    onCloseButton: {
+                        'Return': () => history.back()
+                    }
                 }));
             }
 
@@ -75,7 +84,7 @@ function CreditsInner(props) {
     };
 
     return <>
-        
+
         <section className="credits">
 
             <div>
@@ -105,7 +114,13 @@ function CreditsInner(props) {
 
                     <button className="center" disabled={!amount}>{amount ? <span>Pay ${amount} USD</span> : <span>Enter Amount</span>}</button>
 
-                    <p>{error && error.message}</p>
+                    {error && error.message &&
+                        <div className="center">
+                            <p>{error.message}</p>
+                            <img src={ErrorIcon} />
+                        </div>
+                    }
+
 
                 </form >
             </div>

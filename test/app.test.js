@@ -29,6 +29,8 @@ const DELIMETER = '||';
 
 const now = Date.now();
 
+/// token setup from data
+/// NEVER sell :1 tokens, they are reserve
 
 const uhhmTokens = data.map(({ token_type, metadata }) => ({
 	token_type,
@@ -45,6 +47,8 @@ const uhhmTokens = data.map(({ token_type, metadata }) => ({
 	}
 }));
 
+// tokens going on sale (:2)
+
 const saleTokens = data.map(({ token_type, metadata }) => ({
 	token_type,
 	token_id: token_type + ':2',
@@ -60,22 +64,17 @@ const saleTokens = data.map(({ token_type, metadata }) => ({
 	}
 }));
 
-
-/// contractAccount.accountId is the NFT contract and contractAccount is the owner
-/// see initContract in ./test-utils.js for details
 const contractId = contractAccount.accountId;
 console.log('\n\n contractId:', contractId, '\n\n');
-/// the test fungible token
-// const fungibleId = 'fungible.' + contractId;
+
 const fungibleId = 'dev-1623722036493-86801174308452'
-/// the market contract
 const marketId = 'market.' + contractId;
+
+/// run tests
 
 describe('deploy contract ' + contractName, () => {
 
-	let alice, aliceId, bob, bobId,
-		fungibleAccount, marketAccount,
-		storageMinimum, storageMarket;
+	let owner, ownerId, marketAccount, storageMarket;
 
 	/// most of the following code in beforeAll can be used for deploying and initializing contracts
 	/// skip tests if you want to deploy to production or testnet without any NFTs
@@ -83,9 +82,9 @@ describe('deploy contract ' + contractName, () => {
 		await initContract();
 
 		/// some users
-		aliceId = 'alice-' + now + '.' + contractId;
-		alice = await getAccount(aliceId, '50', credentials.private_key);
-		console.log('\n\n Alice accountId:', aliceId, '\n\n');
+		ownerId = 'owner-' + now + '.' + contractId;
+		owner = await getAccount(ownerId, '50', credentials.private_key);
+		console.log('\n\n Alice accountId:', ownerId, '\n\n');
 
 		// token types and caps
 		const supply_cap_by_type = uhhmTokens.map(({ token_type }) => ({
@@ -159,11 +158,13 @@ describe('deploy contract ' + contractName, () => {
 		console.log('\n\n storageMarket:', storageMarket, '\n\n');
 	});
 
-	test('NFT contract owner mints uhhmTokens', async () => {
+	/// !!! OWNER != contractId !!!
+
+	test('owner mints uhhmTokens', async () => {
 
 		for (let i = 0; i < uhhmTokens.length; i++) {
 			try {
-				const result = await alice.functionCall({
+				await owner.functionCall({
 					contractId,
 					methodName: 'nft_mint',
 					args: uhhmTokens[i],
@@ -178,9 +179,9 @@ describe('deploy contract ' + contractName, () => {
 		
 	});
 
-	test('NFT contract owner mints saleTokens and approves', async () => {
+	test('owner creates saleTokens and approves', async () => {
 
-		await alice.functionCall({
+		await owner.functionCall({
 			contractId: marketId,
 			methodName: 'storage_deposit',
 			gas: GAS,
@@ -189,7 +190,7 @@ describe('deploy contract ' + contractName, () => {
 
 		for (let i = 0; i < saleTokens.length; i++) {
 			try {
-				const result = await alice.functionCall({
+				await owner.functionCall({
 					contractId,
 					methodName: 'nft_mint',
 					args: saleTokens[i],
@@ -201,7 +202,7 @@ describe('deploy contract ' + contractName, () => {
 				console.warn(e)
 			}
 			try {
-				const result = await alice.functionCall({
+				await owner.functionCall({
 					contractId: contractId,
 					methodName: 'nft_approve',
 					args: {

@@ -1,6 +1,7 @@
 import React from 'react';
 import Logo from 'url:../img/logo.svg';
-import Heart from 'url:../img/heart-outline.svg';
+import HeartOutline from 'url:../img/heart-outline.svg';
+import Heart from 'url:../img/heart.svg';
 import Menu from 'url:../img/menu.svg';
 import Close from 'url:../img/close.svg';
 import { formatAmount } from '../utils/format';
@@ -8,8 +9,8 @@ import { BuyCredits } from './BuyCredits';
 
 export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 
-    const { isMenuOpen } = app
-    const { credits } = views
+    const { isMenuOpen, isFavOn } = app
+    const { credits, favs } = views
 
     const handleClose = () => {
         window.scrollTo(0, 0)
@@ -20,11 +21,18 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
         <div>
 
             <header>
-                <div>
-                    <img src={Heart} />
-                    <div className="badge">3</div>
+                <div onClick={() => {
+                    if (favs.length === 0) return;
+                    update('app.isFavOn', !isFavOn)
+                    if (!!pathArgs[0]) history.push('/')
+                }}>
+                    <img className={isFavOn ? 'pulse' : ''} src={isFavOn ? Heart : HeartOutline} />
+                    { favs.length > 0 && <div className="badge">{ favs.length }</div>}
                 </div>
-                <img src={Logo} onClick={() => history.push('/')} />
+                <img src={Logo} onClick={() => {
+                    update('app.isFavOn', false)
+                    history.push('/')
+                }} />
                 <img src={Menu} onClick={() => update('app', { isMenuOpen: true })} />
             </header>
 
@@ -34,14 +42,14 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
                     <img src={Close} onClick={handleClose} />
                 </header>
 
+                <div>
+
                 {
                     account && credits && <div className="credits">
                         <div>{formatAmount(credits)}</div>
                         <div>Credits</div>
                     </div>
                 }
-
-                {!account && <div className="top-margin"></div>}
 
                 <div className="options" onClick={handleClose}>
                     <div tabIndex="1" className={!pathArgs.length ? 'active' : ''} onClick={() => history.push('/')}>
@@ -69,6 +77,10 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
                     }
                 </div>
 
+                </div>
+
+                <div>
+
                 <div className="connect">
                     {!account && <button onClick={() => wallet.signIn()}>Connect Wallet</button>}
 
@@ -77,6 +89,8 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
                         <button className="center text" onClick={() => wallet.signOut()}>Logout</button>
                     </>
                     }
+                </div>
+
                 </div>
             </nav>
 

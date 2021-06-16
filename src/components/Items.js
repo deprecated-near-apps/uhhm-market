@@ -1,39 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { loadItems, loadCredits } from '../state/views';
+import { handleFav } from '../state/favs';
 import { Footer } from './Footer';
-
 import Heart from 'url:../img/heart.svg';
 
-// api-helper config
-const domain = 'https://helper.nearapi.org';
+const DBL_CLICK_WAIT = 300;
+let clickTimeout
 
-export const Items = ({ app, views, update, account, dispatch }) => {
+export const Items = ({ app, views, account, dispatch }) => {
 
-	const { tokens } = views
-
-	let accountId = '';
-	if (account) accountId = account.accountId;
+	const { isFavOn } = app
+	const { tokens, favs } = views
 
 	useEffect(() => {
-		if (!tokens.length) return
-	}, [tokens]);
+		clearTimeout(clickTimeout)
+		clickTimeout = null
+	}, []);
+
+	const handleClick = (token_id) => {
+		if (clickTimeout) {
+			clearTimeout(clickTimeout)
+			clickTimeout = null
+			dispatch(handleFav(token_id))
+			return
+		}
+		clickTimeout = setTimeout(() => history.push('/token/' + token_id + '/'), DBL_CLICK_WAIT)
+	}
+
+	let items = tokens
+	if (isFavOn && favs.length > 0) {
+		items = tokens.filter(({ token_id }) => favs.includes(token_id))
+	}
 
 	return <>
-		<section className="gallery">
+		<section className="items">
 			<div>
 				{
-					tokens.map(({
+					items.map(({
 						imageSrc,
-						owner_id,
 						token_id,
-						isFav,
 					}) => (
-						<div key={token_id} className="item"
-							onClick={() => history.push('/token/' + token_id + '/')}
-						>
+						<div key={token_id} className="item" onClick={() => handleClick(token_id)}>
 							<img crossOrigin="true" src={imageSrc} />
 							{
-								isFav &&
+								favs.includes(token_id) &&
 								<div className="heart">
 									<img src={Heart} />
 								</div>

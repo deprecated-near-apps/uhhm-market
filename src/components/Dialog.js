@@ -1,25 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import * as nearAPI from 'near-api-js';
-import NEAR from 'url:../img/near.svg'
+import React, { useEffect } from 'react';
 import Close from 'url:../img/close.svg'
 
-export const Dialog = ({ resolve, reject, msg, choices, input, noClose = false, info = false, onClose }) => {
+export const Dialog = ({
+    resolve, reject,
+    msg, choices, input,
+    onClose,
+    onCloseButton,
+    info = false,
+}) => {
 
     useEffect(() => {
         window.scrollTo(0, 0)
         if (input) document.querySelector('#dialog-input-0').focus();
     }, [])
 
-	const resolveInput = () => {
-		resolve(input.map((_, i) => document.querySelector('#dialog-input-' + i).value));
-	};
+    const resolveInput = () => {
+        resolve(input.map((_, i) => document.querySelector('#dialog-input-' + i).value));
+    };
 
-	const handleClose = () => {
+    const handleClose = () => {
         reject()
-		if (onClose) onClose()
-	};
+        if (onClose) onClose()
+        if (onCloseButton) Object.values(onCloseButton)[0]()
+    };
 
-    return <section className="modal" onClick={() => handleClose()}>
+    return <section className="modal" onClick={handleClose}>
         <div className="background"></div>
         <div className="content">
             <div className="wrap"
@@ -28,27 +33,32 @@ export const Dialog = ({ resolve, reject, msg, choices, input, noClose = false, 
                     return false;
                 }}
             >
-                <div className="close" onClick={() => handleClose()}>
+                <div className="close" onClick={handleClose}>
                     <img src={Close} />
                 </div>
 
-                <p>{msg}</p>
-					{
-						input &&
-                        input.map(({ placeholder, type = 'text' }, i) => <div key={i}>
-                        	<input 
-                        		id={"dialog-input-" + i} type={type} placeholder={placeholder}
-                        		onKeyUp={(e) => e.key === 'Enter' && resolveInput()}
-                        	/>
-                        </div>)
-					}
-					{
-						choices &&
-                        choices.map((label, i) => <button key={i} onClick={() => resolve(label)}>{label}</button>)
-					}
-					{!info && !choices && <div className="button"
-						onClick={resolveInput}
-					>Accept</div>}
+                <div>{msg}</div>
+
+                {
+                    input &&
+                    input.map(({ placeholder, type = 'text' }, i) => <div key={i}>
+                        <input
+                            id={"dialog-input-" + i} type={type} placeholder={placeholder}
+                            onKeyUp={(e) => e.key === 'Enter' && resolveInput()}
+                        />
+                    </div>)
+                }
+                {
+                    choices &&
+                    choices.map((label, i) => <button key={i} onClick={() => resolve(label)}>{label}</button>)
+                }
+                {!info && !choices && <button className="center"
+                    onClick={resolveInput}
+                >Accept</button>}
+
+                {onCloseButton && <button className="center"
+                    onClick={handleClose}
+                >{Object.keys(onCloseButton)[0]}</button>}
 
             </div>
         </div>

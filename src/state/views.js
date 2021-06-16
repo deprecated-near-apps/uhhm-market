@@ -15,6 +15,8 @@ const NEAR_BASE = 'https://near.mypinata.cloud/ipfs/';
 const LOW_RES_GIF = '/low-res.gif';
 const VIDEO = '/1.m4v';
 
+const sortBids = (a, b) => parseInt(b.price, 10) - parseInt(a.price, 10)
+
 export const loadCredits = (account) => async({ update, getState }) => {
     if (!account) return
     const { contractAccount } = getState()
@@ -47,7 +49,6 @@ export const loadItems = (account) => async ({ update, getState }) => {
             },
         }])
     }).then((res) => res.json()))[0];
-    console.log(tokens)
 
     /// all sales
 
@@ -83,16 +84,26 @@ export const loadItems = (account) => async ({ update, getState }) => {
     })
 
     // merge sale listing with nft token data
+    const allBidsByType = {}
     sales.forEach(({ token_id, token_type }, i) => {
         let token = tokens.find(({ token_type: tt }) => tt === token_type);
         if (!token) return
-        sales[i] = Object.assign(token, sales[i], {
+        const sale = sales[i] = Object.assign(token, sales[i], {
             edition_id: parseInt(token_id.split(':')[1],10)
         });
+        (sale.bids[fungibleId] || []).sort(sortBids)
+        sale.minBid = Math.max(
+            parseInt(Object.values(sale.sale_conditions)[0], 10), // reserve
+            parseInt((sale.bids[fungibleId] || [])[0]?.price || '0', 10));
+
+        if (!allBidsByType[token_type]) allBidsByType[token_type] = [{ owner_id: 'reserve', price: Object.values(sale.sale_conditions)[0] }]
+        allBidsByType[token_type].push(...(sale.bids[fungibleId] || []))
     })
 
-    update('views', { tokens, sales })
-    return { tokens, sales }
+    Object.values(allBidsByType).forEach((arr) => arr.sort(sortBids))
+
+    update('views', { tokens, sales, allBidsByType })
+    return { tokens, sales, allBidsByType }
 };
 
 const data = [
