@@ -26,6 +26,12 @@ $gray-border: 2px solid rgba(255, 255, 255, 0.5);
     font-family: 'Inter', sans-serif !important;
     font-weight: 600;
 }
+@mixin scale-in-animation {
+    transform: scale(0);
+    transform-origin: center;
+    animation: scale-in 0.2s cubic-bezier(0, 0, 0.58, 1);
+    animation-fill-mode: forwards;
+}
 
 ::-webkit-scrollbar {
     width: 0;
@@ -40,10 +46,6 @@ $gray-border: 2px solid rgba(255, 255, 255, 0.5);
     box-sizing: border-box;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-}
-
-.gifffer-play-button {
-    display: none;
 }
 
 body {
@@ -176,10 +178,7 @@ section.items {
             position: relative;
             margin-right: 0.15vw;
             > img {
-                transform: scale(0);
-                transform-origin: center;
-                animation: scale-in 0.2s cubic-bezier(0, 0, 0.58, 1);
-                animation-fill-mode: forwards;
+                @include scale-in-animation;
                 width: 100%;
                 margin-bottom: -5px;
             }
@@ -208,13 +207,16 @@ section.token {
             img, video {
                 width: 100%;
             }
+            img {
+                @include scale-in-animation;
+            }
             video {
                 display: none;
             }
             .lds-loader {
                 position: absolute;
-                top: calc(50% - 40px);
-                left: calc(50% - 40px);
+                top: calc(50% - 32px);
+                left: calc(50% - 32px);
                 z-index: 1000;
             }
         }
@@ -239,9 +241,9 @@ section.token {
         }
     }
     .content {
+        width: 100vw;
         margin: 32px;
     }
-
     .ending {
         margin-top: 16px;
         > h2 {

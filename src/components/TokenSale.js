@@ -10,15 +10,16 @@ import Arrow from 'url:../img/arrow.svg';
 
 export const TokenSale = (props) => {
 
-    const { token, account, dispatch, views } = props
+    const { app, token, account, dispatch, views } = props
+	const { isMobile } = app
     const { credits } = views
-    const { token_id, token_type, minBid } = token
+    const { token_id, token_type, minBid, displayType, displayHowLongAgo } = token
 
     const edition = token_id.split(':')[1]
     const bids = token.bids[fungibleId] || []
 
-    const hasWinningBid = bids[0].owner_id === account?.accountId
-    let topBidOwner = bids[0].owner_id
+    const hasWinningBid = bids[0] && bids[0].owner_id === account?.accountId
+    let topBidOwner = bids[0]?.owner_id
     if (hasWinningBid) {
         topBidOwner = 'Your bid'
     }
@@ -29,6 +30,15 @@ export const TokenSale = (props) => {
 
     return <>
         <div className="content">
+
+            {
+                !isMobile && <div className="heading">
+                    <h2>HipHopHead</h2>
+                    <h2>{displayType}</h2>
+                    <time>Minted: {displayHowLongAgo}</time>
+                </div>
+            }
+
             <div className="bids-type">
                 <div>
                     <div className="label">High</div>
@@ -48,11 +58,11 @@ export const TokenSale = (props) => {
                 <img src={Menu} />
             </div>
 
-            { credits &&
+            {credits &&
                 <p>Credits: {formatAmount(credits)}</p>
             }
 
-            <BuyCredits />
+            {account && <BuyCredits />}
 
             {
                 hasOutbid && <div className="button red center text-white">

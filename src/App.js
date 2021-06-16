@@ -16,6 +16,7 @@ import { Dialog } from './components/Dialog';
 import { Credits } from './components/Credits';
 
 import './App.scss';
+import './AppMedia.scss';
 
 const App = () => {
 	const { state, dispatch, update } = useContext(appStore);

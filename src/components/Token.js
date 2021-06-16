@@ -87,15 +87,6 @@ export const Token = (props) => {
 				</video>
 			</div>
 		</div>
-		{
-			!isMobile && <div className="content">
-				<div className="heading">
-					<h2>HipHopHead</h2>
-					<h2>{displayType}</h2>
-					<time>Minted: {displayHowLongAgo}</time>
-				</div>
-			</div>
-		}
 
 		{isToken && <TokenSeries {...props} />}
 		{isSale && <TokenSale {...props} />}

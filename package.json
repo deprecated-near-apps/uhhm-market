@@ -44,7 +44,7 @@
         "test:unit": "(cd contracts && cargo test -- --nocapture --color always)",
         "prebuild": "rm -rf ./dist",
         "patch:deploy-config": "node ./utils/patch-deploy-config.js",
-        "build": "parcel build src/index.html --no-source-maps --public-url https://near-apps.github.io/nft-market/",
+        "build": "parcel build src/index.html --no-source-maps --public-url https://near-apps.github.io/uhhm-market/",
         "deploy": "yarn patch:deploy-config && cross-env REACT_APP_ENV=dev REACT_APP_API_HELPER=true yarn build && gh-pages -d dist"
     }
 }

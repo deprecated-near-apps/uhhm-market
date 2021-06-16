@@ -88,6 +88,9 @@ function CreditsInner(props) {
         <section className="credits">
 
             <div>
+
+                <p onClick={() => history.back()}>Back</p>
+                
                 <form onSubmit={handleSubmit}>
 
                     <input

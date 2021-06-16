@@ -4,9 +4,10 @@ import Menu from 'url:../img/menu-small.svg';
 
 export const TokenSeries = (props) => {
 
-    const { token, account, views } = props
+    const { app, token, account, views } = props
+	const { isMobile } = app
     const { sales, allBidsByType } = views
-    const { token_type } = token
+    const { token_type, displayType, displayHowLongAgo } = token
 
     const allBids = allBidsByType[token_type]
 
@@ -14,6 +15,15 @@ export const TokenSeries = (props) => {
 
     return <>
         <div className="content">
+
+            {
+                !isMobile && <div className="heading ">
+                    <h2>HipHopHead</h2>
+                    <h2>{displayType}</h2>
+                    <time>Minted: {displayHowLongAgo}</time>
+                </div>
+            }
+            
             <div className="bids-type">
                 <div>
                     <div className="label">Low</div>

@@ -1,0 +1,31 @@
+@media (min-width: 576px) {
+
+}
+@media (min-width: 768px) {
+    
+}
+@media (min-width: 992px) {
+    section.token {
+        padding: 64px;
+        align-items: flex-start;
+        .media, .content {
+            flex: 0.5;
+            margin-top: 0;
+            margin-bottom: 64px;
+        }
+        .heading {
+            text-align: left;
+        }
+    }
+    section.items > div {
+        grid-template-columns: 25% 25% 25% 25%;
+    }
+}
+@media (min-width: 1200px) {
+   
+}
+@media (min-width: 1600px) {
+    section.items > div {
+        grid-template-columns: 20% 20% 20% 20% 20%;
+    }
+}
