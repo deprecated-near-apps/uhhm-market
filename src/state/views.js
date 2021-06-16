@@ -6,6 +6,7 @@ const batchPath = domain + '/v1/batch/';
 const headers = new Headers({
 	'max-age': '3600'
 });
+const DELIMETER = '||';
 
 import { howLongAgo } from '../utils/date';
 
@@ -32,14 +33,44 @@ export const loadCredits = (account) => async({ update, getState }) => {
     })
 }
 
+const parseSale = (i, sales, tokens, allBidsByType) => {
+    let sale = sales[i]
+    const { token_id, token_type } = sale
+    let token = tokens.find(({ token_type: tt }) => tt === token_type);
+    if (token) {
+        sale = sales[i] = Object.assign(token, sales[i])
+    }
+    sale.edition_id = parseInt(token_id.split(':')[1]);
+    (sale.bids[fungibleId] || []).sort(sortBids)
+    sale.minBid = Math.max(
+        parseInt(Object.values(sale.sale_conditions)[0]), // reserve
+        parseInt((sale.bids[fungibleId] || [])[0]?.price || '0'));
+
+    if (!allBidsByType[token_type]) allBidsByType[token_type] = [{ owner_id: 'reserve', price: Object.values(sale.sale_conditions)[0] }]
+    allBidsByType[token_type].push(...(sale.bids[fungibleId] || []))
+
+    return { sales, tokens, allBidsByType }
+}
+
+export const loadSale = (token_id) => async ({ update, getState }) => {
+    const { contractAccount, views: { sales, tokens, allBidsByType } } = getState()
+    const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id})
+    const i = sales.findIndex(({ token_id }) => token_id === sale.token_id)
+    sales.splice(i, 1, sale)
+    parseSale(i, sales, tokens, allBidsByType)
+    update('views', { sales, allBidsByType })
+}
+
 export const loadItems = (account) => async ({ update, getState }) => {
 
     const { contractAccount } = getState()
 
     /// uhhm tokens
+    let newLoad = false
     let tokens = get(UHHM_TOKEN_KEYS[uhhmTokenVersion], null)
     if (!tokens) {
         console.log('fetching tokens from remote')
+        newLoad = true
         tokens = (await fetch(batchPath + '{}', {
             method: 'POST',
             headers,
@@ -85,7 +116,6 @@ export const loadItems = (account) => async ({ update, getState }) => {
 
     const salesNum = await contractAccount.viewFunction(marketId, 'get_supply_by_nft_contract_id', { nft_contract_id: contractId })
     console.log(salesNum)
-    const urlCacheMod = /transactionHashes/.test(window.location.href) ? '?skipcache=true' : ''
     const sales = (await fetch(batchPath + JSON.stringify([{
         contract: marketId,
         method: 'get_sales_by_nft_contract_id',
@@ -101,29 +131,15 @@ export const loadItems = (account) => async ({ update, getState }) => {
         sort: {
             path: 'metadata.issued_at',
         }
-    }]) + urlCacheMod, { headers }).then((res) => res.json()))[0];
+    }]), { headers }).then((res) => res.json()))[0];
 
     /// formatting
 
     // merge sale listing with nft token data
     const allBidsByType = {}
-    sales.forEach(({ token_id, token_type }, i) => {
-        let token = tokens.find(({ token_type: tt }) => tt === token_type);
-        if (!token) return
-        const sale = sales[i] = Object.assign(token, sales[i], {
-            edition_id: parseInt(token_id.split(':')[1])
-        });
-        (sale.bids[fungibleId] || []).sort(sortBids)
-        sale.minBid = Math.max(
-            parseInt(Object.values(sale.sale_conditions)[0]), // reserve
-            parseInt((sale.bids[fungibleId] || [])[0]?.price || '0'));
-
-        if (!allBidsByType[token_type]) allBidsByType[token_type] = [{ owner_id: 'reserve', price: Object.values(sale.sale_conditions)[0] }]
-        allBidsByType[token_type].push(...(sale.bids[fungibleId] || []))
-    })
+    sales.forEach((_, i) => parseSale(i, sales, tokens, allBidsByType))
 
     Object.values(allBidsByType).forEach((arr) => arr.sort(sortBids))
-    console.log(allBidsByType)
 
     update('views', { tokens, sales, allBidsByType })
     return { tokens, sales, allBidsByType }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { contractId, marketId, fungibleId } from '../utils/near-utils'
 import { BuyCredits } from './BuyCredits';
 import { years } from '../utils/format';
-import { loadCredits } from '../state/views';
+import { loadSale } from '../state/views';
 import { formatAmount } from '../utils/format';
 import { handlePlaceBid } from '../state/actions';
 import Menu from 'url:../img/menu-small.svg';
@@ -11,9 +11,13 @@ import Arrow from 'url:../img/arrow.svg';
 export const TokenSale = (props) => {
 
     const { app, wallet, token, account, dispatch, views, update } = props
-	const { isMobile, timeLeft } = app
+    const { isMobile, timeLeft } = app
     const { credits } = views
     const { token_id, token_type, minBid, displayType, displayHowLongAgo } = token
+
+    useEffect(() => {
+        dispatch(loadSale(token_id))
+    }, [])
 
     const edition = token_id.split(':')[1]
     const bids = token.bids[fungibleId] || []
@@ -25,6 +29,7 @@ export const TokenSale = (props) => {
     }
 
     const hasOutbid = !hasWinningBid && bids.some(({ owner_id }) => owner_id === account?.accountId)
+
 
     /// TODO sort bids descending
 
@@ -46,7 +51,7 @@ export const TokenSale = (props) => {
                 </div>
                 <div className="ending">
                     <p>Auction ends in:</p>
-                    <h2>{ timeLeft }</h2>
+                    <h2>{timeLeft}</h2>
                 </div>
             </div>
 
@@ -72,7 +77,7 @@ export const TokenSale = (props) => {
 
             {
                 hasWinningBid ?
-                    <div className="button green center text-white"  onClick={() => {
+                    <div className="button green center text-white" onClick={() => {
                         if (!/localhost/.test(window.location.href)) return
                         dispatch(handlePlaceBid(account, token, minBid))
                     }}>
@@ -80,10 +85,14 @@ export const TokenSale = (props) => {
                     </div>
                     :
                     account ?
-                        <div className="button" onClick={() => dispatch(handlePlaceBid(account, token, minBid))}>
-                            <div>Place a Bid</div>
-                            <img src={Arrow} />
-                        </div>
+                        <>
+                            {
+                                credits !== '0' && <div className="button" onClick={() => dispatch(handlePlaceBid(account, token, minBid))}>
+                                    <div>Place a Bid</div>
+                                    <img src={Arrow} />
+                                </div>
+                            }
+                        </>
                         :
                         <button onClick={() => wallet.signIn()}>Connect Wallet</button>
 
