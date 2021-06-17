@@ -31,8 +31,10 @@ export const Items = ({ app, views, account, dispatch }) => {
 					duration: 500,
 					easing: 'easeOutQuad',
 					complete: () => {
-						document.querySelector(`#explode-` + index).style.transform = 'scale(0)';
-						document.querySelector(`#explode-` + index).style.opacity = 1;
+						const el = document.querySelector(`#explode-` + index);
+						if (!el) return;
+						el.style.transform = 'scale(0)';
+						el.style.opacity = 1;
 					}
 				});
 			}

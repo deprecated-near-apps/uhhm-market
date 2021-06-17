@@ -39,8 +39,10 @@ export const Token = (props) => {
 					duration: 500,
 					easing: 'easeOutQuad',
 					complete: () => {
-						document.querySelector(`#explode`).style.transform = 'scale(0)';
-						document.querySelector(`#explode`).style.opacity = 1;
+						const el = document.querySelector(`#explode`);
+						if (!el) return;
+						el.style.transform = 'scale(0)';
+						el.style.opacity = 1;
 					}
 				});
 			}
