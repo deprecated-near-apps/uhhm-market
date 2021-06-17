@@ -108,9 +108,11 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 										}
 									</div>
 									:
-									<button onClick={() => wallet.signIn()}>
-                                        Connect Wallet
-									</button>
+									<div className="account-button">
+										<button onClick={() => wallet.signIn()}>
+											Connect Wallet
+										</button>
+									</div>
 							}
 						</div>
 					</>

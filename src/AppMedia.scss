@@ -44,6 +44,9 @@
         background: #888;
         > div {
             padding: 0 25vw;
+            > div {
+                padding: 48px 32px;
+            }
         }
         header {
             padding: black;

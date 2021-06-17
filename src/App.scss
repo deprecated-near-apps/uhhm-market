@@ -277,6 +277,7 @@ section.items {
             cursor: pointer;
             position: relative;
             margin-right: 0.15vw;
+            transition: 0.2s cubic-bezier(0, 0, 0.58, 1);
             > img {
                 @include scale-in-animation;
                 width: 100%;
@@ -309,6 +310,7 @@ section.items {
                 > .heart-outline {
                     display: block;
                 }
+                filter: brightness(2);
             }
         }
     }
