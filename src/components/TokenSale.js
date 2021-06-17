@@ -13,7 +13,7 @@ export const TokenSale = (props) => {
     const { app, wallet, token, account, dispatch, views, update } = props
     const { isMobile, timeLeft } = app
     const { credits } = views
-    const { token_id, token_type, minBid, displayType, displayHowLongAgo } = token
+    const { token_id, minBid, displayType } = token
 
     useEffect(() => {
         dispatch(loadSale(token_id))
@@ -30,7 +30,6 @@ export const TokenSale = (props) => {
 
     const hasOutbid = !hasWinningBid && bids.some(({ owner_id }) => owner_id === account?.accountId)
 
-
     /// TODO sort bids descending
 
     return <>
@@ -40,7 +39,7 @@ export const TokenSale = (props) => {
                 !isMobile && <div className="heading">
                     <h2>HipHopHead</h2>
                     <h2>{displayType}</h2>
-                    <time>Minted: {displayHowLongAgo}</time>
+                    {/* <time>Minted: {displayHowLongAgo}</time> */}
                 </div>
             }
 
@@ -55,19 +54,13 @@ export const TokenSale = (props) => {
                 </div>
             </div>
 
-            <div className="select edition"
+            <button className="select edition"
                 onClick={() => update('app.isEditionOpen', true)}
             >
                 <div># {edition}</div>
                 <div>{years(edition)}</div>
                 <img src={Menu} />
-            </div>
-
-            {credits &&
-                <p>Credits: {formatAmount(credits)}</p>
-            }
-
-            {account && <BuyCredits />}
+            </button>
 
             {
                 hasOutbid && <div className="button red center text-white">
@@ -85,18 +78,20 @@ export const TokenSale = (props) => {
                     </div>
                     :
                     account ?
-                        <>
-                            {
-                                credits !== '0' && <div className="button" onClick={() => dispatch(handlePlaceBid(account, token, minBid))}>
-                                    <div>Place a Bid</div>
-                                    <img src={Arrow} />
-                                </div>
-                            }
-                        </>
+                        <button disabled={parseInt(credits) < parseInt(minBid)} onClick={() => dispatch(handlePlaceBid(account, token, minBid))}>
+                            <div>Place a Bid</div>
+                            <img src={Arrow} />
+                        </button>
                         :
                         <button onClick={() => wallet.signIn()}>Connect Wallet</button>
 
             }
+
+            {credits &&
+                <div className="center"><p>Credits: {formatAmount(credits)}</p></div>
+            }
+
+            {account && <BuyCredits />}
 
             <div className="bids">
                 {

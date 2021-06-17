@@ -4,10 +4,10 @@ import { FAV_KEY } from './favs';
 
 import { initNear } from './near';
 import { loadItems, loadCredits } from './views';
-import { isMobile } from '../utils/mobile';
+import { isMobile, checkIsMobile } from '../utils/mobile';
 import { howLongAgo } from '../utils/date';
 
-const endTime = Date.now() + 2629800000
+const endTime = Date.now() + 3600000
 
 const initialState = {
 	app: {
@@ -60,9 +60,18 @@ export const onAppMount = () => async ({ update, dispatch }) => {
 	update('views.favs', get(FAV_KEY, []))
 	update('app.timeLeft', howLongAgo({ ts: endTime, left: true }))
 	setInterval(() => {
+		if (endTime - Date.now() > 3600000) return
 		update('app.timeLeft', howLongAgo({ ts: endTime, left: true }))
 		// update('app.timeLeft', howLongAgo({ ts: endTime, left: true, detail: 'minutes' }))
-	}, 60000)
+	}, 5000)
+	let resizeDebounce
+	window.onresize = () => {
+
+		if (resizeDebounce) clearTimeout(resizeDebounce)
+		resizeDebounce = setTimeout(() => {
+			update('app.isMobile', window.innerWidth < 992 || checkIsMobile())
+		}, 500)
+	}
 };
 
 export const snackAttack = (msg) => async ({ update, dispatch }) => {

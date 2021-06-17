@@ -11,6 +11,20 @@
             transform: translateX(45vw)
         }
     }
+    header {
+        height: 96px;
+        > div {
+            height: 32px;
+        }
+    }
+    section {
+        margin-top: 96px;
+    }
+    section.credits {
+        max-width: 50vw;
+        margin-left:auto;
+        margin-right:auto;
+    }
     section.token {
         padding: 64px;
         align-items: flex-start;

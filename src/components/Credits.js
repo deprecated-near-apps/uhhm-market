@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { CardElement, Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 import { Footer } from './Footer';
 import { loadCredits } from '../state/views';
 import Approved from 'url:../img/approved.svg';
 import ErrorIcon from 'url:../img/error.svg';
+import Back from 'url:../img/back-arrow.svg';
 import { parseAmount } from '../utils/format';
 import { setDialog } from '../state/app';
 
@@ -30,6 +31,8 @@ function CreditsInner(props) {
 
     const [amount, setAmount] = useState("");
     const [error, setError] = useState();
+
+    useEffect(() => document.querySelector('input').focus(), [])
 
     const handleSubmit = async (event) => {
         if (event) event.preventDefault();
@@ -91,7 +94,9 @@ function CreditsInner(props) {
 
             <div>
 
-                <p onClick={() => history.back()}>Back</p>
+                <img src={Back} onClick={() => history.back()} />
+
+                <h1>Buy Credits</h1>
                 
                 <form onSubmit={handleSubmit}>
 

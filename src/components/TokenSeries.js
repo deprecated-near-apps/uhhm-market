@@ -4,10 +4,10 @@ import Menu from 'url:../img/menu-small.svg';
 
 export const TokenSeries = (props) => {
 
-    const { app, token, update, views } = props
+    const { app, token, update, views, dispatch } = props
 	const { isMobile, timeLeft } = app
-    const { sales, allBidsByType } = views
-    const { token_type, displayType, displayHowLongAgo } = token
+    const { salesByType, allBidsByType } = views
+    const { token_type, displayType } = token
 
     const allBids = allBidsByType[token_type]
 
@@ -18,7 +18,7 @@ export const TokenSeries = (props) => {
                 !isMobile && <div className="heading ">
                     <h2>HipHopHead</h2>
                     <h2>{displayType}</h2>
-                    <time>Minted: {displayHowLongAgo}</time>
+                    {/* <time>Minted: {displayHowLongAgo}</time> */}
                 </div>
             }
             
@@ -33,7 +33,7 @@ export const TokenSeries = (props) => {
                 </div>
             </div>
             <div className="description">
-                <h4>36/47 editions available</h4>
+                <h4>{salesByType[token_type]}/47 editions available</h4>
                 <p>Each edition corresponds to a specific year in the hip-hop industry and is an independent NFT with their own bids. Thus, Edition #1 corresponds to the period from 1973 to 1974, Edition #2 to the period from 1974 to 1975, and so on till 2021.</p>
             </div>
             <div className="ending">

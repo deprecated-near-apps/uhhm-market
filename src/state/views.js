@@ -33,7 +33,7 @@ export const loadCredits = (account) => async({ update, getState }) => {
     })
 }
 
-const parseSale = (i, sales, tokens, allBidsByType) => {
+const parseSale = (i, sales, tokens, allBidsByType, salesByType) => {
     let sale = sales[i]
     const { token_id, token_type } = sale
     let token = tokens.find(({ token_type: tt }) => tt === token_type);
@@ -42,14 +42,20 @@ const parseSale = (i, sales, tokens, allBidsByType) => {
     }
     sale.edition_id = parseInt(token_id.split(':')[1]);
     (sale.bids[fungibleId] || []).sort(sortBids)
+
     sale.minBid = Math.max(
         parseInt(Object.values(sale.sale_conditions)[0]), // reserve
         parseInt((sale.bids[fungibleId] || [])[0]?.price || '0'));
 
     if (!allBidsByType[token_type]) allBidsByType[token_type] = [{ owner_id: 'reserve', price: Object.values(sale.sale_conditions)[0] }]
     allBidsByType[token_type].push(...(sale.bids[fungibleId] || []))
+    
+    if (salesByType) {
+        if (!salesByType[token_type]) salesByType[token_type] = 0
+        salesByType[token_type]++;
+    }
 
-    return { sales, tokens, allBidsByType }
+    return { sales, tokens, allBidsByType, salesByType }
 }
 
 export const loadSale = (token_id) => async ({ update, getState }) => {
@@ -136,13 +142,13 @@ export const loadItems = (account) => async ({ update, getState }) => {
     /// formatting
 
     // merge sale listing with nft token data
-    const allBidsByType = {}
-    sales.forEach((_, i) => parseSale(i, sales, tokens, allBidsByType))
+    const allBidsByType = {}, salesByType = {}
+    sales.forEach((_, i) => parseSale(i, sales, tokens, allBidsByType, salesByType))
 
     Object.values(allBidsByType).forEach((arr) => arr.sort(sortBids))
 
-    update('views', { tokens, sales, allBidsByType })
-    return { tokens, sales, allBidsByType }
+    update('views', { tokens, sales, allBidsByType, salesByType })
+    return { tokens, sales, allBidsByType, salesByType }
 };
 
 const data = [

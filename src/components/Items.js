@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { handleFav } from '../state/favs';
 import { Footer } from './Footer';
 import Heart from 'url:../img/heart.svg';
+import HeartOutline from 'url:../img/heart-outline.svg';
+import anime from 'animejs/lib/anime.es.js';
 
 const DBL_CLICK_WAIT = 300;
 let clickTimeout
@@ -16,10 +18,24 @@ export const Items = ({ app, views, account, dispatch }) => {
 		clickTimeout = null
 	}, []);
 
-	const handleClick = (token_type) => {
+	const handleClick = (token_type, index) => {
 		if (clickTimeout) {
 			clearTimeout(clickTimeout)
 			clickTimeout = null
+			// explode!
+			if (!favs.includes(token_type)) {
+				anime({
+					targets: `#explode-` + index,
+					scale: 30,
+					opacity: 0,
+					duration: 500,
+					easing: 'easeOutQuad',
+					complete: () => {
+						document.querySelector(`#explode-` + index).style.transform = 'scale(0)'
+						document.querySelector(`#explode-` + index).style.opacity = 1;
+					}
+				});
+			}
 			dispatch(handleFav(token_type))
 			return
 		}
@@ -38,11 +54,11 @@ export const Items = ({ app, views, account, dispatch }) => {
 					items.map(({
 						imageSrc,
 						token_type,
-					}) => (
-						<div key={token_type} className="item" onClick={() => handleClick(token_type)}>
+					}, i) => (
+						<div key={token_type} className="item" onClick={() => handleClick(token_type, i)}>
 							<img crossOrigin="true" src={imageSrc} />
 							{
-								favs.includes(token_type) &&
+								favs.includes(token_type) ?
 								<div className="heart" onClick={(e) => {
 									e.stopPropagation();
 									dispatch(handleFav(token_type))
@@ -50,7 +66,18 @@ export const Items = ({ app, views, account, dispatch }) => {
 								}}>
 									<img src={Heart} />
 								</div>
+								:
+								<div className="heart-outline" onClick={(e) => {
+									e.stopPropagation();
+									dispatch(handleFav(token_type))
+									return false;
+								}}>
+									<img src={HeartOutline} />
+								</div>
 							}
+							<div className="heart-explode">
+								<img id={'explode-' + i} src={Heart} />
+							</div>
 						</div>
 					))
 				}

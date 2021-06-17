@@ -3,6 +3,7 @@ $width: 800px;
 $halfw: 400px;
 $margin-fix: -16px;
 $red: #ED1C25;
+$gray: #232323;
 $gray-border: 2px solid rgba(255, 255, 255, 0.5);
 $shadow: 0 0 8px black, 0 0 32px rgba(0, 0, 0, 0.5);
 
@@ -17,20 +18,69 @@ $shadow: 0 0 8px black, 0 0 32px rgba(0, 0, 0, 0.5);
     justify-content: space-between;
     align-items: center;
     margin-top: 16px;
-    padding: 16px;
+    padding: 8px 16px;
     font-size: 0.8rem;
     width: 100%;
     background: white;
     color: black;
-    border: none;
+    border: 2px solid white;
     outline: none;
     font-family: 'Inter', sans-serif !important;
     font-weight: 600;
+}
+@mixin credits {
+    display: block;
+    text-align: center;
+    padding-bottom: 32px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+    > div:nth-of-type(1) {
+        font-size: 2rem;
+        color: white !important;
+    }
+    > div:nth-of-type(2) {
+        font-size: 1rem;
+        opacity: 0.5;
+    }
+}
+@keyframes scale-in {
+    0% {
+      transform: scale(0)
+    }
+    100% {
+      transform: scale(1)
+    }
 }
 @mixin scale-in-animation {
     transform: scale(0);
     transform-origin: center;
     animation: scale-in 0.2s cubic-bezier(0, 0, 0.58, 1);
+    animation-fill-mode: forwards;
+}
+@keyframes slide-in-from-right {
+    0% {
+      transform: translateX(50vw)
+    }
+    100% {
+      transform: translateX(0)
+    }
+}
+@mixin slide-in-from-right-animation {
+    transform: translateX(50vw);
+    transform-origin: center;
+    animation: slide-in-from-right 0.2s cubic-bezier(0, 0, 0.58, 1);
+    animation-fill-mode: forwards;
+}
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+@mixin fade-in-animation {
+    opacity: 0;
+    animation: fade-in 0.2s cubic-bezier(0, 0, 0.58, 1);
     animation-fill-mode: forwards;
 }
 
@@ -61,6 +111,7 @@ body {
 }
 
 header {
+    cursor: pointer;
     box-shadow: $shadow;
     background: black;
     position: fixed;
@@ -75,19 +126,85 @@ header {
     padding: 16px;
     > div {
         position: relative;
-        > .badge {
-            position: absolute;
-            top: -4px;
-            right: -9px;
-            border-radius: 4px;
-            background: $red;
-            height: 16px;
-            width: 16px;
-            font-size: 8px;
-            line-height: 16px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
+    }
+    .badge {
+        position: absolute;
+        top: -4px;
+        right: -9px;
+        border-radius: 4px;
+        background: $red;
+        height: 16px;
+        width: 16px;
+        font-size: 8px;
+        line-height: 16px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+    .options {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        > div {
+            margin-right: 32px;
+            opacity: 0.5;
+            > span {
+                font-size: 0.9rem;
+                display: inline-block;
+                height: 32px;
+            }
+            &.active, &:hover {
+                opacity: 1;
+                > span {
+                    border-bottom: 2px solid $red;
+                }
+            }
+        }
+    }
+    > div:nth-of-type(3) {
+        width: 200px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        > div {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .account-button {
+            > button {
+                display: inline-block;
+                width: 150px;
+                margin: 0;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                margin-top: -8px;
+            }
+
+            position: relative;
+            .account-menu {
+                @include slide-in-from-right-animation;
+                box-shadow: $shadow;
+                padding: 32px;
+                position: absolute;
+                width: 400px;
+                top: 36px;
+                right: 0;
+                background: black;
+                background-color: $gray;
+
+                &:active {
+                    border: 2px solid white;
+                }
+                .credits {
+                    @include credits;
+                    border: none;
+                }
+                .connect {
+                    width: 100%;
+                }
+            }
         }
     }
 }
@@ -120,18 +237,7 @@ nav {
         width: 100%;
 
         .credits {
-            display: block;
-            text-align: center;
-            padding-bottom: 32px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.25);
-            > div:nth-of-type(1) {
-                font-size: 2rem;
-                color: white !important;
-            }
-            > div:nth-of-type(2) {
-                font-size: 1rem;
-                opacity: 0.5;
-            }
+            @include credits;
         }
         .options {
             margin: 16px 32px;
@@ -162,15 +268,6 @@ section {
     margin-top: 64px;
 }
 
-@keyframes scale-in {
-    0% {
-      transform: scale(0)
-    }
-    100% {
-      transform: scale(1)
-    }
-}
-
 section.items {
     > div {
         margin-bottom: 32px;
@@ -185,13 +282,32 @@ section.items {
                 width: 100%;
                 margin-bottom: -5px;
             }
-            > .heart {
+            > .heart, > .heart-outline, > .heart-explode {
+                @include fade-in-animation;
                 position: absolute;
                 top: 8px;
                 right: 8px;
                 width: 16px;
                 > img {
+                    position: absolute;
                     width: 100%;
+                }
+            }
+            > .heart-explode {
+                z-index: 10000;
+                top: calc(50% - 8px);
+                left: calc(50% - 8px);
+                > img {
+                    transform: scale(0);
+                    transform-origin: center;
+                }
+            }
+            > .heart-outline {
+                display: none;
+            }
+            &:hover {
+                > .heart-outline {
+                    display: block;
                 }
             }
         }
@@ -223,14 +339,23 @@ section.token {
                 z-index: 1000;
             }
         }
-        > .heart {
-            z-index: 2000;
+        > .heart, > .heart-explode {
+            z-index: 1;
             position: absolute;
             top: 8px;
             right: 8px;
             width: 24px;
             > img {
                 width: 100%;
+            }
+        }
+        > .heart-explode {
+            z-index: 10000;
+            top: calc(50% - 8px);
+            left: calc(50% - 8px);
+            > img {
+                transform: scale(0);
+                transform-origin: center;
             }
         }
     }
@@ -307,6 +432,9 @@ section.token {
             img {
                 filter: invert(100%);
             }
+            &.active, &:hover {
+                border: 2px solid white;
+            }
         }
     }
     .bids {
@@ -331,7 +459,7 @@ section.token {
 
 
 section.credits {
-    padding: 0 32px;
+    padding: 32px;
     background: black;
     display: flex;
     flex-direction: column;
@@ -343,7 +471,7 @@ section.credits {
     }
     .card {
         margin-top: 16px;
-        padding: 16px;
+        padding: 10px;
         width: 100%;
         background: rgba(255, 255, 255, 0.2);
         color: white;
@@ -443,7 +571,7 @@ section.modal {
             box-shadow: $shadow;
             text-align: center;
             margin: 16px;
-            background: #222;
+            background: $gray;
             padding: 32px;
             flex: 1;
             position: relative;
@@ -482,21 +610,37 @@ footer {
     }
 }
 
-
 button, input, select {
     @include button;
     &.text {
         background: none;
+        border: none;
         color: rgba(255, 255, 255, 0.5)
     }
 }
 
-button:disabled {
-    background:rgb(255, 255, 255, 0.5)
+button {
+    &.dark {
+        background: none;
+        color: white;
+        border: $gray-border;
+        img {
+            filter: invert(100%);
+        }
+        &.active, &:hover {
+            border: 2px solid white;
+        }
+    }
+    &:disabled {
+        background:rgb(255, 255, 255, 0.5);
+        border-color: transparent;
+        cursor: not-allowed;
+    }
 }
 
 input {
     background: rgba(255, 255, 255, 0.2);
+    border-color: transparent;
     color: white;
 }
 
@@ -504,10 +648,12 @@ input {
 
 .green {
     background: #00C08C !important;
+    border-color: #00C08C !important;
 }
 
 .red {
     background: #FF595D !important;
+    border-color: #FF595D !important;
 }
 
 .text-white {

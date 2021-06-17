@@ -3,6 +3,7 @@ import { handleFav } from '../state/favs';
 import { Footer } from './Footer';
 import { TokenSeries } from './TokenSeries';
 import { TokenSale } from './TokenSale';
+import anime from 'animejs/lib/anime.es.js';
 
 import HeartOutline from 'url:../img/heart-outline.svg';
 import Heart from 'url:../img/heart.svg';
@@ -15,7 +16,7 @@ export const Token = (props) => {
 	const { app, update, dispatch, views, pathArgs } = props
 
 	const { isMobile } = app
-	const { tokens, favs } = views
+	const { tokens, favs, salesByType } = views
 	const isToken = /token/.test(pathArgs[0])
 	const isSale = /sale/.test(pathArgs[0])
 
@@ -29,6 +30,21 @@ export const Token = (props) => {
 		if (clickTimeout) {
 			clearTimeout(clickTimeout)
 			clickTimeout = null
+			// explode!
+			if (!favs.includes(token_type)) {
+				anime({
+					targets: `#explode`,
+					scale: 30,
+					opacity: 0,
+					duration: 500,
+					easing: 'easeOutQuad',
+					complete: () => {
+						document.querySelector(`#explode`).style.transform = 'scale(0)'
+						document.querySelector(`#explode`).style.opacity = 1;
+					}
+				});
+			}
+
 			dispatch(handleFav(token_type))
 			return
 		}
@@ -66,7 +82,7 @@ export const Token = (props) => {
 				<div className="heading">
 					<h2>HipHopHead</h2>
 					<h2>{displayType}</h2>
-					<time>Minted: {displayHowLongAgo}</time>
+					<time>{salesByType[token_type]}/47 available</time>
 				</div>
 			</div>
 		}
@@ -77,6 +93,9 @@ export const Token = (props) => {
 				return false;
 			}}>
 				<img src={favs.includes(token_type) ? Heart : HeartOutline} />
+			</div>
+			<div className="heart-explode">
+				<img id={'explode'} src={Heart} />
 			</div>
 			<div className="video-wrap">
 				<img crossOrigin="true" src={imageSrc} />

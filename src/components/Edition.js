@@ -20,7 +20,7 @@ export const Edition = (props) => {
             <span>Select Edition</span>
             <img src={Close} onClick={() => update('app.isEditionOpen', false)} />
         </header>
-        <div>
+        <div onClick={() => update('app.isEditionOpen', false)} >
             <div>
                 <div className="not-available">
                     <div>#1</div>

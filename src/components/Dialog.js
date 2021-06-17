@@ -4,6 +4,7 @@ import Close from 'url:../img/close.svg'
 export const Dialog = ({
     resolve, reject,
     msg, choices, input,
+    acceptLabel = 'Accept',
     onClose,
     onCloseButton,
     info = false,
@@ -54,7 +55,7 @@ export const Dialog = ({
                 }
                 {!info && !choices && <button className="center"
                     onClick={resolveInput}
-                >Accept</button>}
+                >{acceptLabel}</button>}
 
                 {onCloseButton && <button className="center"
                     onClick={handleClose}
