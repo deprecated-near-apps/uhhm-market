@@ -152,7 +152,7 @@ nav {
             }
         }
         .connect {
-            padding: 0 16px;
+            padding: 0 16px 32px 16px;
             width: 100%;
         }
     }
@@ -177,6 +177,7 @@ section.items {
         display: grid;
         grid-template-columns: 33.33% 33.33% 33.33%;
         > .item {
+            cursor: pointer;
             position: relative;
             margin-right: 0.15vw;
             > img {

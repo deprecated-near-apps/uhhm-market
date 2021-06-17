@@ -8,8 +8,8 @@ export const Footer = () => {
         <p>Built on</p>
         <img src={NEAR} />
         <div className="social">
-            <img src={Twitter} />
-            <img src={Discord} />
+            <a href="https://twitter.com/NEARProtocol" target="_blank"><img src={Twitter} /></a>
+            <a href="https://near.chat" target="_blank"><img src={Discord} /></a>
         </div>
         <div className="tos">
             <span>Terms of Use</span>

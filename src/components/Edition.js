@@ -1,8 +1,7 @@
 import React from 'react';
 import Close from 'url:../img/close.svg';
 import { years } from '../utils/format';
-
-const editions = Array(36).fill(0)
+import { formatAmount } from '../utils/format'
 
 export const Edition = (props) => {
 
@@ -13,6 +12,8 @@ export const Edition = (props) => {
 
     const editions = sales.filter(({ token_type: tt }) => tt === token_type).sort((a, b) => a.edition_id - b.edition_id)
     const rest = Array(36 - editions.length).fill(editions.length + 2)
+
+    console.log(editions)
 
     return <section className="edition">
         <header>
@@ -27,13 +28,13 @@ export const Edition = (props) => {
                     <div>Not Available</div>
                 </div>
                 {
-                    editions.map(({ token_id, edition_id }) => <div key={edition_id} onClick={() => {
+                    editions.map(({ token_id, edition_id, minBid }) => <div key={edition_id} onClick={() => {
                         history.push('/sale/' + token_id)
                         update('app.isEditionOpen', false)
                     }}>
                         <div>#{edition_id}</div>
                         <div>{years(edition_id)}</div>
-                        <div>$150</div>
+                        <div>{formatAmount(minBid)}</div>
                     </div>)
                 }
                 {
