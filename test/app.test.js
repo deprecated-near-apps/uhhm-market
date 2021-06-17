@@ -67,7 +67,7 @@ const saleTokens = data.map(({ token_type, metadata }) => ({
 const contractId = contractAccount.accountId;
 console.log('\n\n contractId:', contractId, '\n\n');
 
-const fungibleId = 'dev-1623722036493-86801174308452'
+const fungibleId = 'dev-1623722036493-86801174308452';
 const marketId = 'market.' + contractId;
 
 /// run tests
@@ -171,9 +171,9 @@ describe('deploy contract ' + contractName, () => {
 					gas: GAS,
 					attachedDeposit: parseNearAmount('0.1')
 				});
-				console.log('\n\n minted', uhhmTokens[i].token_id, i+1)
+				console.log('\n\n minted', uhhmTokens[i].token_id, i+1);
 			} catch (e) {
-				console.warn(e)
+				console.warn(e);
 			}
 		}
 		
@@ -197,9 +197,9 @@ describe('deploy contract ' + contractName, () => {
 					gas: GAS,
 					attachedDeposit: parseNearAmount('0.1')
 				});
-				console.log('\n\n minted', saleTokens[i].token_id, i+1)
+				console.log('\n\n minted', saleTokens[i].token_id, i+1);
 			} catch (e) {
-				console.warn(e)
+				console.warn(e);
 			}
 			try {
 				await owner.functionCall({
@@ -215,9 +215,9 @@ describe('deploy contract ' + contractName, () => {
 					gas: GAS,
 					attachedDeposit: parseNearAmount('0.01')
 				});
-				console.log('\n\n approved', saleTokens[i].token_id, i+1)
+				console.log('\n\n approved', saleTokens[i].token_id, i+1);
 			} catch(e) {
-				console.warn(e)
+				console.warn(e);
 			}
 		}
 		

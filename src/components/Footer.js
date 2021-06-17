@@ -4,17 +4,17 @@ import Twitter from 'url:../img/twitter.svg';
 import Discord from 'url:../img/discord.svg';
 
 export const Footer = () => {
-    return <footer>
-        <p>Built on</p>
-        <img src={NEAR} />
-        <div className="social">
-            <a href="https://twitter.com/NEARProtocol" target="_blank"><img src={Twitter} /></a>
-            <a href="https://near.chat" target="_blank"><img src={Discord} /></a>
-        </div>
-        <div className="tos">
-            <span>Terms of Use</span>
-            <span>Privacy Policy</span>
-        </div>
-    </footer>
+	return <footer>
+		<p>Built on</p>
+		<img src={NEAR} />
+		<div className="social">
+			<a href="https://twitter.com/NEARProtocol" target="_blank"><img src={Twitter} /></a>
+			<a href="https://near.chat" target="_blank"><img src={Discord} /></a>
+		</div>
+		<div className="tos">
+			<span>Terms of Use</span>
+			<span>Privacy Policy</span>
+		</div>
+	</footer>;
 };
 

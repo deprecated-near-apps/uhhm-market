@@ -13,13 +13,13 @@ const {
 	},
 } = nearAPI;
 
-const credPath = `./neardev/${networkId}/${contractName}.json`
+const credPath = `./neardev/${networkId}/${contractName}.json`;
 console.log(
 	"Loading Credentials:\n",
 	credPath
 );
 
-let credentials
+let credentials;
 try {
 	credentials = JSON.parse(
 		fs.readFileSync(
@@ -27,7 +27,7 @@ try {
 		)
 	);
 } catch(e) {
-	console.warn(e)
+	console.warn(e);
 	/// attempt to load backup creds from local machine
 	credentials = JSON.parse(
 		fs.readFileSync(

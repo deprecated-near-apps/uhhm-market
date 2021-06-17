@@ -9,27 +9,27 @@ import HeartOutline from 'url:../img/heart-outline.svg';
 import Heart from 'url:../img/heart.svg';
 
 const DBL_CLICK_WAIT = 300;
-let clickTimeout
+let clickTimeout;
 
 export const Token = (props) => {
 
-	const { app, update, dispatch, views, pathArgs } = props
+	const { app, update, dispatch, views, pathArgs } = props;
 
-	const { isMobile } = app
-	const { tokens, favs, salesByType } = views
-	const isToken = /token/.test(pathArgs[0])
-	const isSale = /sale/.test(pathArgs[0])
+	const { isMobile } = app;
+	const { tokens, favs, salesByType } = views;
+	const isToken = /token/.test(pathArgs[0]);
+	const isSale = /sale/.test(pathArgs[0]);
 
-	const [mounted, setMounted] = useState(false)
+	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => {
-		setMounted(true)
+		setMounted(true);
 	}, []);
 
 	const handleClick = (token_type) => {
 		if (clickTimeout) {
-			clearTimeout(clickTimeout)
-			clickTimeout = null
+			clearTimeout(clickTimeout);
+			clickTimeout = null;
 			// explode!
 			if (!favs.includes(token_type)) {
 				anime({
@@ -39,29 +39,29 @@ export const Token = (props) => {
 					duration: 500,
 					easing: 'easeOutQuad',
 					complete: () => {
-						document.querySelector(`#explode`).style.transform = 'scale(0)'
+						document.querySelector(`#explode`).style.transform = 'scale(0)';
 						document.querySelector(`#explode`).style.opacity = 1;
 					}
 				});
 			}
 
-			dispatch(handleFav(token_type))
-			return
+			dispatch(handleFav(token_type));
+			return;
 		}
 		clickTimeout = setTimeout(() => {
-			clearTimeout(clickTimeout)
-			clickTimeout = null
-		}, DBL_CLICK_WAIT)
-	}
+			clearTimeout(clickTimeout);
+			clickTimeout = null;
+		}, DBL_CLICK_WAIT);
+	};
 
-	let token
+	let token;
 	if (isSale) {
-		token = tokens.find((t) => t.token_id === pathArgs[1])
+		token = tokens.find((t) => t.token_id === pathArgs[1]);
 	} else {
-		token = tokens.find((t) => t.token_type === pathArgs[1])
+		token = tokens.find((t) => t.token_type === pathArgs[1]);
 	}
 
-	if (!token || !mounted) return null
+	if (!token || !mounted) return null;
 
 	const {
 		token_type,
@@ -71,9 +71,9 @@ export const Token = (props) => {
 		videoSrc,
 		videoSrc2,
 		videoSrc3,
-	} = token
+	} = token;
 
-	props = { ...props, token }
+	props = { ...props, token };
 
 	return <section className="token">
 		{
@@ -89,7 +89,7 @@ export const Token = (props) => {
 		<div className="media" onClick={() => handleClick(token_type)}>
 			<div className="heart" onClick={(e) => {
 				e.stopPropagation();
-				dispatch(handleFav(token_type))
+				dispatch(handleFav(token_type));
 				return false;
 			}}>
 				<img src={favs.includes(token_type) ? Heart : HeartOutline} />
@@ -103,9 +103,9 @@ export const Token = (props) => {
 				<video
 					onClick={() => document.querySelector('video').play()}
 					onLoadedData={() => {
-						document.querySelector('.video-wrap .lds-loader').style.display = 'none'
-						document.querySelector('.video-wrap img').style.display = 'none'
-						document.querySelector('.video-wrap video').style.display = 'block'
+						document.querySelector('.video-wrap .lds-loader').style.display = 'none';
+						document.querySelector('.video-wrap img').style.display = 'none';
+						document.querySelector('.video-wrap video').style.display = 'block';
 					}}
 					autoPlay={true} loop={true} preload="auto"
 				>
@@ -120,6 +120,6 @@ export const Token = (props) => {
 		{isSale && <TokenSale {...props} />}
 
 		<Footer />
-	</section>
+	</section>;
 };
 

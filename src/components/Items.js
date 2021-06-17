@@ -6,22 +6,22 @@ import HeartOutline from 'url:../img/heart-outline.svg';
 import anime from 'animejs/lib/anime.es.js';
 
 const DBL_CLICK_WAIT = 300;
-let clickTimeout
+let clickTimeout;
 
 export const Items = ({ app, views, account, dispatch }) => {
 
-	const { isFavOn } = app
-	const { tokens, favs } = views
+	const { isFavOn } = app;
+	const { tokens, favs } = views;
 
 	useEffect(() => {
-		clearTimeout(clickTimeout)
-		clickTimeout = null
+		clearTimeout(clickTimeout);
+		clickTimeout = null;
 	}, []);
 
 	const handleClick = (token_type, index) => {
 		if (clickTimeout) {
-			clearTimeout(clickTimeout)
-			clickTimeout = null
+			clearTimeout(clickTimeout);
+			clickTimeout = null;
 			// explode!
 			if (!favs.includes(token_type)) {
 				anime({
@@ -31,20 +31,20 @@ export const Items = ({ app, views, account, dispatch }) => {
 					duration: 500,
 					easing: 'easeOutQuad',
 					complete: () => {
-						document.querySelector(`#explode-` + index).style.transform = 'scale(0)'
+						document.querySelector(`#explode-` + index).style.transform = 'scale(0)';
 						document.querySelector(`#explode-` + index).style.opacity = 1;
 					}
 				});
 			}
-			dispatch(handleFav(token_type))
-			return
+			dispatch(handleFav(token_type));
+			return;
 		}
-		clickTimeout = setTimeout(() => history.push('/token/' + token_type + '/'), DBL_CLICK_WAIT)
-	}
+		clickTimeout = setTimeout(() => history.push('/token/' + token_type + '/'), DBL_CLICK_WAIT);
+	};
 
-	let items = tokens
+	let items = tokens;
 	if (isFavOn && favs.length > 0) {
-		items = tokens.filter(({ token_type }) => favs.includes(token_type))
+		items = tokens.filter(({ token_type }) => favs.includes(token_type));
 	}
 
 	return <>
@@ -59,21 +59,21 @@ export const Items = ({ app, views, account, dispatch }) => {
 							<img crossOrigin="true" src={imageSrc} />
 							{
 								favs.includes(token_type) ?
-								<div className="heart" onClick={(e) => {
-									e.stopPropagation();
-									dispatch(handleFav(token_type))
-									return false;
-								}}>
-									<img src={Heart} />
-								</div>
-								:
-								<div className="heart-outline" onClick={(e) => {
-									e.stopPropagation();
-									dispatch(handleFav(token_type))
-									return false;
-								}}>
-									<img src={HeartOutline} />
-								</div>
+									<div className="heart" onClick={(e) => {
+										e.stopPropagation();
+										dispatch(handleFav(token_type));
+										return false;
+									}}>
+										<img src={Heart} />
+									</div>
+									:
+									<div className="heart-outline" onClick={(e) => {
+										e.stopPropagation();
+										dispatch(handleFav(token_type));
+										return false;
+									}}>
+										<img src={HeartOutline} />
+									</div>
 							}
 							<div className="heart-explode">
 								<img id={'explode-' + i} src={Heart} />

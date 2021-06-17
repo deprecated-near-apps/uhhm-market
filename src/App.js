@@ -46,15 +46,15 @@ const App = () => {
 		setProfile(false);
 	}
 
-	if (!contractAccount) return null
+	if (!contractAccount) return null;
 
-	const pathParams = { app, views, update, dispatch, account, wallet, pathArgs }
+	const pathParams = { app, views, update, dispatch, account, wallet, pathArgs };
 
 	return <>
 
 		{loading && <div className="credits-loading">
-            <div className="lds-loader"><div></div><div></div><div></div></div>
-        </div>}
+			<div className="lds-loader"><div></div><div></div><div></div></div>
+		</div>}
 
 		{ isConnectOpen && <Connect {...{update, wallet}} /> }
 		{ dialog && <Dialog {...dialog} /> }

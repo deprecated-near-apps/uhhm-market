@@ -1,12 +1,12 @@
 import React from 'react';
 import getConfig from '../config';
 import * as nearAPI from 'near-api-js';
-import { getWallet, postSignedJson, networkId } from '../utils/near-utils';
+import { getWallet, networkId } from '../utils/near-utils';
 
 export const {
 	GAS,
 	explorerUrl,
-	networkId, nodeUrl, walletUrl, nameSuffix,
+	nodeUrl, walletUrl, nameSuffix,
 	contractName: contractId,
 } = getConfig();
 
@@ -37,14 +37,14 @@ export const initNear = () => async ({ update, getState, dispatch }) => {
 	let account;
 	if (wallet.signedIn) {
 		account = wallet.account();
-		account.displayId = account.accountId.split('.' + networkId)[0]
+		account.displayId = account.accountId.split('.' + networkId)[0];
 		wallet.balance = formatNearAmount((await wallet.account().getAccountBalance()).available, 4);
 		await update('', { near, wallet, contractAccount, account });
 	}
 
 	await update('', { near, wallet, contractAccount, account });
 
-	return { near, wallet, contractAccount, account }
+	return { near, wallet, contractAccount, account };
 };
 
 export const updateWallet = () => async ({ update, getState }) => {
