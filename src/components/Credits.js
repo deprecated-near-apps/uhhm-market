@@ -36,7 +36,7 @@ function CreditsInner(props) {
 
 	useEffect(() => {
 		window.scrollTo(0,0);
-		document.querySelector('input').focus()
+		document.querySelector('input').focus();
 	}, []);
 
 	const handleSubmit = async (event) => {
@@ -85,7 +85,7 @@ function CreditsInner(props) {
 						'Return': () => history.back()
 					}
 				}));
-				setTimeout(() => dispatch(loadCredits(account)), 1000)
+				setTimeout(() => dispatch(loadCredits(account)), 1000);
 			}
 
 		} catch (err) {

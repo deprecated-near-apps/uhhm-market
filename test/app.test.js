@@ -33,21 +33,21 @@ const now = Date.now();
 /// NEVER sell :1 tokens, they are reserve
 
 const failed = [
-'HipHopHead.10.229.1011310:1',
-'HipHopHead.10.292.22166:1',
-'HipHopHead.14.331.51893:1',
-'HipHopHead.17.157:1',
-'HipHopHead.17.318.165205:1',
-'HipHopHead.18.357.1311920:1',
-'HipHopHead.19.350:1',
-'HipHopHead.19.56:1',
-'HipHopHead.20.251:1',
-'HipHopHead.20.90.1542:1',
-'HipHopHead.23.100:1',
-'HipHopHead.23.93:1',
-'HipHopHead.24.344.141205:1',
-'HipHopHead.9.202.21522:1',
-]
+	'HipHopHead.10.229.1011310:1',
+	'HipHopHead.10.292.22166:1',
+	'HipHopHead.14.331.51893:1',
+	'HipHopHead.17.157:1',
+	'HipHopHead.17.318.165205:1',
+	'HipHopHead.18.357.1311920:1',
+	'HipHopHead.19.350:1',
+	'HipHopHead.19.56:1',
+	'HipHopHead.20.251:1',
+	'HipHopHead.20.90.1542:1',
+	'HipHopHead.23.100:1',
+	'HipHopHead.23.93:1',
+	'HipHopHead.24.344.141205:1',
+	'HipHopHead.9.202.21522:1',
+];
 
 const uhhmTokens = data.map(({ token_type, metadata }) => ({
 	token_type,
@@ -62,7 +62,7 @@ const uhhmTokens = data.map(({ token_type, metadata }) => ({
 		'andreleroydavis.near': 200,
 		'edyoung.near': 200,
 	}
-}))
+}));
 
 // .filter(({token_id}) => failed.includes(token_id));
 
@@ -86,7 +86,7 @@ const saleTokens = data.map(({ token_type, metadata }) => ({
 const contractId = contractAccount.accountId;
 console.log('\n\n contractId:', contractId, '\n\n');
 
-const ownerId = 'owner.' + contractId
+const ownerId = 'owner.' + contractId;
 const fungibleId = 'ft.hhft.testnet';
 const marketId = 'market.' + contractId;
 
@@ -122,7 +122,7 @@ describe('deploy contract ' + contractName, () => {
 				gas: GAS
 			});
 		} catch(e) {
-			console.warn(e)
+			console.warn(e);
 		}
 		
 		/** 
@@ -188,7 +188,7 @@ describe('deploy contract ' + contractName, () => {
 
 		for (let i = 0; i < uhhmTokens.length; i++) {
 			try {
-				const token = await owner.viewFunction(contractId, 'nft_token', { token_id: uhhmTokens[i].token_id })
+				const token = await owner.viewFunction(contractId, 'nft_token', { token_id: uhhmTokens[i].token_id });
 				if (token) continue;
 
 				await owner.functionCall({
@@ -225,7 +225,7 @@ describe('deploy contract ' + contractName, () => {
 
 		for (let i = 0; i < saleTokens.length; i++) {
 
-			const token = await owner.viewFunction(contractId, 'nft_token', { token_id: saleTokens[i].token_id })
+			const token = await owner.viewFunction(contractId, 'nft_token', { token_id: saleTokens[i].token_id });
 			if (!token) {
 				try {
 
@@ -248,7 +248,7 @@ describe('deploy contract ' + contractName, () => {
 
 			
 			try {
-				const sale = await owner.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + saleTokens[i].token_id })
+				const sale = await owner.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + saleTokens[i].token_id });
 				if (sale) continue;
 
 				await owner.functionCall({

@@ -39,22 +39,22 @@ const VIDEO = '/1.m4v';
 let {data} = require('../src/tokens');
 
 data = data.map((d) => {
-	const hash = d.metadata.media
-	d.metadata.media = hash + LOW_RES_GIF
-	return d
-})
+	const hash = d.metadata.media;
+	d.metadata.media = hash + LOW_RES_GIF;
+	return d;
+});
 
 /// CURRENT CONTRACT ID
 /// dev-1623990723679-78605620599599
 
 // tokens going on sale (:3)
 
-const edition = ':test-' + Date.now()
+const edition = ':test-' + Date.now();
 
 const receivers = [
 	'md1.testnet',
 	'si1.testnet'
-]
+];
 
 const saleTokens = data.map(({ token_type, metadata }, i) => ({
 	token_type,
@@ -81,7 +81,7 @@ saleTokens.length = receivers.length;
 const contractId = contractAccount.accountId;
 console.log('\n\n contractId:', contractId, '\n\n');
 
-const ownerId = 'owner.' + contractId
+const ownerId = 'owner.' + contractId;
 const fungibleId = 'ft.hhft.testnet';
 const marketId = 'market.' + contractId;
 
@@ -119,7 +119,7 @@ describe('deploy contract ' + contractName, () => {
 
 		for (let i = 0; i < saleTokens.length; i++) {
 
-			const token = await owner.viewFunction(contractId, 'nft_token', { token_id: saleTokens[i].token_id })
+			const token = await owner.viewFunction(contractId, 'nft_token', { token_id: saleTokens[i].token_id });
 			if (!token) {
 				try {
 
