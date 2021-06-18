@@ -110,6 +110,13 @@ body {
     color: white;
 }
 
+.route-wrap {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+}
+
 header {
     cursor: pointer;
     box-shadow: $shadow;
@@ -269,6 +276,12 @@ section {
 }
 
 section.items {
+    text-align: center;
+    margin-top: 96px;
+    h1 {
+        margin: 64px 0;
+        font-size: 1.4rem;
+    }
     > div {
         margin-bottom: 32px;
         display: grid;
@@ -276,7 +289,8 @@ section.items {
         > .item {
             cursor: pointer;
             position: relative;
-            margin-right: 0.15vw;
+            margin-right: 0.5vw;
+            margin-bottom: 0.35vw;
             transition: 0.2s cubic-bezier(0, 0, 0.58, 1);
             > img {
                 @include scale-in-animation;
@@ -287,7 +301,7 @@ section.items {
                 @include fade-in-animation;
                 position: absolute;
                 top: 8px;
-                right: 8px;
+                right: calc(8px + 0.5vw);
                 width: 16px;
                 > img {
                     position: absolute;
@@ -428,6 +442,7 @@ section.token {
             background: black;
             color: white;
             border: $gray-border;
+
             > div:first-child {
                 color: red;
             }
@@ -518,23 +533,35 @@ section.edition {
         overflow: scroll;
         > div {
             box-shadow: $shadow;
-            padding: 32px;
-            background: black;
             > div {
-                margin-top: 32px;
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                > div:nth-of-type(1) {
-                    flex: 0 0 3rem;
-                    color: $red;
-                }
-                > div:nth-of-type(2) {
-                    flex: 1;
-                }
-                > div:nth-of-type(3) {
-                    text-align: right;
+                padding: 32px 0;
+                padding-bottom: 64px;
+                background: black;
+                > div {
+                    padding: 16px 32px;
+                    width: 100%;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    &.available {
+                        &:hover {
+                            cursor: pointer;
+                            background: rgb(255, 255, 255, 0.25);
+                        }
+                    }
+                    &.header {
+                        cursor: pointer;
+                    }
+                    > div:nth-of-type(1) {
+                        flex: 0 0 3rem;
+                        color: $red;
+                    }
+                    > div:nth-of-type(2) {
+                        flex: 1;
+                    }
+                    > div:nth-of-type(3) {
+                        text-align: right;
+                    }
                 }
             }
         }
@@ -602,7 +629,7 @@ footer {
     }
     .social {
         img {
-            margin: 0 8px;
+            margin: 0 16px;
         }
     }
     .tos {
@@ -652,7 +679,9 @@ input {
     background: #00C08C !important;
     border-color: #00C08C !important;
 }
-
+.red-text {
+    color: $red;
+}
 .red {
     background: #FF595D !important;
     border-color: #FF595D !important;

@@ -5,6 +5,7 @@ import { useHistory, pathAndArgs } from './utils/history';
 
 
 import { Header } from './components/Header';
+import { Footer } from './components/Footer';
 import { Items } from './components/Items';
 import { Token } from './components/Token';
 import { Edition } from './components/Edition';
@@ -71,12 +72,16 @@ const App = () => {
 			</div>
 		}
 
-		<div>
-			{ path === '/' && <Items {...pathParams} /> }
-			{ path.substr(0, 6) === '/token' && <Token {...pathParams} /> }
-			{ path.substr(0, 5) === '/sale' && <Token {...pathParams} /> }
-			{ path.substr(0, 8) === '/credits' && <Credits {...pathParams} /> }
+		<div className="route-wrap">
+			<div>
+				{ path === '/' && <Items {...pathParams} /> }
+				{ path.substr(0, 6) === '/token' && <Token {...pathParams} /> }
+				{ path.substr(0, 5) === '/sale' && <Token {...pathParams} /> }
+				{ path.substr(0, 8) === '/credits' && <Credits {...pathParams} /> }
+			</div>
+			<Footer />
 		</div>
+		
 	</>;
 };
 

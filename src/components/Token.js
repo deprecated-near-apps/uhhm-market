@@ -34,7 +34,7 @@ export const Token = (props) => {
 			if (!favs.includes(token_type)) {
 				anime({
 					targets: `#explode`,
-					scale: 30,
+					scale: 20,
 					opacity: 0,
 					duration: 500,
 					easing: 'easeOutQuad',
@@ -121,7 +121,6 @@ export const Token = (props) => {
 		{isToken && <TokenSeries {...props} />}
 		{isSale && <TokenSale {...props} />}
 
-		<Footer />
 	</section>;
 };
 

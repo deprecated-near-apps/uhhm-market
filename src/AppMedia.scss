@@ -1,3 +1,4 @@
+
 @media (min-width: 576px) {
 
 }
@@ -33,19 +34,34 @@
             margin-top: 0;
             margin-bottom: 64px;
         }
+        .content {
+            padding-left: 64px;
+            padding-right: 64px;
+        }
         .heading {
             text-align: left;
         }
     }
-    section.items > div {
-        grid-template-columns: 25% 25% 25% 25%;
+    section.items {
+        margin-top: 128px;
+        > div {
+            grid-template-columns: 25% 25% 25% 25%;
+        }
+        h1 {
+            font-size: 2rem;
+        }
     }
     section.edition {
-        background: #888;
         > div {
+            top: 64px;
             padding: 0 25vw;
             > div {
-                padding: 48px 32px;
+                max-height: 70vh;
+                overflow: scroll;
+                > div {
+                    background: #232323;
+                    padding-bottom: 0;
+                }
             }
         }
         header {
@@ -59,9 +75,50 @@
             width: 50vw;
         }
     }
+
+    footer {
+        margin: 16px 32px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: calc(100% - 64px);
+        .built-on {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            * {
+                margin: auto 8px;
+            }
+        }
+    }
 }
 @media (min-width: 1200px) {
-   
+   section {
+       &:not(.items) {
+            max-width: 1400px;
+            margin-left:auto;
+            margin-right:auto;
+       }
+   }
+   section.credits {
+        max-width: 33.33vw;
+   }
+   section.edition {
+        > div {
+            margin-top: 64px;
+            padding: 0 33.33vw;
+        }
+        header {
+            padding: 32px calc(33.33vw + 32px);
+        }
+    }
+    section.modal {
+        .content {
+            left: 33.33vw;
+            width: 33.33vw;
+        }
+    }
 }
 @media (min-width: 1600px) {
     section.items > div {

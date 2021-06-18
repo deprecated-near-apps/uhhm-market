@@ -26,7 +26,7 @@ export const Items = ({ app, views, account, dispatch }) => {
 			if (!favs.includes(token_type)) {
 				anime({
 					targets: `#explode-` + index,
-					scale: 30,
+					scale: 20,
 					opacity: 0,
 					duration: 500,
 					easing: 'easeOutQuad',
@@ -51,6 +51,9 @@ export const Items = ({ app, views, account, dispatch }) => {
 
 	return <>
 		<section className="items">
+
+			<h1>A Love Letter to <span className="red-text">Hip Hop</span></h1>
+
 			<div>
 				{
 					items.map(({
@@ -84,7 +87,6 @@ export const Items = ({ app, views, account, dispatch }) => {
 					))
 				}
 			</div>
-			<Footer />
 		</section>
 	</>;
 

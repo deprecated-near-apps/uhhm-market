@@ -134,8 +134,6 @@ function CreditsInner(props) {
 
 				</form >
 			</div>
-
-			<Footer />
 		</section >
 	</>;
 
