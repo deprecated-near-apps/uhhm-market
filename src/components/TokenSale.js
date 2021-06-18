@@ -87,7 +87,7 @@ export const TokenSale = (props) => {
 
 			}
 
-			{credits &&
+			{account && credits &&
                 <div className="center"><p>Credits: {formatAmount(credits)}</p></div>
 			}
 

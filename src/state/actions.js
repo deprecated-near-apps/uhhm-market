@@ -6,7 +6,7 @@ import { parseAmount, formatAmount, validateAmount } from '../utils/format';
 
 export const handlePlaceBid = (account, token, minBid) => async ({ dispatch, getState }) => {
 	const result = await dispatch(setDialog({
-		msg: 'What is your bid?',
+		msg: 'Enter Your Bid Amount',
 		acceptLabel: 'Place Bid',
 		input: [
 			{ placeholder: 'Amount', type: 'number' },

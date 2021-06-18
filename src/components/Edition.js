@@ -9,23 +9,23 @@ export const Edition = (props) => {
 	const { sales } = props.views;
 	const { isMobile } = props.app;
 
-	useEffect(() => {
-		const firstAvail = document.querySelector('section.edition .available')
-		const sectionDiv = document.querySelector('section.edition > div')
-		const sectionDivDiv = document.querySelector('section.edition > div > div')
-		let top = 99999
-		if (firstAvail && sectionDiv && sectionDivDiv) {
-			top = firstAvail.getBoundingClientRect().top
-		}
-		sectionDiv.scrollTo(0, top)
-		sectionDivDiv.scrollTo(0, top)
-	}, [])
+	// useEffect(() => {
+	// 	const firstAvail = document.querySelector('section.edition .available')
+	// 	const sectionDiv = document.querySelector('section.edition > div')
+	// 	const sectionDivDiv = document.querySelector('section.edition > div > div')
+	// 	let top = 99999
+	// 	if (firstAvail && sectionDiv && sectionDivDiv) {
+	// 		top = firstAvail.getBoundingClientRect().top
+	// 	}
+	// 	sectionDiv.scrollTo(0, top)
+	// 	sectionDivDiv.scrollTo(0, top)
+	// }, [])
 
 	const token_type = props.pathArgs[1].split(':')[0];
 
-	const editions = sales.filter(({ token_type: tt }) => tt === token_type).sort((a, b) => b.edition_id - a.edition_id);
+	const list = Array(36).fill(37)
 
-	const rest = Array(36 - editions.length).fill(37).reverse();
+	const editions = sales.filter(({ token_type: tt }) => tt === token_type).sort((a, b) => b.edition_id - a.edition_id);
 
 	return <section className="edition">
 		{
@@ -45,27 +45,29 @@ export const Edition = (props) => {
 						<img src={Close} onClick={() => update('app.isEditionOpen', false)} />
 					</div>
 				}
+				{
+					list.map((total, i) => {
+						const index = total - i
+						const edition = sales.find(({ edition_id }) => edition_id === index)
 
-				
-				{
-					rest.map((l, i) => {
-						const index = l - i;
-						return <div key={index} className="not-available">
-							<div>#{index}</div>
-							<div>{years(index)}</div>
-							<div>Not Available</div>
-						</div>;
+						if (edition) {
+							const { token_id, edition_id, minBid } = edition
+							return <div className="available" key={edition_id} onClick={() => {
+								history.push('/sale/' + token_id);
+								update('app.isEditionOpen', false);
+							}}>
+								<div>#{edition_id}</div>
+								<div>{years(edition_id)}</div>
+								<div>{formatAmount(minBid)}</div>
+							</div>
+						} else {
+							return <div key={index} className="not-available">
+								<div>#{index}</div>
+								<div>{years(index)}</div>
+								<div>Not Available</div>
+							</div>;
+						}
 					})
-				}
-				{
-					editions.map(({ token_id, edition_id, minBid }) => <div className="available" key={edition_id} onClick={() => {
-						history.push('/sale/' + token_id);
-						update('app.isEditionOpen', false);
-					}}>
-						<div>#{edition_id}</div>
-						<div>{years(edition_id)}</div>
-						<div>{formatAmount(minBid)}</div>
-					</div>)
 				}
 				<div className="not-available">
 					<div>#1</div>

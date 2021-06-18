@@ -30,9 +30,14 @@ function CreditsInner(props) {
 	const elements = useElements();
 
 	const [amount, setAmount] = useState("");
+	const [email, setEmail] = useState("");
+	const [tel, setTel] = useState("");
 	const [error, setError] = useState();
 
-	useEffect(() => document.querySelector('input').focus(), []);
+	useEffect(() => {
+		window.scrollTo(0,0);
+		document.querySelector('input').focus()
+	}, []);
 
 	const handleSubmit = async (event) => {
 		if (event) event.preventDefault();
@@ -58,6 +63,8 @@ function CreditsInner(props) {
 					accountId,
 					paymentMethodId: paymentMethod.id,
 					amount: parseAmount(amount),
+					email: !!email.length ? email : undefined,
+					phoneNumber: !!tel.length ? tel : undefined,
 				}),
 			});
 
@@ -66,7 +73,6 @@ function CreditsInner(props) {
 			if (res.status !== 200) throw json;
 
 			if (json?.outcome?.status?.SuccessValue === "") {
-				dispatch(loadCredits(account));
 				dispatch(setDialog({
 					msg: <div>
 						<img src={Approved} />
@@ -79,6 +85,7 @@ function CreditsInner(props) {
 						'Return': () => history.back()
 					}
 				}));
+				setTimeout(() => dispatch(loadCredits(account)), 1000)
 			}
 
 		} catch (err) {
@@ -102,7 +109,7 @@ function CreditsInner(props) {
 
 					<input
 						type="number"
-						step="0.01"
+						step="1"
 						placeholder="Amount"
 						value={amount}
 						onChange={({ target }) => setAmount(target.value)}
@@ -121,6 +128,22 @@ function CreditsInner(props) {
 							}}
 						/>
 					</div>
+
+					<input
+						type="email"
+						step="1"
+						placeholder="Email (optional)"
+						value={email}
+						onChange={({ target }) => setEmail(target.value)}
+					/>
+
+					<input
+						type="tel"
+						step="1"
+						placeholder="Phone (optional)"
+						value={tel}
+						onChange={({ target }) => setTel(target.value)}
+					/>
 
 					<button className="center" disabled={!amount}>{amount ? <span>Pay ${amount} USD</span> : <span>Enter Amount</span>}</button>
 

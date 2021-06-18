@@ -47,23 +47,16 @@ data = data.map((d) => {
 /// CURRENT CONTRACT ID
 /// dev-1623990723679-78605620599599
 
-// tokens going on sale (:3)
+// tokens going on sale (:37)
+const edition = ':37'
 
-const edition = ':test-' + Date.now()
-
-const receivers = [
-	'md1.testnet',
-	'si1.testnet'
-]
-
-const saleTokens = data.map(({ token_type, metadata }, i) => ({
+const saleTokens = data.map(({ token_type, metadata }) => ({
 	token_type,
 	token_id: token_type + edition,
 	metadata: {
 		...metadata,
 		issued_at: Date.now().toString(),
 	},
-	receiver_id: receivers[i],
 	perpetual_royalties: {
 		['escrow-42.uhhm.near']: 1000,
 		'uhhm.near': 100,
@@ -71,12 +64,6 @@ const saleTokens = data.map(({ token_type, metadata }, i) => ({
 		'edyoung.near': 200,
 	}
 }));
-
-/// just a few test tokens
-
-saleTokens.length = receivers.length;
-
-
 
 const contractId = contractAccount.accountId;
 console.log('\n\n contractId:', contractId, '\n\n');
@@ -106,16 +93,16 @@ describe('deploy contract ' + contractName, () => {
 
 	test('owner creates saleTokens and approves', async () => {
 		
-		// try {
-		// 	await owner.functionCall({
-		// 		contractId: marketId,
-		// 		methodName: 'storage_deposit',
-		// 		gas: GAS,
-		// 		attachedDeposit: new BN(storageMarket).mul(new BN(saleTokens.length))
-		// 	});
-		// } catch (e) {
-		// 	console.warn(e);
-		// }
+		try {
+			await owner.functionCall({
+				contractId: marketId,
+				methodName: 'storage_deposit',
+				gas: GAS,
+				attachedDeposit: new BN(storageMarket).mul(new BN(saleTokens.length))
+			});
+		} catch (e) {
+			console.warn(e);
+		}
 
 		for (let i = 0; i < saleTokens.length; i++) {
 
@@ -141,28 +128,28 @@ describe('deploy contract ' + contractName, () => {
 			}
 
 			
-			// try {
-			// 	const sale = await owner.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + saleTokens[i].token_id })
-			// 	if (sale) continue;
+			try {
+				const sale = await owner.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + saleTokens[i].token_id })
+				if (sale) continue;
 
-			// 	await owner.functionCall({
-			// 		contractId: contractId,
-			// 		methodName: 'nft_approve',
-			// 		args: {
-			// 			token_id: saleTokens[i].token_id,
-			// 			account_id: marketId,
-			// 			msg: JSON.stringify({ is_auction: true, sale_conditions: {
-			// 				[fungibleId]: '100'
-			// 			} })
-			// 		},
-			// 		gas: GAS,
-			// 		attachedDeposit: parseNearAmount('0.01')
-			// 	});
-			// 	console.log('\n\n approved', saleTokens[i].token_id, i+1);
-			// } catch(e) {
-			// 	console.log('\n\n failed to approve', saleTokens[i].token_id, i+1);
-			// 	console.warn(e);
-			// }
+				await owner.functionCall({
+					contractId: contractId,
+					methodName: 'nft_approve',
+					args: {
+						token_id: saleTokens[i].token_id,
+						account_id: marketId,
+						msg: JSON.stringify({ is_auction: true, sale_conditions: {
+							[fungibleId]: '100'
+						} })
+					},
+					gas: GAS,
+					attachedDeposit: parseNearAmount('0.01')
+				});
+				console.log('\n\n approved', saleTokens[i].token_id, i+1);
+			} catch(e) {
+				console.log('\n\n failed to approve', saleTokens[i].token_id, i+1);
+				console.warn(e);
+			}
 		}
 		
 	});
