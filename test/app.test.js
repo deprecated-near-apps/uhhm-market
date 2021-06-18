@@ -32,6 +32,23 @@ const now = Date.now();
 /// token setup from data
 /// NEVER sell :1 tokens, they are reserve
 
+const failed = [
+'HipHopHead.10.229.1011310:1',
+'HipHopHead.10.292.22166:1',
+'HipHopHead.14.331.51893:1',
+'HipHopHead.17.157:1',
+'HipHopHead.17.318.165205:1',
+'HipHopHead.18.357.1311920:1',
+'HipHopHead.19.350:1',
+'HipHopHead.19.56:1',
+'HipHopHead.20.251:1',
+'HipHopHead.20.90.1542:1',
+'HipHopHead.23.100:1',
+'HipHopHead.23.93:1',
+'HipHopHead.24.344.141205:1',
+'HipHopHead.9.202.21522:1',
+]
+
 const uhhmTokens = data.map(({ token_type, metadata }) => ({
 	token_type,
 	token_id: token_type + ':1',
@@ -40,12 +57,14 @@ const uhhmTokens = data.map(({ token_type, metadata }) => ({
 		issued_at: Date.now().toString(),
 	},
 	perpetual_royalties: {
-		['escrow-' + i + '.uhhm.near']: 1000,
+		['escrow-42.uhhm.near']: 1000,
 		'uhhm.near': 100,
 		'andreleroydavis.near': 200,
 		'edyoung.near': 200,
 	}
-}));
+}))
+
+// .filter(({token_id}) => failed.includes(token_id));
 
 // tokens going on sale (:2)
 
@@ -57,7 +76,7 @@ const saleTokens = data.map(({ token_type, metadata }) => ({
 		issued_at: Date.now().toString(),
 	},
 	perpetual_royalties: {
-		['escrow-' + i + '.uhhm.near']: 1000,
+		['escrow-42.uhhm.near']: 1000,
 		'uhhm.near': 100,
 		'andreleroydavis.near': 200,
 		'edyoung.near': 200,
@@ -67,14 +86,15 @@ const saleTokens = data.map(({ token_type, metadata }) => ({
 const contractId = contractAccount.accountId;
 console.log('\n\n contractId:', contractId, '\n\n');
 
-const fungibleId = 'dev-1623722036493-86801174308452';
+const ownerId = 'owner.' + contractId
+const fungibleId = 'ft.hhft.testnet';
 const marketId = 'market.' + contractId;
 
 /// run tests
 
 describe('deploy contract ' + contractName, () => {
 
-	let owner, ownerId, marketAccount, storageMarket;
+	let owner, marketAccount, storageMarket;
 
 	/// most of the following code in beforeAll can be used for deploying and initializing contracts
 	/// skip tests if you want to deploy to production or testnet without any NFTs
@@ -82,9 +102,10 @@ describe('deploy contract ' + contractName, () => {
 		await initContract();
 
 		/// some users
-		ownerId = 'owner-' + now + '.' + contractId;
-		owner = await getAccount(ownerId, '50', credentials.private_key);
-		console.log('\n\n Alice accountId:', ownerId, '\n\n');
+		// ownerId = 'owner-' + now + '.' + contractId;
+		owner = await createOrInitAccount(ownerId, credentials.private_key, '20');
+		// owner = await getAccount(ownerId, '10', credentials.private_key);
+		console.log('\n\n Owner accountId:', ownerId, '\n\n');
 
 		// token types and caps
 		const supply_cap_by_type = uhhmTokens.map(({ token_type }) => ({
@@ -93,14 +114,17 @@ describe('deploy contract ' + contractName, () => {
 
 		console.log('\n\n', supply_cap_by_type, '\n\n');
 
-		await contractAccount.functionCall({
-			contractId,
-			methodName: 'add_token_types',
-			args: { supply_cap_by_type },
-			gas: GAS
-		});
-
-
+		try {
+			await contractAccount.functionCall({
+				contractId,
+				methodName: 'add_token_types',
+				args: { supply_cap_by_type },
+				gas: GAS
+			});
+		} catch(e) {
+			console.warn(e)
+		}
+		
 		/** 
 		 * Deploy the Market Contract and connect it to the NFT contract (contractId)
 		 * and the FT contract (fungibleAccount.[contractId])
@@ -164,6 +188,9 @@ describe('deploy contract ' + contractName, () => {
 
 		for (let i = 0; i < uhhmTokens.length; i++) {
 			try {
+				const token = await owner.viewFunction(contractId, 'nft_token', { token_id: uhhmTokens[i].token_id })
+				if (token) continue;
+
 				await owner.functionCall({
 					contractId,
 					methodName: 'nft_mint',
@@ -173,6 +200,10 @@ describe('deploy contract ' + contractName, () => {
 				});
 				console.log('\n\n minted', uhhmTokens[i].token_id, i+1);
 			} catch (e) {
+				console.log('\n\n failed to mint', uhhmTokens[i].token_id, i+1);
+				if (/expired/.test(e.toString())) {
+					fs.appendFileSync('log.txt', uhhmTokens[i].token_id + '\n');
+				}
 				console.warn(e);
 			}
 		}
@@ -180,28 +211,46 @@ describe('deploy contract ' + contractName, () => {
 	});
 
 	test('owner creates saleTokens and approves', async () => {
-
-		await owner.functionCall({
-			contractId: marketId,
-			methodName: 'storage_deposit',
-			gas: GAS,
-			attachedDeposit: new BN(storageMarket).mul(new BN(uhhmTokens.length))
-		});
+		
+		try {
+			await owner.functionCall({
+				contractId: marketId,
+				methodName: 'storage_deposit',
+				gas: GAS,
+				attachedDeposit: new BN(storageMarket).mul(new BN(uhhmTokens.length))
+			});
+		} catch (e) {
+			console.warn(e);
+		}
 
 		for (let i = 0; i < saleTokens.length; i++) {
-			try {
-				await owner.functionCall({
-					contractId,
-					methodName: 'nft_mint',
-					args: saleTokens[i],
-					gas: GAS,
-					attachedDeposit: parseNearAmount('0.1')
-				});
-				console.log('\n\n minted', saleTokens[i].token_id, i+1);
-			} catch (e) {
-				console.warn(e);
+
+			const token = await owner.viewFunction(contractId, 'nft_token', { token_id: saleTokens[i].token_id })
+			if (!token) {
+				try {
+
+					await owner.functionCall({
+						contractId,
+						methodName: 'nft_mint',
+						args: saleTokens[i],
+						gas: GAS,
+						attachedDeposit: parseNearAmount('0.1')
+					});
+					console.log('\n\n minted', saleTokens[i].token_id, i+1);
+				} catch (e) {
+					console.log('\n\n failed to mint', saleTokens[i].token_id, i+1);
+					if (/expired/.test(e.toString())) {
+						fs.appendFileSync('log.txt', saleTokens[i].token_id + '\n');
+					}
+					console.warn(e);
+				}
 			}
+
+			
 			try {
+				const sale = await owner.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + saleTokens[i].token_id })
+				if (sale) continue;
+
 				await owner.functionCall({
 					contractId: contractId,
 					methodName: 'nft_approve',
@@ -217,6 +266,7 @@ describe('deploy contract ' + contractName, () => {
 				});
 				console.log('\n\n approved', saleTokens[i].token_id, i+1);
 			} catch(e) {
+				console.log('\n\n failed to approve', saleTokens[i].token_id, i+1);
 				console.warn(e);
 			}
 		}

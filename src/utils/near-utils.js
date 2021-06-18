@@ -30,9 +30,10 @@ export const near = new Near({
 // export const contractId = contractName;
 // export const marketId = 'market.' + contractName;
 
-export const contractId = 'dev-1623802012999-47812480686775';
+// export const contractId = 'dev-1623802012999-47812480686775';
+export const contractId = 'dev-1623990723679-78605620599599';
 export const marketId = 'market.' + contractId;
-export const fungibleId = 'dev-1623722036493-86801174308452';
+export const fungibleId = 'ft.hhft.testnet';
 
 
 

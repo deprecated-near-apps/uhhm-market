@@ -17,10 +17,10 @@ async function initContract() {
 	try {
 		const newArgs = {
 			owner_id: contractAccount.accountId,
-			metadata: {
-				spec: 'nft-1',
-				name: 'Test NFT',
-				symbol: 'TNFT',
+			"metadata": {
+				"spec": "nft-1",
+				"name": "UHHM NFT - Hip Hop Heads",
+				"symbol": "HHH"
 			},
 			supply_cap_by_type: {
 				test: '1000000',
@@ -36,10 +36,10 @@ async function initContract() {
 }
 const getAccountBalance = async (accountId) => (new nearAPI.Account(connection, accountId)).getAccountBalance();
 
-const createOrInitAccount = async(accountId, secret) => {
+const createOrInitAccount = async(accountId, secret, amount = DEFAULT_NEW_CONTRACT_AMOUNT) => {
 	let account;
 	try {
-		account = await createAccount(accountId, DEFAULT_NEW_CONTRACT_AMOUNT, secret);
+		account = await createAccount(accountId, amount, secret);
 	} catch (e) {
 		if (!/because it already exists/.test(e.toString())) {
 			throw e;

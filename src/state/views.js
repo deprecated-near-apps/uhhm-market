@@ -38,7 +38,7 @@ const parseSale = (i, sales, tokens, allBidsByType, salesByType) => {
 	const { token_id, token_type } = sale;
 	let token = tokens.find(({ token_type: tt }) => tt === token_type);
 	if (token) {
-		sale = sales[i] = Object.assign(token, sales[i]);
+		sale = sales[i] = Object.assign({}, token, sales[i]);
 	}
 	sale.edition_id = parseInt(token_id.split(':')[1]);
 	(sale.bids[fungibleId] || []).sort(sortBids);
@@ -72,11 +72,9 @@ export const loadItems = (account) => async ({ update, getState }) => {
 	const { contractAccount } = getState();
 
 	/// uhhm tokens
-	let newLoad = false;
 	let tokens = get(UHHM_TOKEN_KEYS[uhhmTokenVersion], null);
 	if (!tokens) {
 		console.log('fetching tokens from remote');
-		newLoad = true;
 		tokens = (await fetch(batchPath + '{}', {
 			method: 'POST',
 			headers,
@@ -117,11 +115,12 @@ export const loadItems = (account) => async ({ update, getState }) => {
 	} else {
 		console.log('loading tokens from cache');
 	}
+	console.log('uhhm tokens', tokens.length);
 
 	/// all sales
 
 	const salesNum = await contractAccount.viewFunction(marketId, 'get_supply_by_nft_contract_id', { nft_contract_id: contractId });
-	console.log(salesNum);
+	console.log('sales', salesNum);
 	const sales = (await fetch(batchPath + JSON.stringify([{
 		contract: marketId,
 		method: 'get_sales_by_nft_contract_id',

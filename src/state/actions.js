@@ -30,7 +30,7 @@ export const handlePlaceBid = (account, token, minBid) => async ({ dispatch, get
 		}));
 	}
 
-	if (parseInt(amount) < minBid) {
+	if (parseInt(amount) <= minBid) {
 		return dispatch(setDialog({
 			msg: 'The minimum bid is ' + formatAmount(minBid),
 			info: true

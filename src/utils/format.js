@@ -1,6 +1,6 @@
 export const years = (i) => {
 	i = parseInt(i);
-	return (1973 + i) + '-' + (1974 + i);
+	return (1972 + i) + '-' + (1973 + i);
 };
 
 export const validateAmount = (amount) => !!amount.length && amount !== '.' && /^\d*.\d?\d?$/.test(amount);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Close from 'url:../img/close.svg';
 import { years } from '../utils/format';
 import { formatAmount } from '../utils/format';
@@ -9,10 +9,23 @@ export const Edition = (props) => {
 	const { sales } = props.views;
 	const { isMobile } = props.app;
 
+	useEffect(() => {
+		const firstAvail = document.querySelector('section.edition .available')
+		const sectionDiv = document.querySelector('section.edition > div')
+		const sectionDivDiv = document.querySelector('section.edition > div > div')
+		let top = 99999
+		if (firstAvail && sectionDiv && sectionDivDiv) {
+			top = firstAvail.getBoundingClientRect().top
+		}
+		sectionDiv.scrollTo(0, top)
+		sectionDivDiv.scrollTo(0, top)
+	}, [])
+
 	const token_type = props.pathArgs[1].split(':')[0];
 
-	const editions = sales.filter(({ token_type: tt }) => tt === token_type).sort((a, b) => a.edition_id - b.edition_id);
-	const rest = Array(36 - editions.length).fill(editions.length + 2);
+	const editions = sales.filter(({ token_type: tt }) => tt === token_type).sort((a, b) => b.edition_id - a.edition_id);
+
+	const rest = Array(36 - editions.length).fill(37).reverse();
 
 	return <section className="edition">
 		{
@@ -33,11 +46,17 @@ export const Edition = (props) => {
 					</div>
 				}
 
-				<div className="not-available">
-					<div>#1</div>
-					<div>1973-1974</div>
-					<div>Not Available</div>
-				</div>
+				
+				{
+					rest.map((l, i) => {
+						const index = l - i;
+						return <div key={index} className="not-available">
+							<div>#{index}</div>
+							<div>{years(index)}</div>
+							<div>Not Available</div>
+						</div>;
+					})
+				}
 				{
 					editions.map(({ token_id, edition_id, minBid }) => <div className="available" key={edition_id} onClick={() => {
 						history.push('/sale/' + token_id);
@@ -48,16 +67,11 @@ export const Edition = (props) => {
 						<div>{formatAmount(minBid)}</div>
 					</div>)
 				}
-				{
-					rest.map((l, i) => {
-						const index = l + i;
-						return <div key={index} className="not-available">
-							<div>#{index}</div>
-							<div>{years(index)}</div>
-							<div>Not Available</div>
-						</div>;
-					})
-				}
+				<div className="not-available">
+					<div>#1</div>
+					<div>1973-1974</div>
+					<div>Not Available</div>
+				</div>
 			</div>
 			</div>
 		</div>

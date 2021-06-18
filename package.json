@@ -46,6 +46,12 @@
         "prebuild": "rm -rf ./dist",
         "patch:deploy-config": "node ./utils/patch-deploy-config.js",
         "build": "parcel build src/index.html --public-url https://near-apps.github.io/uhhm-market/",
-        "deploy": "yarn patch:deploy-config && cross-env REACT_APP_ENV=dev REACT_APP_API_HELPER=true yarn build && gh-pages -d dist"
+        "deploy": "yarn patch:deploy-config && cross-env REACT_APP_ENV=dev REACT_APP_API_HELPER=true yarn build && gh-pages -d dist",
+    
+
+        
+        "test:ed3": "cross-env REACT_APP_ENV=dev jest ed3.test.js --useStderr"
+    
+    
     }
 }

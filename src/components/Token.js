@@ -16,7 +16,7 @@ export const Token = (props) => {
 	const { app, update, dispatch, views, pathArgs } = props;
 
 	const { isMobile } = app;
-	const { tokens, favs, salesByType } = views;
+	const { tokens, sales, favs, salesByType } = views;
 	const isToken = /token/.test(pathArgs[0]);
 	const isSale = /sale/.test(pathArgs[0]);
 
@@ -58,7 +58,7 @@ export const Token = (props) => {
 
 	let token;
 	if (isSale) {
-		token = tokens.find((t) => t.token_id === pathArgs[1]);
+		token = sales.find((t) => t.token_id === pathArgs[1]);
 	} else {
 		token = tokens.find((t) => t.token_type === pathArgs[1]);
 	}
