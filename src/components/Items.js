@@ -65,7 +65,10 @@ export const Items = ({ app, views, dispatch }) => {
 			if (token.bids.length > bidMax) {
 				bidMax = token.bids.length
 			}
-			items.push(tokens.find(({ token_type }) => token_type === token.type))
+			const item = tokens.find(({ token_type }) => token_type === token.type)
+			if (item) {
+				items.push(item)
+			}
 		})
 		hot.forEach((token) => {
 			token.bids.length = Math.floor(token.bids.length / bidMax * 3)
