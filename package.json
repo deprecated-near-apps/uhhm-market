@@ -52,6 +52,7 @@
         
         "test:edX": "cross-env REACT_APP_ENV=dev jest edX.test.js --useStderr",
         "test:ed3": "cross-env REACT_APP_ENV=dev jest ed3.test.js --useStderr",
+        "test:ed36": "cross-env REACT_APP_ENV=dev jest ed36.test.js --useStderr",
         "test:ed37": "cross-env REACT_APP_ENV=dev jest ed37.test.js --useStderr"
     
     

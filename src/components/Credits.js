@@ -86,6 +86,8 @@ function CreditsInner(props) {
 					}
 				}));
 				setTimeout(() => dispatch(loadCredits(account)), 1000);
+			} else {
+				window.open(json.intent.next_action.redirect_to_url.url, '_blank')
 			}
 
 		} catch (err) {

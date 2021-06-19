@@ -9,25 +9,25 @@ export const Footer = ({ isMobile }) => {
 			isMobile ?
 				<>
 					<p>Built on</p>
-					<img src={NEAR} />
+					<a href="https://near.org" target="_blank"><img src={NEAR} /></a>
 					<div className="social">
 						<a href="https://twitter.com/NEARProtocol" target="_blank"><img src={Twitter} /></a>
 						<a href="https://near.chat" target="_blank"><img src={Discord} /></a>
 					</div>
 					<div className="tos">
-						<span>Terms of Use</span>
+						<span onClick={() => history.push('/tos')}>Terms of Use</span>
 						<span>Privacy Policy</span>
 					</div>
 				</>
 				:
 				<>
 					<div className="tos">
-						<span>Terms of Use</span>
+						<span onClick={() => history.push('/tos')}>Terms of Use</span>
 						<span>Privacy Policy</span>
 					</div>
 					<div className="built-on">
 						<p>Built on</p>
-						<img src={NEAR} />
+						<a href="https://near.org" target="_blank"><img src={NEAR} /></a>
 					</div>
 					<div className="social">
 						<a href="https://twitter.com/NEARProtocol" target="_blank"><img src={Twitter} /></a>

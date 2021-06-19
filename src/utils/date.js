@@ -8,9 +8,10 @@ const bounds = [
 
 export const howLongAgo = ({
 	ts,
-	detail = 'hour',
-	join = ', ',
+	detail = 'second',
+	join = ' : ',
 	left = false,
+	abbv = true,
 	onlyNumbers = false,
 }) => {
 	let t = left ? (ts - Date.now()) : (Date.now() - ts);
@@ -19,7 +20,13 @@ export const howLongAgo = ({
 		const { div, sing, plur } = bounds[i];
 		const v = Math.floor(t / div);
 		if (t > div) {
-			matches.push(v + ' ' + (onlyNumbers ? '' : (t > div * 2 ? plur : sing)));
+			let res = v
+			if (!onlyNumbers) {
+				let label = (t > div * 2 ? plur : sing)
+				if (abbv) label = label.substr(0, 1)
+				res += label
+			}
+			matches.push(res);
 			if (!detail) break;
 			if (detail === sing) break;
 			t -= div * v;

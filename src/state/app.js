@@ -19,6 +19,7 @@ const initialState = {
 		isMobile,
 		isConnectOpen: false,
 		dialog: null,
+		timeLeft: '',
 	},
 	near: {
 		initialized: false,
@@ -28,7 +29,8 @@ const initialState = {
 		marketStoragePaid: '0',
 		tokens: [],
 		sales: [],
-		allBidsByType: [],
+		allBidsByType: {},
+		salesByType: {},
 		allTokens: [],
 		credits: '0',
 	}
@@ -55,7 +57,7 @@ export const onAppMount = () => async ({ update, dispatch }) => {
 	update('app', { mounted: true });
 	const { account } = await dispatch(initNear());
 	await dispatch(loadCredits(account));
-	await dispatch(loadItems());
+	await dispatch(loadItems(account));
 	update('app.loading', false);
 	update('views.favs', get(FAV_KEY, []));
 	update('app.timeLeft', howLongAgo({ ts: endTime, left: true }));

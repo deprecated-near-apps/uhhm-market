@@ -21,6 +21,8 @@ const UHHM_TOKEN_KEYS = {
 };
 const uhhmTokenVersion = 'v1';
 
+export const ACCOUNT_SALES = '__ACCOUNT_SALES__'
+
 const sortBids = (a, b) => parseInt(b.price) - parseInt(a.price);
 
 export const loadCredits = (account) => async({ update, getState }) => {
@@ -33,7 +35,12 @@ export const loadCredits = (account) => async({ update, getState }) => {
 	});
 };
 
-const parseSale = (i, sales, tokens, allBidsByType, salesByType) => {
+const parseSale = ({
+	i, sales, tokens, account,
+	allBidsByType,
+	salesByType,
+	debug = false
+}) => {
 	let sale = sales[i];
 	const { token_id, token_type } = sale;
 	let token = tokens.find(({ token_type: tt }) => tt === token_type);
@@ -41,14 +48,23 @@ const parseSale = (i, sales, tokens, allBidsByType, salesByType) => {
 		sale = sales[i] = Object.assign({}, token, sales[i]);
 	}
 	sale.edition_id = parseInt(token_id.split(':')[1]);
-	(sale.bids[fungibleId] || []).sort(sortBids);
+	const bids = (sale.bids[fungibleId] || []).sort(sortBids);
 
 	sale.minBid = Math.max(
 		parseInt(Object.values(sale.sale_conditions)[0]), // reserve
-		parseInt((sale.bids[fungibleId] || [])[0]?.price || '0'));
+		parseInt(bids[0]?.price || '0'));
+
+	if (account) {
+		const { accountId } = account
+		const accountSales = get(ACCOUNT_SALES + account.accountId, [])
+		if (bids.some(({ owner_id }) => owner_id === accountId)) {
+			if (!accountSales.includes(token_id)) accountSales.push(token_id)
+		}
+		set(ACCOUNT_SALES + account.accountId, accountSales)
+	}
 
 	if (!allBidsByType[token_type]) allBidsByType[token_type] = [{ owner_id: 'reserve', price: Object.values(sale.sale_conditions)[0] }];
-	allBidsByType[token_type].push(...(sale.bids[fungibleId] || []));
+	allBidsByType[token_type].push(...(bids));
     
 	if (salesByType) {
 		if (!salesByType[token_type]) salesByType[token_type] = 0;
@@ -59,15 +75,14 @@ const parseSale = (i, sales, tokens, allBidsByType, salesByType) => {
 };
 
 export const loadSale = (token_id) => async ({ update, getState }) => {
-	const { contractAccount, views: { sales, tokens, allBidsByType } } = getState();
+	const { account, contractAccount, views: { sales, tokens, allBidsByType } } = getState();
 	const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id});
 	const i = sales.findIndex(({ token_id }) => token_id === sale.token_id);
-	sales.splice(i, 1, sale);
-	parseSale(i, sales, tokens, allBidsByType);
+	parseSale({i, sales, tokens, allBidsByType, account});
 	update('views', { sales, allBidsByType });
 };
 
-export const loadItems = (account) => async ({ update, getState }) => {
+export const loadItems = (account) => async ({ update, getState, dispatch }) => {
 
 	const { contractAccount } = getState();
 
@@ -120,7 +135,7 @@ export const loadItems = (account) => async ({ update, getState }) => {
 	/// all sales
 
 	const salesNum = await contractAccount.viewFunction(marketId, 'get_supply_by_nft_contract_id', { nft_contract_id: contractId });
-	console.log('sales', salesNum);
+	console.log('sales total', salesNum);
 	const sales = (await fetch(batchPath + JSON.stringify([{
 		contract: marketId,
 		method: 'get_sales_by_nft_contract_id',
@@ -137,16 +152,23 @@ export const loadItems = (account) => async ({ update, getState }) => {
 			path: 'metadata.issued_at',
 		}
 	}]), { headers }).then((res) => res.json()))[0];
-
+	console.log('sales', sales.length);
+	
 	/// formatting
 
 	// merge sale listing with nft token data
 	const allBidsByType = {}, salesByType = {};
-	sales.forEach((_, i) => parseSale(i, sales, tokens, allBidsByType, salesByType));
+	sales.forEach((_, i) => parseSale({i, sales, tokens, allBidsByType, salesByType, account}));
 
 	Object.values(allBidsByType).forEach((arr) => arr.sort(sortBids));
+	await update('views', { tokens, sales, allBidsByType, salesByType });
 
-	update('views', { tokens, sales, allBidsByType, salesByType });
+	/// pull account bids (sales) and load those sales
+	if (account) {
+		const accountSales = get(ACCOUNT_SALES + account.accountId, [])
+		await Promise.all(accountSales.map((token_id) => dispatch(loadSale(token_id))))
+	}
+
 	return { tokens, sales, allBidsByType, salesByType };
 };
 

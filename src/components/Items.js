@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { handleFav } from '../state/favs';
-import { Footer } from './Footer';
 import Heart from 'url:../img/heart.svg';
 import HeartOutline from 'url:../img/heart-outline.svg';
 import anime from 'animejs/lib/anime.es.js';
@@ -8,9 +7,9 @@ import anime from 'animejs/lib/anime.es.js';
 const DBL_CLICK_WAIT = 300;
 let clickTimeout;
 
-export const Items = ({ app, views, account, dispatch }) => {
+export const Items = ({ app, views, dispatch }) => {
 
-	const { isFavOn } = app;
+	const { isFavOn, timeLeft } = app;
 	const { tokens, favs } = views;
 
 	useEffect(() => {
@@ -54,7 +53,16 @@ export const Items = ({ app, views, account, dispatch }) => {
 
 			<h1>A Love Letter to <span className="red-text">Hip Hop</span></h1>
 
-			<div>
+			<p>
+				To understand what's going on here and how to get involved, check out <a href="">About</a> and <a href="">How It Works</a>
+			</p>
+			<p>
+				Auction ends in
+			</p>
+			<p className="ending">{timeLeft}</p>
+			<p className="pieces">{isFavOn ? 'Favorites' : '103 Pieces'}</p>
+			<div className="bg"></div>
+			<main>
 				{
 					items.map(({
 						imageSrc,
@@ -86,7 +94,7 @@ export const Items = ({ app, views, account, dispatch }) => {
 						</div>
 					))
 				}
-			</div>
+			</main>
 		</section>
 	</>;
 

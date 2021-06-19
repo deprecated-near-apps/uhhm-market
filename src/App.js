@@ -3,15 +3,21 @@ import React, { useContext, useEffect, useState } from 'react';
 import { appStore, onAppMount } from './state/app';
 import { useHistory, pathAndArgs } from './utils/history';
 
-
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { Items } from './components/Items';
 import { Token } from './components/Token';
+import { MyBids } from './components/MyBids';
 import { Edition } from './components/Edition';
 import { Connect } from './components/Connect';
 import { Dialog } from './components/Dialog';
 import { Credits } from './components/Credits';
+
+/// pages
+
+import { About } from './components/About';
+import { HowItWorks } from './components/HowItWorks';
+import { TOS } from './components/TOS';
 
 import './App.scss';
 import './AppMedia.scss';
@@ -33,7 +39,7 @@ const App = () => {
 		dispatch(onAppMount());
 	}, []);
 	useHistory(() => {
-		document.body.scrollTo(0,0);
+		window.scrollTo(0,0);
 		update('app', {
 			href: window.location.href,
 			isMenuOpen: false
@@ -77,7 +83,11 @@ const App = () => {
 				{ path === '/' && <Items {...pathParams} /> }
 				{ path.substr(0, 6) === '/token' && <Token {...pathParams} /> }
 				{ path.substr(0, 5) === '/sale' && <Token {...pathParams} /> }
+				{ path.substr(0, 5) === '/bids' && <MyBids {...pathParams} /> }
 				{ path.substr(0, 8) === '/credits' && <Credits {...pathParams} /> }
+				{ path.substr(0, 6) === '/about' && <About {...pathParams} /> }
+				{ path.substr(0, 4) === '/how' && <HowItWorks {...pathParams} /> }
+				{ path.substr(0, 4) === '/tos' && <TOS {...pathParams} /> }
 			</div>
 			<Footer />
 		</div>

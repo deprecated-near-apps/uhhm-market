@@ -153,7 +153,7 @@ header {
         justify-content: space-around;
         align-items: center;
         > div {
-            margin-right: 32px;
+            margin: 0 16px;
             opacity: 0.5;
             > span {
                 font-size: 0.9rem;
@@ -278,11 +278,36 @@ section {
 section.items {
     text-align: center;
     margin-top: 96px;
-    h1 {
-        margin: 64px 0;
+    > h1 {
+        margin: 32px 0;
         font-size: 1.4rem;
     }
-    > div {
+    > p {
+        font-size: 0.8rem;
+        color: #888;
+        margin: 16px;
+    }
+    > .ending {
+        color: white;
+        text-align: center;
+        font-size: 1.2rem;
+    }
+    > .pieces {
+        color: white;
+        text-align: left;
+    }
+
+    > .bg {
+        z-index: -1;
+        position: absolute;
+        width: 100vw;
+        height: 100vh;
+        top: 0;
+        opacity: 0.2;
+        background: linear-gradient(to top, transparent, $red, transparent);
+    }
+
+    > main {
         margin-bottom: 32px;
         display: grid;
         grid-template-columns: 33.33% 33.33% 33.33%;
@@ -474,6 +499,32 @@ section.token {
     }
 }
 
+section.bids {
+    > main {
+        margin-top: 128px;
+        > .bid {
+            .button {
+                @include button;
+            }
+            margin: 16px;
+            padding: 32px;
+            background: $gray;
+            text-align: center;
+
+            .left {
+                > p:first-of-type {
+                    font-size: 1.2rem;
+                }
+            }
+
+
+            > img {
+                width: 50vw;
+                max-width: 300px;
+            }
+        }
+    }
+}
 
 section.credits {
     padding: 32px;
@@ -496,6 +547,40 @@ section.credits {
         outline: none;
     }
 
+}
+
+section.page {
+    margin-left: auto;
+    margin-right: auto;
+    padding: 32px;
+    background: black;
+    h1 {
+        .red {
+            color: $red;
+            background: black !important;
+        }
+    }
+    h2 {
+        color: white;
+        font-size: 1.1rem;
+    }
+    p, ul {
+        color:#888;
+        font-weight: 400;
+        span {
+            color: white;
+        }
+    }
+    .number {
+        font-weight: 600;
+        color: white;
+        span {
+            color: $red;
+        }
+    }
+    hr {
+        border: 1px solid #444;
+    }
 }
 
 .credits-loading {
@@ -633,6 +718,7 @@ footer {
         }
     }
     .tos {
+        cursor: pointer;
         span {
             margin: 0 8px;
         }
@@ -673,6 +759,13 @@ input {
     color: white;
 }
 
+a, a:visited, a:focus {
+    color: white;
+}
+a:hover {
+    color: $red;
+}
+
 /// helper classes to override
 
 .green {
@@ -686,6 +779,11 @@ input {
     background: #FF595D !important;
     border-color: #FF595D !important;
 }
+.deep-red {
+    background: $red !important;
+    border-color: $red !important;
+    color: white !important;
+}
 
 .text-white {
     color: white !important;
@@ -693,6 +791,10 @@ input {
 
 .top-margin-16 {
     margin-top: 16px;
+}
+
+.width-auto {
+    width: auto;
 }
 
 .center {

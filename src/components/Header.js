@@ -7,6 +7,38 @@ import Close from 'url:../img/close.svg';
 import { formatAmount } from '../utils/format';
 import { BuyCredits } from './BuyCredits';
 
+
+const Options = ({account, update, pathArgs, handleClose}) => {
+	return <div className="options" onClick={handleClose}>
+				<div tabIndex="1" className={!pathArgs.length ? 'active' : ''} onClick={() => {
+					update('app.isFavOn', false);
+					history.push('/');
+				}} >
+					<span>Collection</span>
+				</div>
+				<div tabIndex="2" className={pathArgs[0] === 'about' ? 'active' : ''} onClick={() => history.push('/about')}>
+					<span>About</span>
+				</div>
+				{/* <div tabIndex="3" className={pathArgs[0] === 'community' ? 'active' : ''} onClick={() => history.push('/')}>
+					<span>Community</span>
+				</div> */}
+				<div tabIndex="4" className={pathArgs[0] === 'how' ? 'active' : ''} onClick={() => history.push('/how')}>
+					<span>How It Works</span>
+				</div>
+				{
+					account && <>
+						<div tabIndex="4" className={pathArgs[0] === 'bids' ? 'active' : ''} onClick={() => history.push('/bids')}>
+							<span>My Bids</span>
+						</div>
+
+						{/* <div tabIndex="4" className={pathArgs[0] === 'how' ? 'active' : ''} onClick={() => history.push('/')}>
+							<span>My Collection</span>
+						</div> */}
+					</>
+				}
+			</div>
+}
+
 export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 
 	const { isMenuOpen, isFavOn, isMobile } = app;
@@ -45,34 +77,9 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 							history.push('/');
 						}} />
 						</div>
-						<div className="options" onClick={handleClose}>
-							<div tabIndex="1" className={!pathArgs.length ? 'active' : ''} onClick={() => {
-								update('app.isFavOn', false);
-								history.push('/');
-							}} >
-								<span>Collection</span>
-							</div>
-							<div tabIndex="2" className={pathArgs[0] === 'about' ? 'active' : ''} onClick={() => history.push('/')}>
-								<span>About</span>
-							</div>
-							<div tabIndex="3" className={pathArgs[0] === 'community' ? 'active' : ''} onClick={() => history.push('/')}>
-								<span>Community</span>
-							</div>
-							<div tabIndex="4" className={pathArgs[0] === 'how' ? 'active' : ''} onClick={() => history.push('/')}>
-								<span>How it works</span>
-							</div>
-							{
-								account && <>
-									<div tabIndex="4" className={pathArgs[0] === 'how' ? 'active' : ''} onClick={() => history.push('/')}>
-										<span>My Bids</span>
-									</div>
 
-									<div tabIndex="4" className={pathArgs[0] === 'how' ? 'active' : ''} onClick={() => history.push('/')}>
-										<span>My Collection</span>
-									</div>
-								</>
-							}
-						</div>
+						<Options {...{ account, update, pathArgs, handleClose }} />
+
 						<div>
 							<div onClick={() => {
 								if (favs.length === 0) return;
@@ -139,34 +146,7 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 						</div>
 					}
 
-					{isMobile && <div className="options" onClick={handleClose}>
-						<div tabIndex="1" className={!pathArgs.length ? 'active' : ''} onClick={() => {
-							update('app.isFavOn', false);
-							history.push('/');
-						}} >
-							<span>Collection</span>
-						</div>
-						<div tabIndex="2" className={pathArgs[0] === 'about' ? 'active' : ''} onClick={() => history.push('/')}>
-							<span>About</span>
-						</div>
-						<div tabIndex="3" className={pathArgs[0] === 'community' ? 'active' : ''} onClick={() => history.push('/')}>
-							<span>Community</span>
-						</div>
-						<div tabIndex="4" className={pathArgs[0] === 'how' ? 'active' : ''} onClick={() => history.push('/')}>
-							<span>How it works</span>
-						</div>
-						{
-							account && <>
-								<div tabIndex="4" className={pathArgs[0] === 'how' ? 'active' : ''} onClick={() => history.push('/')}>
-									<span>My Bids</span>
-								</div>
-
-								<div tabIndex="4" className={pathArgs[0] === 'how' ? 'active' : ''} onClick={() => history.push('/')}>
-									<span>My Collection</span>
-								</div>
-							</>
-						}
-					</div>}
+					{isMobile && <Options {...{ account, update, pathArgs, handleClose }} /> }
 
 				</div>
 

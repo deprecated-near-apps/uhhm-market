@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { contractId, marketId, fungibleId } from '../utils/near-utils';
+import { fungibleId } from '../utils/near-utils';
 import { BuyCredits } from './BuyCredits';
 import { years } from '../utils/format';
 import { loadSale } from '../state/views';

@@ -1,8 +1,9 @@
 import { contractId, marketId, fungibleId } from '../utils/near-utils';
+import { get, set, del } from '../utils/storage';
 import { setDialog } from '../state/app';
 import { GAS } from '../state/near';
 import { parseAmount, formatAmount, validateAmount } from '../utils/format';
-
+import { ACCOUNT_SALES } from './views';
 
 export const handlePlaceBid = (account, token, minBid) => async ({ dispatch, getState }) => {
 	const result = await dispatch(setDialog({
@@ -38,11 +39,11 @@ export const handlePlaceBid = (account, token, minBid) => async ({ dispatch, get
 	}
 
 	const { nft_contract_id, token_id } = token;
-	console.log({
-		receiver_id: marketId,
-		amount,
-		msg: JSON.stringify({ nft_contract_id, token_id })
-	});
+
+	const accountSales = get(ACCOUNT_SALES + account.accountId, [])
+	if (!accountSales.includes(token_id)) accountSales.push(token_id)
+	set(ACCOUNT_SALES + account.accountId, accountSales)
+	
 	await account.functionCall({
 		contractId: fungibleId,
 		methodName: 'ft_transfer_call',
