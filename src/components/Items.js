@@ -48,7 +48,7 @@ export const Items = ({ app, views, dispatch }) => {
 		}, DBL_CLICK_WAIT);
 	};
 
-	let items = tokens;
+	let items = tokens.slice();
 	if (isFavOn && favs.length > 0) {
 		items = tokens.filter(({ token_type }) => favs.includes(token_type));
 	}
@@ -71,7 +71,7 @@ export const Items = ({ app, views, dispatch }) => {
 			}
 		})
 		hot.forEach((token) => {
-			token.bids.length = Math.floor(token.bids.length / bidMax * 3)
+			token.bidIconNum = Math.floor(token.bids.length / bidMax * 3)
 		})
 	}
 
@@ -118,7 +118,7 @@ export const Items = ({ app, views, dispatch }) => {
 							{
 								isHotOn && <div className="flame">
 									{
-										new Array(hot[i].bids.length).fill(0).map((_, i) => {
+										new Array(hot[i].bidIconNum).fill(0).map((_, i) => {
 											return <img key={i} src={Flame} />
 										})
 									}
