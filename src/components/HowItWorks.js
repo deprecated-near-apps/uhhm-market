@@ -42,12 +42,12 @@ export const HowItWorks = (props) => {
 				If you are outbid, the credits will be returned to you immediately and you can use them to bid again. You may need to purchase more credits to submit a higher bid. When you purchase more credits, your bidding allowance will go up. You can make as many credit purchases as you wish to add to your available credits.
 			</p>
 			<p>
-				Credits can be used on any edition throughout the auction as long as they are not bonded to a winning NFT bid.
+				Credits can be used on any edition throughout the auction as long as they are not bonded to a currently winning NFT bid.
 			</p>
 
 			<p className="number"><span>5.</span> Receive winning NFT or refunded credits</p>
 			<p>
-				On Day 36 (noon EDT), bidding will conclude and winners will receive their Hip Hop Head NFTs in their NEAR wallet. 
+				On Day 37 (noon EDT), bidding will conclude and winners will receive their Hip Hop Head NFTs in their NEAR wallet. 
 			</p>
 			<p>
 				Any credits purchased for non-winning bids will be refunded to the bidder’s credit card. 

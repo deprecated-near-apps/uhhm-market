@@ -8,11 +8,11 @@ export const About = (props) => {
 
 			<h1>Birthed in the 47th<br/>Year of the <span className="red">Hip Hop</span> Era</h1>
 			<p>
-				The Hip Hop Heads First Edition is a collaborative NFT art series featuring the work of the celebrated illustrator André LeRoy Davis, creator of The Source Magazine’s iconic The Last Word and the background animation of Ed Young, one of The Source Magazine’s original co-owners. Each illustration exists as a collection of 47 to represent the 47 Years of the Hip Hop Era. The animation loops at a rate of ~47.8 seconds to pinpoint the time of creation in the Hip Hop Era.
+				The Hip Hop Heads First Edition is a collaborative NFT art series featuring the work of the celebrated illustrator André LeRoy Davis, creator of <i>The Source Magazine</i>’s iconic The Last Word and the background animation of Ed Young, one of <i>The Source Magazine</i>’s original co-owners. Each illustration exists as a collection of 47 to represent the 47 Years of the Hip Hop Era. The animation loops at a rate of ~47.8 seconds to pinpoint the time of creation in the Hip Hop Era.
 			</p>
 
 			<h2>
-				What is the difference between the editions
+				What is the difference between the editions?
 			</h2>
 			<p>
 				Each Hip Hop Head First Edition is named in relation to the artist’s place in the Hip Hop Era. And each featured artist has earned a place in the history of Hip Hop that warranted an illustration by André LeRoy Davis. Hip Hop Heads were featured in The Last Word because the artist was central to the musical, social, political, economic or lifestyle news of the moment and shaped the history of Hip Hop at a moment in time – to be illustrated as a Hip Hop Head meant that you were, and would always be, Historic.
@@ -22,7 +22,7 @@ export const About = (props) => {
 				About royalties and donations – why not all editions are available at auction
 			</h2>
 			<p>
-				The #1 of each series is being donated to reside in and establish the Universal Hip Hop Museum’s original crypto art collection. The #38 - #47 of each series is being made available to the featured artist or the artist’s estate if they verify and claim their NFTsgift. Both the Artists/Artist’s Estate and the Universal Hip Hop Museum will share in the royalty streams for secondary market sales of #2 - #47 of each series. André LeRoy Davis and Ed Young are making these donations to show the unique power and potential of NFTs to benefit creatives and their estates in ways never before possible.
+				The #1 of each series is being donated to reside in and establish the Universal Hip Hop Museum’s original crypto art collection. The #38 - #47 of each series is being made available to the featured artist or the artist’s estate if they verify and claim their gift. Both the Artists/Artist’s Estate and the Universal Hip Hop Museum will share in the royalty streams for secondary market sales of #2 - #47 of each series. André LeRoy Davis and Ed Young are making these donations to show the unique power and potential of NFTs to benefit creatives and their estates in ways never before possible.
 			</p>
 			<h2>
 				The background animation has a hidden meaning
