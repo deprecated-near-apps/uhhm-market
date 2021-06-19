@@ -4,7 +4,13 @@ import * as nearAPI from 'near-api-js';
 export const {
 	GAS,
 	networkId, nodeUrl, walletUrl, nameSuffix,
-	contractName, contractMethods,
+	
+	contractName,
+	contractId,
+	marketId,
+	fungibleId,
+	
+	contractMethods,
 	accessKeyMethods,
 } = getConfig();
 
@@ -25,15 +31,6 @@ export const near = new Near({
 		keyStore: new keyStores.BrowserLocalStorageKeyStore()
 	},
 });
-
-// // alias
-// export const contractId = contractName;
-// export const marketId = 'market.' + contractName;
-
-// export const contractId = 'dev-1623802012999-47812480686775';
-export const contractId = 'dev-1623990723679-78605620599599';
-export const marketId = 'market.' + contractId;
-export const fungibleId = 'ft.hhft.testnet';
 
 
 

@@ -17,7 +17,12 @@ const {
 	credentials,
 } = testUtils;
 const {
-	networkId, GAS, GUESTS_ACCOUNT_SECRET
+	networkId, GAS, GUESTS_ACCOUNT_SECRET,
+
+	contractId,
+	marketId,
+	fungibleId,
+	
 } = getConfig();
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000000;
@@ -65,13 +70,7 @@ const saleTokens = data.map(({ token_type, metadata }) => ({
 	}
 }));
 
-const contractId = contractAccount.accountId;
-console.log('\n\n contractId:', contractId, '\n\n');
-
 const ownerId = 'owner.' + contractId;
-const fungibleId = 'ft.hhft.testnet';
-const marketId = 'market.' + contractId;
-
 /// run tests
 
 describe('deploy contract ' + contractName, () => {

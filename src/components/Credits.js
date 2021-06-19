@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { CardElement, Elements, useElements, useStripe } from "@stripe/react-stripe-js";
-import { Footer } from './Footer';
 import { loadCredits } from '../state/views';
 import Approved from 'url:../img/approved.svg';
 import ErrorIcon from 'url:../img/error.svg';
@@ -9,9 +8,15 @@ import Back from 'url:../img/back-arrow.svg';
 import { parseAmount } from '../utils/format';
 import { setDialog } from '../state/app';
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY, {
-	stripeAccount: process.env.REACT_APP_STRIPE_ACCOUNT_ID,
-});
+let pk = process.env.REACT_APP_STRIPE_PUBLIC_KEY, stripeAccount = process.env.REACT_APP_STRIPE_ACCOUNT_ID
+if (process.env.REACT_APP_ENV === 'prod') {
+	pk = process.env.REACT_APP_STRIPE_PUBLIC_KEY_PROD
+	stripeAccount = process.env.REACT_APP_STRIPE_ACCOUNT_ID_PROD
+}
+
+const stripePromise = loadStripe(pk, { stripeAccount });
+
+let interval, startCredits
 
 export function Credits(props) {
 	return <Elements stripe={stripePromise}>
@@ -21,7 +26,8 @@ export function Credits(props) {
 
 function CreditsInner(props) {
 
-	const { account, update, dispatch } = props;
+	const { account, update, dispatch, views } = props;
+	const { credits } = views
 
 	if (!account) return null;
 	const { accountId } = account;
@@ -35,9 +41,30 @@ function CreditsInner(props) {
 	const [error, setError] = useState();
 
 	useEffect(() => {
+		startCredits = credits
 		window.scrollTo(0,0);
 		document.querySelector('input').focus();
 	}, []);
+
+	useEffect(() => {
+		if (credits === startCredits) return
+		handleSuccess()
+	}, [credits]);
+
+	const handleSuccess = () => {
+		dispatch(setDialog({
+			msg: <div>
+				<img src={Approved} />
+				<h1>Credits successfully purchased!</h1>
+				<p>{amount}</p>
+				<p>Go place your bid!</p>
+			</div>,
+			info: true,
+			onCloseButton: {
+				'Return': () => history.back()
+			}
+		}));
+	}
 
 	const handleSubmit = async (event) => {
 		if (event) event.preventDefault();
@@ -54,7 +81,7 @@ function CreditsInner(props) {
 			});
 			if (error) throw error;
 
-			const res = await fetch('https://stripe-nft-hip-hop.vercel.app/api/pay', {
+			const res = await fetch(process.env.REACT_APP_STRIPE_ENDPOINT, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -73,20 +100,15 @@ function CreditsInner(props) {
 			if (res.status !== 200) throw json;
 
 			if (json?.outcome?.status?.SuccessValue === "") {
-				dispatch(setDialog({
-					msg: <div>
-						<img src={Approved} />
-						<h1>Credits successfully purchased!</h1>
-						<p>{amount}</p>
-						<p>Go place your bid!</p>
-					</div>,
-					info: true,
-					onCloseButton: {
-						'Return': () => history.back()
-					}
-				}));
+				handleSuccess()
 				setTimeout(() => dispatch(loadCredits(account)), 1000);
 			} else {
+				// check regardless, maybe charge success but no redirect
+				if (interval) clearInterval(interval) 
+				interval = setInterval(() => {
+					dispatch(loadCredits(account))
+				}, 2000)
+				// may throw but start checking credits above
 				window.open(json.intent.next_action.redirect_to_url.url, '_blank')
 			}
 

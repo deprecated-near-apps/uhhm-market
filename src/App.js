@@ -83,8 +83,8 @@ const App = () => {
 				{ path === '/' && <Items {...pathParams} /> }
 				{ path.substr(0, 6) === '/token' && <Token {...pathParams} /> }
 				{ path.substr(0, 5) === '/sale' && <Token {...pathParams} /> }
-				{ path.substr(0, 5) === '/bids' && <MyBids {...pathParams} /> }
-				{ path.substr(0, 8) === '/credits' && <Credits {...pathParams} /> }
+				{ account && path.substr(0, 5) === '/bids' && <MyBids {...pathParams} /> }
+				{ account && path.substr(0, 8) === '/credits' && <Credits {...pathParams} /> }
 				{ path.substr(0, 6) === '/about' && <About {...pathParams} /> }
 				{ path.substr(0, 4) === '/how' && <HowItWorks {...pathParams} /> }
 				{ path.substr(0, 4) === '/tos' && <TOS {...pathParams} /> }

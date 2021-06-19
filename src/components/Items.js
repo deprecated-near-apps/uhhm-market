@@ -9,7 +9,7 @@ let clickTimeout;
 
 export const Items = ({ app, views, dispatch }) => {
 
-	const { isFavOn, timeLeft } = app;
+	const { isFavOn, timeLeft, isMobile } = app;
 	const { tokens, favs } = views;
 
 	useEffect(() => {
@@ -25,7 +25,7 @@ export const Items = ({ app, views, dispatch }) => {
 			if (!favs.includes(token_type)) {
 				anime({
 					targets: `#explode-` + index,
-					scale: 20,
+					scale: isMobile ? 8 : 25,
 					opacity: 0,
 					duration: 500,
 					easing: 'easeOutQuad',
@@ -54,7 +54,7 @@ export const Items = ({ app, views, dispatch }) => {
 			<h1>A Love Letter to <span className="red-text">Hip Hop</span></h1>
 
 			<p>
-				To understand what's going on here and how to get involved, check out <a href="">About</a> and <a href="">How It Works</a>
+				To understand what's going on here and how to get involved, check out <a href="" onClick={() => history.push('/about')}>About</a> and <a href="" onClick={() => history.push('/how')}>How It Works</a>
 			</p>
 			<p>
 				Auction ends in
