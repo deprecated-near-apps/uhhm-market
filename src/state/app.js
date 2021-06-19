@@ -7,7 +7,7 @@ import { loadItems, loadCredits } from './views';
 import { isMobile, checkIsMobile } from '../utils/mobile';
 import { howLongAgo } from '../utils/date';
 
-const endTime = Date.now() + 3600000;
+const endTime = 1627370001973;
 
 const initialState = {
 	app: {
@@ -16,6 +16,7 @@ const initialState = {
 		isEditionOpen: false,
 		isMenuOpen: false,
 		isFavOn: false,
+		isHotOn: false,
 		isMobile,
 		isConnectOpen: false,
 		dialog: null,

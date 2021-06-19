@@ -19,7 +19,7 @@ $gray: #232323;
             height: 32px;
         }
         > div:nth-of-type(1) {
-            width: 200px;
+            width: 220px;
         }
     }
     section {
@@ -54,6 +54,14 @@ $gray: #232323;
         margin-top: 128px;
         > main {
             grid-template-columns: 25% 25% 25% 25%;
+            > .item > .flame {
+                bottom: calc(8px - 0.35vw);
+                left: 8px;
+                width: 16px;
+                > img {
+                    width: 16px;
+                }
+            }
         }
         h1 {
             font-size: 2rem;

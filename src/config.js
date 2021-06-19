@@ -44,6 +44,7 @@ module.exports = function getConfig(prod = false) {
 			contractId: "uhhmnft.near",
 			marketId: "market.uhhmnft.near",
 			fungibleId: "ft.hip-hop.near",
+			ownerId: 'owner.uhhmnft.near',
 		};
 	}
 

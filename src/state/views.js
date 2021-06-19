@@ -3,9 +3,13 @@ import { get, set, del } from '../utils/storage';
 // api-helper config
 const domain = 'https://helper.nearapi.org';
 const batchPath = domain + '/v1/batch/';
-const headers = new Headers({
-	'max-age': '3600'
-});
+const headersObj = {
+	'max-age': '0'
+}
+if (process.env.REACT_APP_ENV === 'prod') {
+	headersObj['near-network'] = 'mainnet'
+}
+const headers = new Headers(headersObj);
 const DELIMETER = '||';
 
 import { howLongAgo } from '../utils/date';
@@ -54,6 +58,7 @@ const parseSale = ({
 		parseInt(Object.values(sale.sale_conditions)[0]), // reserve
 		parseInt(bids[0]?.price || '0'));
 
+
 	if (account) {
 		const { accountId } = account
 		const accountSales = get(ACCOUNT_SALES + account.accountId, [])
@@ -77,6 +82,7 @@ const parseSale = ({
 export const loadSale = (token_id) => async ({ update, getState }) => {
 	const { account, contractAccount, views: { sales, tokens, allBidsByType } } = getState();
 	const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id});
+	
 	const i = sales.findIndex(({ token_id }) => token_id === sale.token_id);
 	parseSale({i, sales, tokens, allBidsByType, account});
 	update('views', { sales, allBidsByType });
@@ -278,4 +284,11 @@ const data = [
 	{ token_type: 'HipHopHead.9.202.21522', metadata: { media: 'QmeKrG48dqMUQR3N6kAGYvvu4xASQP3DEay9shkgpo6i4N' } },
 ];
 
-export const uhhmTokenIds = data.map(({token_type}) => token_type + ':1');
+
+
+export const uhhmTokenIds = data.map(({token_type}) => {
+	if (token_type === 'HipHopHead.10.229.182114' && process.env.REACT_APP_ENV === 'prod') {
+		token_type = 'HipHopHead.yar10.229.182114'
+	}
+	return token_type + ':1'
+});

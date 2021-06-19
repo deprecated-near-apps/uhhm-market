@@ -38,14 +38,29 @@
         "patch:config": "node ./utils/patch-config.js",
         "test": "cross-env REACT_APP_ENV=dev jest app.test.js --useStderr",
         "prestart": "rm -rf ./parcel-cache",
+        
+        
         "start": "cross-env REACT_APP_ENV=dev parcel src/index.html --open",
+        "start:prod": "cross-env REACT_APP_ENV=prod parcel src/index.html --open",
+        
+        
         "start:deploy": "yarn patch:deploy-config && cross-env REACT_APP_ENV=dev REACT_APP_API_HELPER=true parcel src/index.html --open",
         "fix": "eslint src/ test/ --fix",
         "test:unit": "(cd contracts && cargo test -- --nocapture --color always)",
         "prebuild": "rm -rf ./dist",
         "patch:deploy-config": "node ./utils/patch-deploy-config.js",
-        "build": "parcel build src/index.html --public-url https://near-apps.github.io/uhhm-market/",
-        "deploy": "yarn patch:deploy-config && cross-env REACT_APP_ENV=dev REACT_APP_API_HELPER=true yarn build && gh-pages -d dist",
+        
+        "build:testnet": "parcel build src/index.html --public-url https://near-apps.github.io/uhhm-market/",
+        "deploy:testnet": "yarn patch:deploy-config && cross-env REACT_APP_ENV=dev REACT_APP_API_HELPER=true yarn build:testnet && gh-pages -d dist",
+        
+        "build": "parcel build src/index.html --public-url https://nft.hiphop",
+        "static": "rm -rf dist/CNAME && cp src/static/CNAME dist/CNAME",
+        "deploy": "cross-env REACT_APP_ENV=prod yarn build && yarn static && gh-pages -d dist",
+
+
+        "deploy:prod-gh": "cross-env REACT_APP_ENV=prod yarn build:testnet && gh-pages -d dist",
+        
+        
         "test:edX": "cross-env REACT_APP_ENV=dev jest edX.test.js --useStderr",
         "test:ed3": "cross-env REACT_APP_ENV=dev jest ed3.test.js --useStderr",
         "test:ed36": "cross-env REACT_APP_ENV=dev jest ed36.test.js --useStderr",

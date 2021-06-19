@@ -30,7 +30,8 @@ const App = () => {
 		app: {
 			loading, tab, isConnectOpen, dialog, isEditionOpen,
 		},
-		views, near, wallet, contractAccount, account
+		views,
+		near, wallet, contractAccount, account
 	} = state;
 
 	const [profile, setProfile] = useState(false);

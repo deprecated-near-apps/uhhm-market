@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { handleFav } from '../state/favs';
 import Heart from 'url:../img/heart.svg';
 import HeartOutline from 'url:../img/heart-outline.svg';
+import Flame from 'url:../img/flame.svg';
 import anime from 'animejs/lib/anime.es.js';
 
 const DBL_CLICK_WAIT = 300;
@@ -9,8 +10,8 @@ let clickTimeout;
 
 export const Items = ({ app, views, dispatch }) => {
 
-	const { isFavOn, timeLeft, isMobile } = app;
-	const { tokens, favs } = views;
+	const { isFavOn, isHotOn, timeLeft, isMobile } = app;
+	const { tokens, favs, allBidsByType, sales } = views;
 
 	useEffect(() => {
 		clearTimeout(clickTimeout);
@@ -18,6 +19,7 @@ export const Items = ({ app, views, dispatch }) => {
 	}, []);
 
 	const handleClick = (token_type, index) => {
+
 		if (clickTimeout) {
 			clearTimeout(clickTimeout);
 			clickTimeout = null;
@@ -40,12 +42,35 @@ export const Items = ({ app, views, dispatch }) => {
 			dispatch(handleFav(token_type));
 			return;
 		}
-		clickTimeout = setTimeout(() => history.push('/token/' + token_type + '/'), DBL_CLICK_WAIT);
+		clickTimeout = setTimeout(() => {
+			if (!sales.length) return
+			history.push('/token/' + token_type + '/')
+		}, DBL_CLICK_WAIT);
 	};
 
 	let items = tokens;
 	if (isFavOn && favs.length > 0) {
 		items = tokens.filter(({ token_type }) => favs.includes(token_type));
+	}
+
+	const hot = Object.entries(allBidsByType).map(([k, v]) => ({
+		type: k,
+		bids: v
+	})).filter(({ bids }) => bids.length > 1).sort((a, b) => b.bids.length - a.bids.length)
+
+	if (isHotOn && hot.length > 0) {
+		items = []
+		let bidMax = 0
+		hot.forEach((token) => {
+			if (token.bids.length > bidMax) {
+				bidMax = token.bids.length
+			}
+			items.push(tokens.find(({ token_type }) => token_type === token.type))
+		})
+		hot.forEach((token) => {
+			token.bids.length = Math.ceil(token.bids.length / bidMax * 3)
+			console.log(token.bids.length)
+		})
 	}
 
 	return <>
@@ -54,7 +79,7 @@ export const Items = ({ app, views, dispatch }) => {
 			<h1>A Love Letter to <span className="red-text">Hip Hop</span></h1>
 
 			<p>
-				To understand what's going on here and how to get involved, check out <a href="" onClick={() => history.push('/about')}>About</a> and <a href="" onClick={() => history.push('/how')}>How It Works</a>
+				To understand what's going on here and how to get involved, check out <a onClick={() => history.push('/about')}>About</a> and <a onClick={() => history.push('/how')}>How It Works</a>
 			</p>
 			<p>
 				Auction ends in
@@ -87,6 +112,15 @@ export const Items = ({ app, views, dispatch }) => {
 									}}>
 										<img src={HeartOutline} />
 									</div>
+							}
+							{
+								isHotOn && <div className="flame">
+									{
+										new Array(hot[i].bids.length).fill(0).map((_, i) => {
+											return <img key={i} src={Flame} />
+										})
+									}
+								</div>
 							}
 							<div className="heart-explode">
 								<img id={'explode-' + i} src={Heart} />

@@ -1,17 +1,27 @@
 import React from 'react';
+import { get, set, del } from '../utils/storage';
 import Logo from 'url:../img/logo.svg';
 import HeartOutline from 'url:../img/heart-outline.svg';
 import Heart from 'url:../img/heart.svg';
+import FlameOutline from 'url:../img/flame-outline.svg';
+import Flame from 'url:../img/flame.svg';
 import Menu from 'url:../img/menu.svg';
 import Close from 'url:../img/close.svg';
 import { formatAmount } from '../utils/format';
+import { ACCOUNT_SALES } from '../state/views';
 import { BuyCredits } from './BuyCredits';
 
-
 const Options = ({account, update, pathArgs, handleClose}) => {
+
+	let accountSales = []
+	if (account) {
+		accountSales = get(ACCOUNT_SALES + account.accountId, [])
+	}
+
 	return <div className="options" onClick={handleClose}>
 				<div tabIndex="1" className={!pathArgs.length ? 'active' : ''} onClick={() => {
 					update('app.isFavOn', false);
+					update('app.isHotOn', false);
 					history.push('/');
 				}} >
 					<span>Collection</span>
@@ -27,9 +37,9 @@ const Options = ({account, update, pathArgs, handleClose}) => {
 				</div>
 				{
 					account && <>
-						<div tabIndex="4" className={pathArgs[0] === 'bids' ? 'active' : ''} onClick={() => history.push('/bids')}>
+						{!!accountSales.length && <div tabIndex="4" className={pathArgs[0] === 'bids' ? 'active' : ''} onClick={() => history.push('/bids')}>
 							<span>My Bids</span>
-						</div>
+						</div>}
 
 						{/* <div tabIndex="4" className={pathArgs[0] === 'how' ? 'active' : ''} onClick={() => history.push('/')}>
 							<span>My Collection</span>
@@ -41,7 +51,7 @@ const Options = ({account, update, pathArgs, handleClose}) => {
 
 export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 
-	const { isMenuOpen, isFavOn, isMobile } = app;
+	const { isMenuOpen, isFavOn, isHotOn, isMobile } = app;
 	const { credits, favs } = views;
 
 	const handleClose = () => {
@@ -55,39 +65,72 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 			<header>
 				{isMobile ?
 					<>
-						<div onClick={() => {
-							if (favs.length === 0) return;
-							update('app.isFavOn', !isFavOn);
-							if (!!pathArgs[0]) history.push('/');
-						}}>
-							<img className={isFavOn ? 'pulse' : ''} src={isFavOn ? Heart : HeartOutline} />
-							{favs.length > 0 && <div className="badge">{favs.length}</div>}
+						<div>
+							<div className="icon" onClick={() => {
+								if (favs.length === 0) return;
+								update('app.isFavOn', !isFavOn);
+								if (!isFavOn) update('app.isHotOn', false);
+								if (!!pathArgs[0]) history.push('/');
+							}}>
+								<img className={isFavOn ? 'pulse' : ''} src={isFavOn ? Heart : HeartOutline} />
+								{favs.length > 0 && <div className="badge">{favs.length}</div>}
+							</div>
+							<div className="icon"
+								onClick={() => {
+									update('app.isHotOn', !isHotOn);
+									if (!isHotOn) update('app.isFavOn', false);
+									if (!!pathArgs[0]) history.push('/');
+								}}
+							>
+								<img src={isHotOn ? Flame : FlameOutline} />
+							</div>
 						</div>
+
 						<img src={Logo} onClick={() => {
 							update('app.isFavOn', false);
+							update('app.isHotOn', false);
 							history.push('/');
 						}} />
-						<img src={Menu} onClick={() => update('app', { isMenuOpen: true })} />
+
+						<div className="mobile-menu">
+							<img src={Menu} onClick={() => update('app', { isMenuOpen: true })} />
+						</div>
 
 					</>
 					:
 					<>
-						<div><img src={Logo} onClick={() => {
-							update('app.isFavOn', false);
-							history.push('/');
-						}} />
+						<div>
+							<img src={Logo} onClick={() => {
+								update('app.isFavOn', false);
+								update('app.isHotOn', false);
+								history.push('/');
+							}} />
 						</div>
 
 						<Options {...{ account, update, pathArgs, handleClose }} />
 
 						<div>
-							<div onClick={() => {
-								if (favs.length === 0) return;
-								update('app.isFavOn', !isFavOn);
-								if (!!pathArgs[0]) history.push('/');
-							}}>
-								<img className={isFavOn ? 'pulse' : ''} src={isFavOn ? Heart : HeartOutline} />
-								{favs.length > 0 && <div className="badge">{favs.length}</div>}
+							<div>
+								<div className="icon"
+									onClick={() => {
+										if (favs.length === 0) return;
+										update('app.isFavOn', !isFavOn);
+										if (!isFavOn) update('app.isHotOn', false);
+										if (!!pathArgs[0]) history.push('/');
+									}}
+								>
+									<img className={isFavOn ? 'pulse' : ''} src={isFavOn ? Heart : HeartOutline} />
+									{favs.length > 0 && <div className="badge">{favs.length}</div>}
+								</div>
+								<div className="icon"
+									onClick={() => {
+										update('app.isHotOn', !isHotOn);
+										if (!isHotOn) update('app.isFavOn', false);
+										if (!!pathArgs[0]) history.push('/');
+									}}
+								>
+									<img src={isHotOn ? Flame : FlameOutline} />
+								</div>
 							</div>
 							{
 								account ?

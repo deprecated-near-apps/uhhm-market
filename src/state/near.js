@@ -37,9 +37,21 @@ export const initNear = () => async ({ update, getState, dispatch }) => {
 	let account;
 	if (wallet.signedIn) {
 		account = wallet.account();
-		account.displayId = account.accountId.split('.' + networkId)[0];
-		wallet.balance = formatNearAmount((await wallet.account().getAccountBalance()).available, 4);
-		await update('', { near, wallet, contractAccount, account });
+		if (process.env.REACT_APP_ENV === 'prod' && /.testnet/.test(account.accountId)) {
+			wallet.signOut()
+		} else {
+			account.displayId = account.accountId.split('.' + networkId)[0];
+			try {
+				wallet.balance = formatNearAmount((await wallet.account().getAccountBalance()).available, 4);
+				await update('', { near, wallet, contractAccount, account });
+			} catch (e) {
+				if (/does not exist while viewing/.test(e.toString())) {
+					wallet.signOut()
+				} else {
+					throw e
+				}
+			}
+		}
 	}
 
 	await update('', { near, wallet, contractAccount, account });

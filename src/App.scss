@@ -132,7 +132,11 @@ header {
     align-items: center;
     padding: 16px;
     > div {
-        position: relative;
+        display: inline-block;
+    }
+    > .mobile-menu {
+        width: 58px;
+        text-align: right;
     }
     .badge {
         position: absolute;
@@ -168,15 +172,20 @@ header {
             }
         }
     }
+
+    .icon {
+        display: inline-block;
+        position: relative;
+        &:first-child {
+            margin-right: 16px;
+        }
+    }
+
     > div:nth-of-type(3) {
-        width: 200px;
+        width: 220px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        > div {
-            position: relative;
-            display: inline-block;
-        }
         
         .account-button {
             > button {
@@ -321,6 +330,15 @@ section.items {
                 @include scale-in-animation;
                 width: 100%;
                 margin-bottom: -5px;
+            }
+            > .flame {
+                position: absolute;
+                bottom: calc(4px - 0.35vw);
+                left: 4px;
+                width: 12px;
+                > img {
+                    width: 10px;
+                }
             }
             > .heart, > .heart-outline, > .heart-explode {
                 @include fade-in-animation;
@@ -533,6 +551,10 @@ section.credits {
     flex-direction: column;
     justify-content: space-between;
     height: calc(100vh - 64px);
+
+    p {
+        opacity: 0.5;
+    }
     
     form {
         margin-top: 32px;
