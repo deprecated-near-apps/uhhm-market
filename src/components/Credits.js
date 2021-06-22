@@ -266,7 +266,6 @@ function CreditsInner(props) {
 					phoneNumber: !!tel.length ? tel : undefined,
 				}),
 			});
-
 			update('app.loading', false);
 			const json = await res.json();
 			if (res.status !== 200) throw json;
@@ -299,7 +298,7 @@ function CreditsInner(props) {
 
 					<img src={Back} onClick={() => history.back()} />
 
-					<h1>Buy Credits</h1>
+					<h1>Create Account</h1>
 
 					<input
 						type="text"
@@ -309,6 +308,8 @@ function CreditsInner(props) {
 						disabled={revealed}
 						onChange={async ({ target }) => handleAccountId(target.value)}
 					/>
+
+					{revealed && <p>This is your seed phrase. The only way you can sign into and recover your account.<br/>You need to copy it somewhere safe.</p>}
 
 					<input
 						type={revealed ? 'text' : 'password'}
@@ -324,9 +325,10 @@ function CreditsInner(props) {
 						copy(credentials.seedPhrase)
 						dispatch(setDialog({
 							msg: <div>
-								<p>Seed phrase has been copied. (Command/Ctrl - C)</p>
+								<p>Seed phrase has been copied.</p>
+								<p>(Command/Ctrl - C)</p>
 								<p>PLEASE MAKE SURE TO SAVE THIS SEED PHRASE SOMEWHERE SECURE.</p>
-								<p>Do not share your seed phrase with anyone. </p>
+								<p>Do not share this with anyone. </p>
 								<p>We cannot recover your credits if you lose your seed phrase.</p>
 							</div>,
 							info: true,
@@ -337,7 +339,7 @@ function CreditsInner(props) {
 						}));
 					}}>Copy Seed Phrase</button>}
 
-					{!revealed && <button className="center" disabled={!!accountError.length} onClick={() => setRevealed(true)}>Reveal My Seed Phrase</button>}
+					{!revealed && <button className="center" disabled={!!accountError.length} onClick={() => setRevealed(true)}>Next</button>}
 
 				</div>
 			}
