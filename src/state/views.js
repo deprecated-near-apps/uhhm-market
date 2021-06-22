@@ -1,4 +1,5 @@
 import { contractId, fungibleId, marketId } from '../utils/near-utils';
+import { Account } from 'near-api-js';
 import { get, set, del } from '../utils/storage';
 // api-helper config
 const domain = 'https://helper.nearapi.org';
@@ -6,6 +7,7 @@ const batchPath = domain + '/v1/batch/';
 const headersObj = {
 	'max-age': '0'
 }
+
 if (process.env.REACT_APP_ENV === 'prod') {
 	headersObj['near-network'] = 'mainnet'
 }
@@ -29,7 +31,7 @@ export const ACCOUNT_SALES = '__ACCOUNT_SALES__'
 
 const sortBids = (a, b) => parseInt(b.price) - parseInt(a.price);
 
-export const loadCredits = (account) => async({ update, getState }) => {
+export const loadCredits = (account) => async ({ update, getState }) => {
 	if (!account) return;
 	const { contractAccount } = getState();
 	update('views', {
@@ -70,7 +72,7 @@ const parseSale = ({
 
 	if (!allBidsByType[token_type]) allBidsByType[token_type] = [{ owner_id: 'reserve', price: Object.values(sale.sale_conditions)[0] }];
 	allBidsByType[token_type].push(...(bids));
-    
+
 	if (salesByType) {
 		if (!salesByType[token_type]) salesByType[token_type] = 0;
 		salesByType[token_type]++;
@@ -81,10 +83,10 @@ const parseSale = ({
 
 export const loadSale = (token_id) => async ({ update, getState }) => {
 	const { account, contractAccount, views: { sales, tokens, allBidsByType } } = getState();
-	const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id});
-	
+	const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
+
 	const i = sales.findIndex(({ token_id }) => token_id === sale.token_id);
-	parseSale({i, sales, tokens, allBidsByType, account});
+	parseSale({ i, sales, tokens, allBidsByType, account });
 	update('views', { sales, allBidsByType });
 };
 
@@ -113,7 +115,7 @@ export const loadItems = (account) => async ({ update, getState, dispatch }) => 
 				},
 			}])
 		}).then((res) => res.json()))[0];
-    
+
 		tokens.forEach((token) => {
 			token.displayType = token.token_type.split('HipHopHead')[1].slice(1);
 			token.displayHowLongAgo = howLongAgo({
@@ -159,12 +161,12 @@ export const loadItems = (account) => async ({ update, getState, dispatch }) => 
 		}
 	}]), { headers }).then((res) => res.json()))[0];
 	console.log('sales', sales.length);
-	
+
 	/// formatting
 
 	// merge sale listing with nft token data
 	const allBidsByType = {}, salesByType = {};
-	sales.forEach((_, i) => parseSale({i, sales, tokens, allBidsByType, salesByType, account}));
+	sales.forEach((_, i) => parseSale({ i, sales, tokens, allBidsByType, salesByType, account }));
 
 	Object.values(allBidsByType).forEach((arr) => arr.sort(sortBids));
 	await update('views', { tokens, sales, allBidsByType, salesByType });
@@ -176,6 +178,19 @@ export const loadItems = (account) => async ({ update, getState, dispatch }) => 
 	}
 
 	return { tokens, sales, allBidsByType, salesByType };
+};
+
+export const doesAccountExist = (accountId) => async ({ update, getState, dispatch }) => {
+	const { near: { connection } } = getState()
+	try {
+		await new Account(connection, accountId).state();
+		return true;
+	} catch (e) {
+		if (/does not exist while viewing/.test(e)) {
+			return false
+		}
+		throw e;
+	}
 };
 
 const data = [
@@ -286,7 +301,7 @@ const data = [
 
 
 
-export const uhhmTokenIds = data.map(({token_type}) => {
+export const uhhmTokenIds = data.map(({ token_type }) => {
 	if (token_type === 'HipHopHead.10.229.182114' && process.env.REACT_APP_ENV === 'prod') {
 		token_type = 'HipHopHead.yar10.229.182114'
 	}

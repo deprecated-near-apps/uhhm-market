@@ -145,7 +145,7 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 													<div>Credits</div>
 												</div>
 												<div className="connect">
-													{!account && <button onClick={() => wallet.signIn()}>Connect Wallet</button>}
+													{!account && <button onClick={() => update('app.isConnectOpen', true)}>Connect Wallet</button>}
 
 													{account && <>
 														<BuyCredits />
@@ -159,7 +159,7 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 									</div>
 									:
 									<div className="account-button">
-										<button onClick={() => wallet.signIn()}>
+										<button onClick={() => update('app.isConnectOpen', true)}>
 											Connect Wallet
 										</button>
 									</div>
@@ -196,7 +196,7 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 				<div>
 
 					<div className="connect">
-						{!account && <button onClick={() => wallet.signIn()}>Connect Wallet</button>}
+						{!account && <button onClick={() => update('app.isConnectOpen', true)}>Connect Wallet</button>}
 
 						{account && <>
 							<BuyCredits />

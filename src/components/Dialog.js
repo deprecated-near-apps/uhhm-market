@@ -7,6 +7,7 @@ export const Dialog = ({
 	acceptLabel = 'Accept',
 	onClose,
 	onCloseButton,
+	onCancelled,
 	info = false,
 }) => {
 
@@ -19,13 +20,16 @@ export const Dialog = ({
 		resolve(input.map((_, i) => document.querySelector('#dialog-input-' + i).value));
 	};
 
-	const handleClose = () => {
+	const handleClose = (cancelled = false) => {
 		reject();
+		if (cancelled === true && onCancelled) {
+			return onCancelled()
+		}
 		if (onClose) onClose();
 		if (onCloseButton) Object.values(onCloseButton)[0]();
 	};
 
-	return <section className="modal" onClick={handleClose}>
+	return <section className="modal" onClick={() => handleClose(true)}>
 		<div className="background"></div>
 		<div className="content">
 			<div className="wrap"
@@ -34,7 +38,7 @@ export const Dialog = ({
 					return false;
 				}}
 			>
-				<div className="close" onClick={handleClose}>
+				<div className="close" onClick={() => handleClose(true)}>
 					<img src={Close} />
 				</div>
 

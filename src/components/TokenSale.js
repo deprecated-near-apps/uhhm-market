@@ -83,7 +83,7 @@ export const TokenSale = (props) => {
 							<img src={Arrow} />
 						</button>
 						:
-						<button onClick={() => wallet.signIn()}>Connect Wallet</button>
+						<button onClick={() => update('app.isConnectOpen', true)}>Connect Wallet</button>
 
 			}
 

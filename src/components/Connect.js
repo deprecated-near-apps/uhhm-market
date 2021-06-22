@@ -22,10 +22,19 @@ export const Connect = ({ update, wallet }) => {
 					<img src={Close} />
 				</div>
 				<img src={NEAR} />
-				<p>You need to connect your Near wallet to participate in auction. If you don't already have one, you can create it for free</p>
+				<p>You need to connect your Near wallet to participate in auction. If you don't already have one, you can create it for free.</p>
 				<div className="button"
 					onClick={() => wallet.signIn()}
 				>Connect Wallet</div>
+	< br/>
+				<div className="button"
+					onClick={() => {
+						update('app.isConnectOpen', false)
+						history.push('/credits')
+					}}
+				>Create a Wallet</div>
+				<p>(requires credit card purchase)</p>
+
 			</div>
 		</div>
 	</section>;
