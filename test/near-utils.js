@@ -1,7 +1,8 @@
 const fs = require("fs");
 const nearAPI = require("near-api-js");
 const getConfig = require("../src/config");
-const { nodeUrl, networkId, contractName, contractMethods } = getConfig();
+const { nodeUrl, networkId, contractName, contractMethods } = getConfig(false);
+
 const {
 	keyStores: { InMemoryKeyStore },
 	Near,

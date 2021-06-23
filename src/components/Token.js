@@ -24,6 +24,12 @@ export const Token = (props) => {
 
 	useEffect(() => {
 		setMounted(true);
+
+		// dataLayer.push({ 'event': 'pageview',     
+		// 	'page_location': '/' + pathArgs.join('/'),
+		// 	'page_title': 'Token: ' + (isToken ? 'series' : 'edition')
+		// });
+		
 	}, []);
 
 	const handleClick = (token_type) => {

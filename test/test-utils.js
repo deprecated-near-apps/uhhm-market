@@ -36,6 +36,13 @@ async function initContract() {
 }
 const getAccountBalance = async (accountId) => (new nearAPI.Account(connection, accountId)).getAccountBalance();
 
+const initAccount = async(accountId, secret) => {
+	account = new nearAPI.Account(connection, accountId);
+	const newKeyPair = KeyPair.fromString(secret);
+	keyStore.setKey(networkId, accountId, newKeyPair);
+	return account
+}
+
 const createOrInitAccount = async(accountId, secret, amount = DEFAULT_NEW_CONTRACT_AMOUNT) => {
 	let account;
 	try {
@@ -139,6 +146,7 @@ module.exports = {
 	credentials,
 	keyStore,
 	getContract,
+	initAccount,
 	getAccountBalance,
 	contract,
 	contractName,
