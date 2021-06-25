@@ -9,7 +9,6 @@ export const MyBids = ({ account, views, dispatch }) => {
 
 	const { sales } = views
 	const accountSales = get(ACCOUNT_SALES + account.accountId, [])
-	console.log(accountSales)
 
 	const bids = sales.filter(({ token_id }) => accountSales.includes(token_id))
 

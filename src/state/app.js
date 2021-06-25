@@ -57,11 +57,11 @@ export const setDialog = (dialog) => async ({ update }) => {
 export const onAppMount = () => async ({ update, dispatch }) => {
 	update('app', { mounted: true });
 	const { account } = await dispatch(initNear());
-	await dispatch(loadCredits(account));
-	await dispatch(loadItems(account));
-	update('app.loading', false);
-	update('views.favs', get(FAV_KEY, []));
 	update('app.timeLeft', howLongAgo({ ts: endTime, left: true }));
+	update('views.favs', get(FAV_KEY, []));
+	await dispatch(loadItems(account));
+	await dispatch(loadCredits(account));
+	update('app.loading', false);
 	setInterval(() => {
 		if (endTime - Date.now() > 3600000) return;
 		update('app.timeLeft', howLongAgo({ ts: endTime, left: true }));
@@ -69,7 +69,6 @@ export const onAppMount = () => async ({ update, dispatch }) => {
 	}, 5000);
 	let resizeDebounce;
 	window.onresize = () => {
-
 		if (resizeDebounce) clearTimeout(resizeDebounce);
 		resizeDebounce = setTimeout(() => {
 			update('app.isMobile', window.innerWidth < 992 || checkIsMobile());

@@ -5,7 +5,7 @@ import { get, set, del } from '../utils/storage';
 const domain = 'https://helper.nearapi.org';
 const batchPath = domain + '/v1/batch/';
 const headersObj = {
-	'max-age': '0'
+	'max-age': '21600' // 6hrs
 }
 
 if (process.env.REACT_APP_ENV === 'prod') {
@@ -27,6 +27,7 @@ const UHHM_TOKEN_KEYS = {
 };
 const uhhmTokenVersion = 'v1';
 
+export const RESERVE_PRICE = 4700
 export const ACCOUNT_SALES = '__ACCOUNT_SALES__'
 
 const sortBids = (a, b) => parseInt(b.price) - parseInt(a.price);
@@ -49,6 +50,7 @@ const parseSale = ({
 }) => {
 	let sale = sales[i];
 	const { token_id, token_type } = sale;
+
 	let token = tokens.find(({ token_type: tt }) => tt === token_type);
 	if (token) {
 		sale = sales[i] = Object.assign({}, token, sales[i]);
@@ -84,9 +86,36 @@ const parseSale = ({
 export const loadSale = (token_id) => async ({ update, getState }) => {
 	const { account, contractAccount, views: { sales, tokens, allBidsByType } } = getState();
 	const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
-
 	const i = sales.findIndex(({ token_id }) => token_id === sale.token_id);
+	if (i === -1) return
+	sales.splice(i, 1, sale)
 	parseSale({ i, sales, tokens, allBidsByType, account });
+	update('views', { sales, allBidsByType });
+};
+
+export const loadNextEdition = (token_type) => async ({ update, getState }) => {
+	const { account, contractAccount, views: { sales, tokens, allBidsByType } } = getState();
+
+	// find next token_id for this type
+	const token_id = token_type + ':' + (sales.filter(({ token_type: tt }) => tt === token_type)
+		.map(({token_id}) => parseInt(token_id.split(':')[1]))
+		.sort()[0] + 1)
+	
+	// find sale
+	const sale = await contractAccount.viewFunction(marketId, 'get_sale', { nft_contract_token: contractId + DELIMETER + token_id });
+	if (!sale) return
+	
+	// does sale already exist and we just got an update? e.g. have they been here before?
+	let i = sales.findIndex(({ token_id }) => token_id === sale.token_id);
+	if (i === -1) {
+		i = sales.length - 1
+		sales.push(sale)
+	} else {
+		sales.splice(i, 1, sale)
+	}
+	console.log('sales', sales.length);
+	
+	parseSale({ i, sales, allBidsByType, tokens, account });
 	update('views', { sales, allBidsByType });
 };
 
@@ -139,6 +168,10 @@ export const loadItems = (account) => async ({ update, getState, dispatch }) => 
 		console.log('loading tokens from cache');
 	}
 	console.log('uhhm tokens', tokens.length);
+	update('views', { tokens });
+	if (window.location.pathname === '/') {
+		update('app', { loading: false });
+	}
 
 	/// all sales
 
@@ -153,7 +186,7 @@ export const loadItems = (account) => async ({ update, getState, dispatch }) => 
 		batch: {
 			from_index: '0',
 			limit: salesNum,
-			step: '55',
+			step: '75',
 			flatten: [],
 		},
 		sort: {
@@ -169,13 +202,8 @@ export const loadItems = (account) => async ({ update, getState, dispatch }) => 
 	sales.forEach((_, i) => parseSale({ i, sales, tokens, allBidsByType, salesByType, account }));
 
 	Object.values(allBidsByType).forEach((arr) => arr.sort(sortBids));
-	await update('views', { tokens, sales, allBidsByType, salesByType });
 
-	/// pull account bids (sales) and load those sales
-	if (account) {
-		const accountSales = get(ACCOUNT_SALES + account.accountId, [])
-		await Promise.all(accountSales.map((token_id) => dispatch(loadSale(token_id))))
-	}
+	await update('views', { tokens, sales, allBidsByType, salesByType });
 
 	return { tokens, sales, allBidsByType, salesByType };
 };
@@ -298,8 +326,6 @@ const data = [
 	{ token_type: 'HipHopHead.37.325', metadata: { media: 'QmXk8vmxXaAszYrUnvqLiJqHyhffhJpPvp7USoZFSxfx4q' } },
 	{ token_type: 'HipHopHead.9.202.21522', metadata: { media: 'QmeKrG48dqMUQR3N6kAGYvvu4xASQP3DEay9shkgpo6i4N' } },
 ];
-
-
 
 export const uhhmTokenIds = data.map(({ token_type }) => {
 	if (token_type === 'HipHopHead.10.229.182114' && process.env.REACT_APP_ENV === 'prod') {

@@ -56,7 +56,7 @@ data = data.map((d) => {
 const edition = ':test-' + Date.now();
 
 const receivers = [
-	'testingtesting.testnet',
+	'md1.testnet',
 ];
 
 const saleTokens = data.map(({ token_type, metadata }, i) => ({

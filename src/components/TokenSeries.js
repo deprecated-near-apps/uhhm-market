@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { formatAmount } from '../utils/format';
 import Menu from 'url:../img/menu-small.svg';
+import { RESERVE_PRICE, loadNextEdition } from '../state/views';
 
 export const TokenSeries = (props) => {
 
 	const { app, token, update, views, dispatch } = props;
 	const { isMobile, timeLeft } = app;
-	const { salesByType, allBidsByType } = views;
+	const { sales, salesByType, allBidsByType } = views;
 	const { token_type, displayType } = token;
 
-	const allBids = allBidsByType[token_type];
+	useEffect(() => {
+		if (!sales.length) return
+		dispatch(loadNextEdition(token_type));
+	}, [sales]);
+
+	const allBids = allBidsByType[token_type] || [{ price: RESERVE_PRICE }];
 
 	return <>
 		<div className="content">
