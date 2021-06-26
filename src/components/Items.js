@@ -43,7 +43,6 @@ export const Items = ({ app, views, dispatch }) => {
 			return;
 		}
 		clickTimeout = setTimeout(() => {
-			if (!sales.length) return
 			history.push('/token/' + token_type + '/')
 		}, DBL_CLICK_WAIT);
 	};

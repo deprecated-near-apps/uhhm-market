@@ -94,7 +94,16 @@ export const loadSale = (token_id) => async ({ update, getState }) => {
 };
 
 export const loadNextEdition = (token_type) => async ({ update, getState }) => {
+
+	console.log(token_type)
+	if (token_type === 'HipHopHead.10.229.182114' && process.env.REACT_APP_ENV === 'prod') {
+		token_type = 'HipHopHead.yar10.229.182114'
+	}
+
+	console.log(token_type)
+
 	const { account, contractAccount, views: { sales, tokens, allBidsByType } } = getState();
+	
 
 	// find next token_id for this type
 	const token_id = token_type + ':' + (sales.filter(({ token_type: tt }) => tt === token_type)

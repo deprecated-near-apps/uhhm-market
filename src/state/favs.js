@@ -13,5 +13,8 @@ export const handleFav = (token_id) => async ({ update, dispatch }) => {
 	}
 	set(FAV_KEY, favs);
 	update('views.favs', favs);
+	if (favs.length === 0) {
+		update('app.isFavOn', false);
+	}
 };
 

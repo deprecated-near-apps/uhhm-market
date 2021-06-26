@@ -52,7 +52,7 @@ const Options = ({account, update, pathArgs, handleClose}) => {
 export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 
 	const { isMenuOpen, isFavOn, isHotOn, isMobile } = app;
-	const { credits, favs } = views;
+	const { credits, favs, sales } = views;
 
 	const handleClose = () => {
 		window.scrollTo(0, 0);
@@ -75,7 +75,7 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 								<img className={isFavOn ? 'pulse' : ''} src={isFavOn ? Heart : HeartOutline} />
 								{favs.length > 0 && <div className="badge">{favs.length}</div>}
 							</div>
-							<div className="icon"
+							{sales.length > 0 && <div className="icon"
 								onClick={() => {
 									update('app.isHotOn', !isHotOn);
 									if (!isHotOn) update('app.isFavOn', false);
@@ -83,7 +83,7 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 								}}
 							>
 								<img src={isHotOn ? Flame : FlameOutline} />
-							</div>
+							</div>}
 						</div>
 
 						<img src={Logo} onClick={() => {
@@ -122,7 +122,7 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 									<img className={isFavOn ? 'pulse' : ''} src={isFavOn ? Heart : HeartOutline} />
 									{favs.length > 0 && <div className="badge">{favs.length}</div>}
 								</div>
-								<div className="icon"
+								{sales.length > 0 && <div className="icon"
 									onClick={() => {
 										update('app.isHotOn', !isHotOn);
 										if (!isHotOn) update('app.isFavOn', false);
@@ -130,7 +130,7 @@ export const Header = ({ app, views, pathArgs, update, account, wallet }) => {
 									}}
 								>
 									<img src={isHotOn ? Flame : FlameOutline} />
-								</div>
+								</div>}
 							</div>
 							{
 								account ?

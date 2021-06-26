@@ -46,12 +46,12 @@ export const TokenSeries = (props) => {
 				<p>Auction ends in:</p>
 				<h2>{ timeLeft }</h2>
 			</div>
-			<div className="select"
+			{sales.length > 0 && <div className="select"
 				onClick={() => update('app.isEditionOpen', true)}
 			>
 				<div>Select Edition</div>
 				<img src={Menu} />
-			</div>
+			</div>}
 		</div>
 	</>;
 };

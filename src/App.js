@@ -43,7 +43,8 @@ const App = () => {
 		window.scrollTo(0,0);
 		update('app', {
 			href: window.location.href,
-			isMenuOpen: false
+			isMenuOpen: false,
+			isEditionOpen: false,
 		});
 	}, true);
 	const { path, args, pathArgs } = pathAndArgs();
