@@ -84,9 +84,9 @@ $shadow: 0 0 8px black, 0 0 32px rgba(0, 0, 0, 0.5);
     animation-fill-mode: forwards;
 }
 
-::-webkit-scrollbar {
-    width: 0;
-}
+// ::-webkit-scrollbar {
+//     width: 0;
+// }
 
 ::placeholder {
     color: white;
@@ -101,9 +101,9 @@ $shadow: 0 0 8px black, 0 0 32px rgba(0, 0, 0, 0.5);
 
 body {
     margin: 0;
-    width: 100vw;
+    width: 100%;
     height: auto;
-    overflow-y: scroll;
+    overflow-y: auto;
     font-family: 'Inter', sans-serif !important;
     font-weight: 600;
     background: black;
@@ -126,7 +126,7 @@ header {
     left: 0;
     z-index: 1000;
     height: 64px;
-    width: 100vw;
+    width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -429,7 +429,7 @@ section.token {
         }
     }
     .content {
-        width: 100vw;
+        width: 100%;
         margin: 32px;
     }
     .ending {

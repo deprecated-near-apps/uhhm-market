@@ -74,9 +74,11 @@ $gray: #232323;
         > div {
             top: 64px;
             padding: 0 25vw;
+            overflow: hidden;
             > div {
                 max-height: 70vh;
                 overflow: scroll;
+                overflow-x: hidden;
                 > div {
                     background: #232323;
                     padding-bottom: 0;
