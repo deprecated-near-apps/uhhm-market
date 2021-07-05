@@ -93,18 +93,39 @@ export const loadSale = (token_id) => async ({ update, getState }) => {
 	update('views', { sales, allBidsByType });
 };
 
+export const loadSalesForEdition = (token_type) => async ({ update, getState }) => {
+	console.log('loadSalesForEdition', token_type)
+
+	const { account, contractAccount, views: { sales, tokens, allBidsByType, salesByType } } = getState();
+	
+	// find sale
+	const editionSales = await contractAccount.viewFunction(marketId, 'get_sales_by_nft_token_type', {
+		token_type,
+		from_index: '0',
+		limit: 36
+	});
+	if (!editionSales || !editionSales.length) return
+	
+	// does sale already exist and we just got an update? e.g. have they been here before?
+	editionSales.forEach((sale) => {
+		let i = sales.findIndex(({ token_id }) => token_id === sale.token_id);
+		if (i === -1) {
+			i = sales.length
+			sales.push(sale)
+		} else {
+			sales.splice(i, 1, sale)
+		}
+		parseSale({ i, sales, allBidsByType, salesByType, tokens, account });
+	})
+	
+	update('views', { sales, allBidsByType, salesByType });
+};
+
 export const loadNextEdition = (token_type) => async ({ update, getState }) => {
-
-	console.log(token_type)
-	if (token_type === 'HipHopHead.10.229.182114' && process.env.REACT_APP_ENV === 'prod') {
-		token_type = 'HipHopHead.yar10.229.182114'
-	}
-
-	console.log(token_type)
+	console.log('loadNextEdition', token_type)
 
 	const { account, contractAccount, views: { sales, tokens, allBidsByType } } = getState();
 	
-
 	// find next token_id for this type
 	const token_id = token_type + ':' + (sales.filter(({ token_type: tt }) => tt === token_type)
 		.map(({token_id}) => parseInt(token_id.split(':')[1]))
@@ -122,7 +143,6 @@ export const loadNextEdition = (token_type) => async ({ update, getState }) => {
 	} else {
 		sales.splice(i, 1, sale)
 	}
-	console.log('sales', sales.length);
 	
 	parseSale({ i, sales, allBidsByType, tokens, account });
 	update('views', { sales, allBidsByType });

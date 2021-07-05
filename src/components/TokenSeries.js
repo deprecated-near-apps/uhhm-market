@@ -1,19 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { formatAmount } from '../utils/format';
 import Menu from 'url:../img/menu-small.svg';
-import { RESERVE_PRICE, loadNextEdition } from '../state/views';
+import { RESERVE_PRICE, loadSalesForEdition, loadNextEdition } from '../state/views';
 
 export const TokenSeries = (props) => {
 
 	const { app, token, update, views, dispatch } = props;
 	const { isMobile, timeLeft } = app;
 	const { sales, salesByType, allBidsByType } = views;
-	const { token_type, displayType } = token;
+	let { token_type, displayType } = token;
+
+	if (token_type === 'HipHopHead.10.229.182114' && process.env.REACT_APP_ENV === 'prod') {
+		token_type = 'HipHopHead.yar10.229.182114'
+	}
 
 	useEffect(() => {
-		if (!sales.length) return
-		dispatch(loadNextEdition(token_type));
-	}, [sales]);
+		if (sales.length > 0) dispatch(loadNextEdition(token_type))
+		else dispatch(loadSalesForEdition(token_type));
+	}, []);
 
 	const allBids = allBidsByType[token_type] || [{ price: RESERVE_PRICE }];
 
