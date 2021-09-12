@@ -181,8 +181,8 @@ export const loadItems = (account) => async ({ update, getState, dispatch }) => 
 			});
 			// token.imageSrc = `${DWEB_BASE}${token.metadata.media}${LOW_RES_GIF}`;
 			// token.imageSrc = `${GATEWAY_BASE}${token.metadata.media}${LOW_RES_GIF}`;
-			// token.imageSrc = `https://uhhm-heads.s3.us-west-2.amazonaws.com/${token.metadata.media}.webp`;
-			token.imageSrc = `https://files.uhhmnft.org/webp/${token.metadata.media}`;
+			token.imageSrc = `https://uhhm-heads.s3.us-west-2.amazonaws.com/${token.metadata.media}.webp`;
+			// token.imageSrc = `https://nft.hiphop/webp/${token.metadata.media}`;
 			token.videoSrc = `${DWEB_BASE}${token.metadata.media}${VIDEO}`;
 			token.videoSrc2 = `${IPFS_BASE}${token.metadata.media}${VIDEO}`;
 			token.videoSrc3 = `${NEAR_BASE}${token.metadata.media}${VIDEO}`;
@@ -196,6 +196,19 @@ export const loadItems = (account) => async ({ update, getState, dispatch }) => 
 	} else {
 		console.log('loading tokens from cache');
 	}
+
+	// fix img src
+	tokens.forEach((token) => {
+		token.imageSrc = `https://uhhm-heads.s3.us-west-2.amazonaws.com/${token.metadata.media}.webp`;
+	});
+	// migrate
+	set(UHHM_TOKEN_KEYS[uhhmTokenVersion], tokens);
+	Object.entries(UHHM_TOKEN_KEYS).forEach(([k, v]) => {
+		if (k === uhhmTokenVersion) return;
+		del(v);
+	});
+
+
 	console.log('uhhm tokens', tokens.length);
 	update('views', { tokens });
 	if (window.location.pathname === '/') {

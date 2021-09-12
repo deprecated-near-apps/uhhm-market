@@ -74,6 +74,8 @@ export const Items = ({ app, views, dispatch }) => {
 		})
 	}
 
+	if (items[0]) console.log(items[0].imageSrc)
+
 	return <>
 		<section className="items">
 
