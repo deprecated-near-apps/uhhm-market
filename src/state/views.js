@@ -180,12 +180,10 @@ export const loadItems = (account) => async ({ update, getState, dispatch }) => 
 				ts: token.metadata.issued_at, detail: 'hour'
 			});
 			token.imageSrc = `${DWEB_BASE}${token.metadata.media}${LOW_RES_GIF}`;
+			token.imageSrc = `${GATEWAY_BASE}${token.metadata.media}${LOW_RES_GIF}`;
 			token.videoSrc = `${DWEB_BASE}${token.metadata.media}${VIDEO}`;
 			token.videoSrc2 = `${IPFS_BASE}${token.metadata.media}${VIDEO}`;
 			token.videoSrc3 = `${NEAR_BASE}${token.metadata.media}${VIDEO}`;
-			token.imageSrc = `https://files.uhhmnft.org/webp/${token.metadata.media}`;
-			token.imageSrc = `https://uhhm-heads.s3.us-west-2.amazonaws.com/${token.metadata.media}.webp`;
-			token.imageSrc = `https://sweet-paper-723d.near.workers.dev/?uhhm-heads-cid=${token.metadata.media}`;
 		});
 		// migrate
 		set(UHHM_TOKEN_KEYS[uhhmTokenVersion], tokens);
