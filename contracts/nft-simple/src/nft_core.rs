@@ -308,7 +308,10 @@ impl NonFungibleTokenCore for Contract {
 
     fn nft_token(&self, token_id: TokenId) -> Option<JsonToken> {
         if let Some(token) = self.tokens_by_id.get(&token_id) {
-            let metadata = self.token_metadata_by_id.get(&token_id).unwrap();
+            let mut metadata = self.token_metadata_by_id.get(&token_id).unwrap();
+			if metadata.title.is_none() {
+				metadata.title = Some(token_id.clone());
+			}
             Some(JsonToken {
                 token_id,
                 owner_id: token.owner_id,
