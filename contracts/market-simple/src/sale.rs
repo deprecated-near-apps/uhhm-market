@@ -12,7 +12,7 @@ pub struct Bid {
 #[serde(crate = "near_sdk::serde")]
 pub struct Sale {
     pub owner_id: AccountId,
-    pub approval_id: U64,
+    pub approval_id: u64,
     pub nft_contract_id: String,
     pub token_id: String,
     pub sale_conditions: SaleConditions,
@@ -190,8 +190,9 @@ impl Contract {
             buyer_id.clone(),
             token_id,
             sale.approval_id,
-            None,
+            "payout from market".to_string(),
             price,
+			10,
             &nft_contract_id,
             1,
             GAS_FOR_NFT_TRANSFER,

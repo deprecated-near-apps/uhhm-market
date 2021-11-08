@@ -2,7 +2,7 @@ const BN = require('bn.js');
 const fetch = require('node-fetch');
 const nearAPI = require('near-api-js');
 const { KeyPair, Account, Contract, utils: { format: { parseNearAmount } } } = nearAPI;
-const { near, credentials, connection, keyStore, contract, contractAccount } = require('./near-utils');
+const { near, connection, keyStore, contract, contractAccount } = require('./near-utils');
 const getConfig = require('../src/config');
 const {
 	networkId, contractName, contractMethods,
@@ -17,10 +17,10 @@ async function initContract() {
 	try {
 		const newArgs = {
 			owner_id: contractAccount.accountId,
-			"metadata": {
-				"spec": "nft-1",
-				"name": "UHHM NFT - Hip Hop Heads",
-				"symbol": "HHH"
+			metadata: {
+				spec: 'nft-1',
+				name: 'Test NFT',
+				symbol: 'TNFT',
 			},
 			supply_cap_by_type: {
 				test: '1000000',
@@ -42,11 +42,10 @@ const initAccount = async(accountId, secret) => {
 	keyStore.setKey(networkId, accountId, newKeyPair);
 	return account
 }
-
-const createOrInitAccount = async(accountId, secret, amount = DEFAULT_NEW_CONTRACT_AMOUNT) => {
+const createOrInitAccount = async(accountId, secret) => {
 	let account;
 	try {
-		account = await createAccount(accountId, amount, secret);
+		account = await createAccount(accountId, DEFAULT_NEW_CONTRACT_AMOUNT, secret);
 	} catch (e) {
 		if (!/because it already exists/.test(e.toString())) {
 			throw e;
@@ -61,7 +60,7 @@ const createOrInitAccount = async(accountId, secret, amount = DEFAULT_NEW_CONTRA
 	return account;
 };
 
-async function getAccount(accountId, fundingAmount = DEFAULT_NEW_ACCOUNT_AMOUNT, secret) {
+async function getAccount(accountId, fundingAmount = DEFAULT_NEW_ACCOUNT_AMOUNT) {
 	accountId = accountId || generateUniqueSubAccount();
 	const account = new nearAPI.Account(connection, accountId);
 	try {
@@ -72,7 +71,7 @@ async function getAccount(accountId, fundingAmount = DEFAULT_NEW_ACCOUNT_AMOUNT,
 			throw e;
 		}
 	}
-	return await createAccount(accountId, fundingAmount, secret);
+	return await createAccount(accountId, fundingAmount);
 };
 
 
@@ -139,14 +138,39 @@ const getSignature = async (account) => {
 	return { blockNumber, blockNumberSignature };
 };
 
+const loadCredentials = (accountId) => {
+	const credPath = `./neardev/${networkId}/${accountId}.json`;
+	console.log(
+		"Loading Credentials:\n",
+		credPath
+	);
+
+	let credentials;
+	try {
+		credentials = JSON.parse(
+			fs.readFileSync(
+				credPath
+			)
+		);
+	} catch(e) {
+		console.warn('credentials not in /neardev');
+		/// attempt to load backup creds from local machine
+		credentials = JSON.parse(
+			fs.readFileSync(
+				`${process.env.HOME}/.near-credentials/${networkId}/${accountId}.json`
+			)
+		);
+	}
+
+	return credentials
+}
+
 module.exports = { 
 	TEST_HOST,
 	near,
 	connection,
-	credentials,
 	keyStore,
 	getContract,
-	initAccount,
 	getAccountBalance,
 	contract,
 	contractName,

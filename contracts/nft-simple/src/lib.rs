@@ -141,6 +141,7 @@ impl Contract {
     }
 
     pub fn unlock_token_types(&mut self, token_types: Vec<String>) {
+		self.assert_owner();
         for token_type in &token_types {
             self.token_types_locked.remove(&token_type);
         }

@@ -64,7 +64,7 @@ where
 
 pub(crate) fn refund_approved_account_ids(
     account_id: AccountId,
-    approved_account_ids: &HashMap<AccountId, U64>,
+    approved_account_ids: &HashMap<AccountId, u64>,
 ) -> Promise {
     refund_approved_account_ids_iter(account_id, approved_account_ids.keys())
 }
@@ -118,7 +118,7 @@ impl Contract {
         sender_id: &AccountId,
         receiver_id: &AccountId,
         token_id: &TokenId,
-        approval_id: Option<U64>,
+        approval_id: Option<u64>,
         memo: Option<String>,
     ) -> Token {
         let token = self.tokens_by_id.get(token_id).expect("Token not found");
@@ -141,7 +141,7 @@ impl Contract {
             assert_eq!(
                 actual_approval_id, &enforced_approval_id,
                 "The actual approval_id {} is different from the given approval_id {}",
-                actual_approval_id.0, enforced_approval_id.0,
+                actual_approval_id, enforced_approval_id,
             );
         }
 
